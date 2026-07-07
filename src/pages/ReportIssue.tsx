@@ -1,0 +1,1096 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Crosshair,
+  MapPin,
+  Loader2,
+  AlertTriangle,
+  Send,
+  BellRing,
+  Sparkles,
+  Wand2,
+  Search,
+} from 'lucide-react'
+import {
+  CATEGORIES,
+  CATEGORY_LIST,
+  DEPARTMENTS,
+  SEVERITIES,
+  resolveRouting,
+  type CategoryId,
+  type DepartmentId,
+  type ResolvedConditional,
+  type Severity,
+} from '../data/categories'
+import type { GeoLocation, MediaItem } from '../data/types'
+import { CategoryIconTile } from '../components/CategoryPill'
+import { MediaUpload, MediaThumb } from '../components/MediaUpload'
+import { MapView } from '../components/MapView'
+import { useAuth } from '../store/auth'
+import { useIssues } from '../store/issues'
+import { reverseGeocode, searchAddress, type ForwardResult } from '../lib/geocode'
+import { findNearby, formatDistance } from '../lib/dedupe'
+import { cn } from '../lib/cn'
+import { shortId } from '../lib/format'
+import { rememberCreated } from './MyIssues'
+import { analyzeIssue, type AiSuggestion } from '../services/ai'
+import { useTestMode } from '../store/testMode'
+
+const STEPS = ['Category', 'Details', 'Location', 'Departments', 'Review'] as const
+
+export function ReportIssue() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const preset = (location.state as { category?: CategoryId })?.category
+  const { user } = useAuth()
+  const mockAi = useTestMode((s) => s.mockAi)
+  const createIssue = useIssues((s) => s.create)
+  const refresh = useIssues((s) => s.refresh)
+  const loaded = useIssues((s) => s.loaded)
+  const issues = useIssues((s) => s.issues)
+
+  const [step, setStep] = useState(preset ? 1 : 0)
+  const [category, setCategory] = useState<CategoryId | null>(preset ?? null)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [severity, setSeverity] = useState<Severity>('high')
+  const [media, setMedia] = useState<MediaItem[]>([])
+  const [picked, setPicked] = useState<{ lat: number; lng: number } | null>(
+    null
+  )
+  const [address, setAddress] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [district, setDistrict] = useState('')
+  const [locating, setLocating] = useState(false)
+  const [name, setName] = useState(user?.name ?? '')
+  const [phone, setPhone] = useState(user?.phone ?? '')
+  const [anonymous, setAnonymous] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState<AiSuggestion | null>(null)
+  const [aiUnavailable, setAiUnavailable] = useState(false)
+  const [searchQ, setSearchQ] = useState('')
+  const [searchResults, setSearchResults] = useState<ForwardResult[]>([])
+  const [searching, setSearching] = useState(false)
+  // Department confirmation + mandatory approval gate.
+  const [conditionals, setConditionals] = useState<ResolvedConditional[]>([])
+  const [consent, setConsent] = useState(false)
+
+  useEffect(() => {
+    if (!loaded) refresh()
+  }, [loaded, refresh])
+
+  const cat = category ? CATEGORIES[category] : null
+
+  /** Recompute the conditional-department suggestions (AI + keyword driven). */
+  const computeConditionals = (): ResolvedConditional[] => {
+    if (!category) return []
+    const decision = resolveRouting(category, {
+      text: `${title} ${description}`,
+      aiDepartments: aiSuggestion?.departments,
+    })
+    return decision.conditional
+  }
+
+  /** The final department list = core (locked) + selected conditional. */
+  const finalDepartments: DepartmentId[] = category
+    ? Array.from(
+        new Set([
+          ...CATEGORIES[category].core,
+          ...conditionals.filter((c) => c.selected).map((c) => c.department),
+        ])
+      )
+    : []
+
+  /** Ask the AI to triage from the first image + description. */
+  const runAi = async () => {
+    const firstImage = media.find(
+      (m) => m.type === 'image' && m.url.startsWith('data:')
+    )
+    if (!firstImage && description.trim().length < 8) {
+      toast.error('Add a photo or a longer description for AI to analyse')
+      return
+    }
+    setAnalyzing(true)
+    setAiSuggestion(null)
+    const res = await analyzeIssue({
+      description,
+      imageDataUrl: firstImage?.url,
+    })
+    setAnalyzing(false)
+    if (!res.ok) {
+      if (res.reason === 'unavailable') {
+        setAiUnavailable(true)
+        toast('AI assist isn\'t configured — fill the form manually.', {
+          icon: 'ℹ️',
+        })
+      } else {
+        toast.error('AI could not analyse this right now.')
+      }
+      return
+    }
+    setAiSuggestion(res.suggestion)
+    toast.success('AI suggestion ready')
+  }
+
+  const applyAi = () => {
+    if (!aiSuggestion) return
+    if (aiSuggestion.category) setCategory(aiSuggestion.category)
+    if (aiSuggestion.title) setTitle(aiSuggestion.title)
+    if (aiSuggestion.summary && description.trim().length === 0)
+      setDescription(aiSuggestion.summary)
+    setSeverity(aiSuggestion.severity)
+    toast.success('Applied AI suggestion')
+  }
+
+  const detectLocation = () => {
+    if (!('geolocation' in navigator)) {
+      toast.error('Geolocation not supported on this device')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        setPicked({ lat: latitude, lng: longitude })
+        const r = await reverseGeocode(latitude, longitude)
+        setAddress(r.address)
+        if (r.city) setCity(r.city)
+        if (r.state) setState(r.state)
+        if (r.district) setDistrict(r.district)
+        setLocating(false)
+        toast.success('Location detected')
+      },
+      () => {
+        setLocating(false)
+        toast.error('Could not get location. Drop a pin or type it manually.')
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }
+
+  const placePin = async (lat: number, lng: number) => {
+    setPicked({ lat, lng })
+    const r = await reverseGeocode(lat, lng)
+    setAddress(r.address)
+    if (r.city) setCity(r.city)
+    if (r.state) setState(r.state)
+    if (r.district) setDistrict(r.district)
+  }
+
+  const validPhone = phone === '' || /^\d{10}$/.test(phone)
+
+  // Possible duplicates: same-category reports near the chosen location.
+  const nearby = useMemo(() => {
+    if (!category || !picked) return []
+    return findNearby(
+      { lat: picked.lat, lng: picked.lng, category },
+      issues,
+      { meters: 300, hours: 72 }
+    )
+  }, [category, picked, issues])
+
+  // Debounced forward-address search for the location step.
+  useEffect(() => {
+    if (step !== 2) return
+    const q = searchQ.trim()
+    if (q.length < 3) {
+      setSearchResults([])
+      return
+    }
+    setSearching(true)
+    const handle = setTimeout(async () => {
+      const results = await searchAddress(q)
+      setSearchResults(results)
+      setSearching(false)
+    }, 500)
+    return () => clearTimeout(handle)
+  }, [searchQ, step])
+
+  const pickSearchResult = (r: ForwardResult) => {
+    setPicked({ lat: r.lat, lng: r.lng })
+    setAddress(r.label)
+    setSearchResults([])
+    setSearchQ('')
+  }
+
+  const canNext = useMemo(() => {
+    if (step === 0) return !!category
+    if (step === 1) return title.trim().length >= 4 && description.trim().length >= 8
+    if (step === 2) return !!picked && address.trim().length > 2
+    if (step === 3) return true // department confirmation — any selection allowed
+    return true
+  }, [step, category, title, description, picked, address])
+
+  /** Advance one step; recompute department suggestions when entering that step. */
+  const goNext = () => {
+    if (!canNext) return
+    setStep((s) => {
+      const next = s + 1
+      if (next === 3) setConditionals(computeConditionals())
+      return next
+    })
+  }
+
+  const toggleConditional = (dept: DepartmentId) => {
+    setConditionals((prev) =>
+      prev.map((c) =>
+        c.department === dept ? { ...c, selected: !c.selected } : c
+      )
+    )
+  }
+
+  const submit = async () => {
+    if (!category || !picked) return
+    if (!anonymous && !name.trim()) {
+      toast.error('Enter your name or choose to report anonymously')
+      return
+    }
+    if (!anonymous && !validPhone) {
+      toast.error('Enter a valid 10-digit mobile number, or leave it blank')
+      return
+    }
+    if (!consent) {
+      toast.error('Please confirm the declaration before submitting')
+      return
+    }
+    setSubmitting(true)
+    const loc: GeoLocation = {
+      lat: picked.lat,
+      lng: picked.lng,
+      address: address.trim(),
+      city: city.trim() || undefined,
+      state: state.trim() || undefined,
+      district: district.trim() || city.trim() || undefined,
+    }
+    try {
+      const issue = await createIssue({
+        title: title.trim(),
+        category,
+        description: description.trim(),
+        severity,
+        location: loc,
+        media,
+        reporterName: name,
+        reporterPhone: phone || undefined,
+        anonymous,
+        routedDepartments: finalDepartments,
+      })
+      rememberCreated(issue.id)
+
+      // Simulate the routed-department notifications (only confirmed departments).
+      finalDepartments.forEach((d, idx) => {
+        setTimeout(() => {
+          toast(
+            (t) => (
+              <span className="flex items-center gap-2" onClick={() => toast.dismiss(t.id)}>
+                <BellRing className="h-4 w-4 text-saffron-400" />
+                Alert sent to <b>{DEPARTMENTS[d].name}</b>
+              </span>
+            ),
+            { icon: null }
+          )
+        }, 400 + idx * 700)
+      })
+
+      toast.success(`Report ${shortId(issue.id)} submitted`)
+      setTimeout(() => navigate(`/issue/${issue.id}`), 500)
+    } catch {
+      toast.error('Something went wrong. Please try again.')
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="container-page max-w-4xl py-8 sm:py-12">
+      <div className="mb-8">
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
+          Report an issue
+        </h1>
+        <p className="mt-1 text-slate-600">
+          Help authorities respond faster with clear details and an accurate
+          location.
+        </p>
+      </div>
+
+      {/* Stepper */}
+      <ol className="mb-8 flex items-center">
+        {STEPS.map((label, i) => {
+          const done = i < step
+          const active = i === step
+          return (
+            <li key={label} className="flex flex-1 items-center last:flex-none">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    'grid h-8 w-8 place-items-center rounded-full text-sm font-bold transition-colors',
+                    done && 'bg-ashoka-500 text-white',
+                    active && 'bg-ink-800 text-white ring-4 ring-ink-800/15',
+                    !done && !active && 'bg-slate-200 text-slate-500'
+                  )}
+                >
+                  {done ? <Check className="h-4 w-4" /> : i + 1}
+                </div>
+                <span
+                  className={cn(
+                    'hidden text-sm font-semibold sm:block',
+                    active ? 'text-ink-900' : 'text-slate-500'
+                  )}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < STEPS.length - 1 && (
+                <div
+                  className={cn(
+                    'mx-3 h-0.5 flex-1 rounded',
+                    i < step ? 'bg-ashoka-500' : 'bg-slate-200'
+                  )}
+                />
+              )}
+            </li>
+          )
+        })}
+      </ol>
+
+      <div className="card p-6 sm:p-8">
+        {/* Step 0 — category */}
+        {step === 0 && (
+          <div className="animate-fade-in">
+            <h2 className="text-lg font-bold text-ink-900">
+              What are you reporting?
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              This decides which department gets notified.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {CATEGORY_LIST.map((c) => {
+                const active = category === c.id
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => setCategory(c.id)}
+                    className={cn(
+                      'flex items-start gap-3 rounded-xl border p-4 text-left transition-all',
+                      active
+                        ? 'border-ink-500 bg-ink-50 ring-2 ring-ink-500/25'
+                        : 'border-slate-200 hover:border-ink-300 hover:bg-slate-50'
+                    )}
+                  >
+                    <CategoryIconTile category={c.id} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-ink-900">{c.name}</span>
+                        {c.emergency && (
+                          <span className="chip bg-red-100 text-[10px] text-red-600">
+                            Emergency
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {c.description}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Step 1 — details */}
+        {step === 1 && cat && (
+          <div className="animate-fade-in space-y-5">
+            <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
+              <CategoryIconTile category={cat.id} className="h-10 w-10" />
+              <div>
+                <div className="text-sm font-bold text-ink-900">{cat.name}</div>
+                <button
+                  className="text-xs font-semibold text-ink-600 hover:underline"
+                  onClick={() => setStep(0)}
+                >
+                  Change category
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="issue-title" className="label">
+                Title
+              </label>
+              <input
+                id="issue-title"
+                className={cn(
+                  'input',
+                  title.trim().length > 0 &&
+                    title.trim().length < 4 &&
+                    'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                )}
+                placeholder="Briefly describe the issue"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                maxLength={90}
+                aria-invalid={title.trim().length > 0 && title.trim().length < 4}
+              />
+              {title.trim().length > 0 && title.trim().length < 4 && (
+                <p className="mt-1 text-xs font-medium text-red-600">
+                  Please enter at least 4 characters.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="issue-desc" className="label">
+                Description
+              </label>
+              <textarea
+                id="issue-desc"
+                className={cn(
+                  'input min-h-[110px] resize-y',
+                  description.trim().length > 0 &&
+                    description.trim().length < 8 &&
+                    'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                )}
+                placeholder="What is happening? Any details that help responders (landmarks, number of people, severity)…"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={600}
+                aria-invalid={
+                  description.trim().length > 0 && description.trim().length < 8
+                }
+              />
+              {description.trim().length > 0 && description.trim().length < 8 && (
+                <p className="mt-1 text-xs font-medium text-red-600">
+                  Add a little more detail (at least 8 characters).
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="label">How severe is it?</label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {(Object.keys(SEVERITIES) as Severity[]).map((s) => {
+                  const active = severity === s
+                  const meta = SEVERITIES[s]
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSeverity(s)}
+                      className={cn(
+                        'rounded-lg border px-3 py-2.5 text-sm font-semibold transition-all',
+                        active
+                          ? 'text-white'
+                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      )}
+                      style={
+                        active
+                          ? { backgroundColor: meta.color, borderColor: meta.color }
+                          : undefined
+                      }
+                    >
+                      {meta.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="label">Photo / Video evidence</label>
+              <MediaUpload items={media} onChange={setMedia} />
+            </div>
+
+            {/* AI assist */}
+            {!aiUnavailable && (
+              <div className="rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-indigo-600 text-white">
+                      <Sparkles className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-ink-900">
+                        AI assist
+                        {mockAi && (
+                          <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                            Demo AI (text only)
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {mockAi
+                          ? 'Offline demo AI — classifies from your typed description (it does not read the photo). Turn off “Mock AI” in the Tester panel to use the real Gemini vision AI.'
+                          : 'Let AI read your photo and description and suggest the category, severity and a clear title.'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={runAi}
+                    disabled={analyzing}
+                    className="btn shrink-0 bg-indigo-600 text-white hover:bg-indigo-700"
+                  >
+                    {analyzing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="h-4 w-4" />
+                    )}
+                    Analyse
+                  </button>
+                </div>
+
+                {aiSuggestion && (
+                  <div className="mt-3 animate-fade-in rounded-lg border border-indigo-200 bg-white p-3">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      {aiSuggestion.category ? (
+                        <span className="font-semibold text-ink-900">
+                          {CATEGORIES[aiSuggestion.category].name}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">Unclear category</span>
+                      )}
+                      <span
+                        className="chip text-[11px]"
+                        style={{
+                          color: SEVERITIES[aiSuggestion.severity].color,
+                          backgroundColor:
+                            SEVERITIES[aiSuggestion.severity].color + '18',
+                        }}
+                      >
+                        {SEVERITIES[aiSuggestion.severity].label}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {Math.round(aiSuggestion.confidence * 100)}% confident
+                      </span>
+                    </div>
+                    {aiSuggestion.title && (
+                      <p className="mt-1.5 text-sm font-medium text-ink-800">
+                        “{aiSuggestion.title}”
+                      </p>
+                    )}
+                    {aiSuggestion.summary && (
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        {aiSuggestion.summary}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={applyAi}
+                      className="btn-outline mt-2.5 py-1.5 text-xs"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Use these suggestions
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2 — location */}
+        {step === 2 && (
+          <div className="animate-fade-in space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-ink-900">
+                Where is the issue?
+              </h2>
+              <button
+                onClick={detectLocation}
+                className="btn-outline"
+                disabled={locating}
+              >
+                {locating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Crosshair className="h-4 w-4" />
+                )}
+                Use my current location
+              </button>
+            </div>
+
+            <div className="rounded-lg bg-blue-50 p-3 text-xs text-blue-700">
+              <MapPin className="mr-1 inline h-3.5 w-3.5" />
+              Search an address, tap the map to drop a pin, or use your GPS.
+            </div>
+
+            {/* Address search */}
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                className="input pl-9"
+                placeholder="Search a place or address in India…"
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+              />
+              {searching && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+              )}
+              {searchResults.length > 0 && (
+                <ul className="absolute z-[500] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lift">
+                  {searchResults.map((r, i) => (
+                    <li key={i}>
+                      <button
+                        type="button"
+                        onClick={() => pickSearchResult(r)}
+                        className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      >
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-saffron-500" />
+                        <span className="text-slate-700">{r.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <MapView
+              className="h-[320px] w-full"
+              onPlace={placePin}
+              picked={picked}
+              center={picked ? [picked.lat, picked.lng] : undefined}
+              zoom={picked ? 16 : 5}
+            />
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="label">Address / Landmark</label>
+                <input
+                  className="input"
+                  placeholder="e.g. Near City Hospital, MG Road"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label">City</label>
+                <input
+                  className="input"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <label className="label">State</label>
+                <input
+                  className="input"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  placeholder="State"
+                />
+              </div>
+            </div>
+            {picked && (
+              <p className="text-xs text-slate-400">
+                Pinned at {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Step 3 — department confirmation */}
+        {step === 3 && cat && (
+          <div className="animate-fade-in space-y-5">
+            <div>
+              <h2 className="text-lg font-bold text-ink-900">
+                Who should be alerted?
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                So the right teams respond — and no wrong department is disturbed —
+                confirm which departments should get this report.
+              </p>
+            </div>
+
+            {/* Core — always alerted, locked */}
+            <div>
+              <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                Always alerted for {cat.name}
+              </div>
+              <div className="space-y-2">
+                {cat.core.map((d) => {
+                  const dep = DEPARTMENTS[d]
+                  const Icon = dep.icon
+                  return (
+                    <div
+                      key={d}
+                      className="flex items-center gap-3 rounded-xl border border-ink-200 bg-ink-50/60 p-3"
+                    >
+                      <div
+                        className="grid h-9 w-9 place-items-center rounded-lg"
+                        style={{ backgroundColor: dep.color + '1a', color: dep.color }}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-ink-900">
+                          {dep.name}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          Primary responder for this category
+                        </div>
+                      </div>
+                      <Check className="h-4 w-4 text-ashoka-600" />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Conditional — user confirms */}
+            {conditionals.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                  Include if relevant
+                  {aiSuggestion && (
+                    <span className="chip bg-indigo-100 py-0 text-[10px] text-indigo-700">
+                      <Sparkles className="h-3 w-3" /> AI-assisted
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {conditionals.map((c) => {
+                    const dep = DEPARTMENTS[c.department]
+                    const Icon = dep.icon
+                    return (
+                      <button
+                        key={c.department}
+                        type="button"
+                        onClick={() => toggleConditional(c.department)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all',
+                          c.selected
+                            ? 'border-ink-400 bg-white ring-1 ring-ink-400/30'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        )}
+                      >
+                        <div
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg"
+                          style={{
+                            backgroundColor: dep.color + '1a',
+                            color: dep.color,
+                          }}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-ink-900">
+                              {dep.name}
+                            </span>
+                            {c.matched ? (
+                              <span className="chip bg-amber-100 py-0 text-[10px] text-amber-700">
+                                Suggested
+                              </span>
+                            ) : (
+                              <span className="chip bg-slate-100 py-0 text-[10px] text-slate-500">
+                                Optional
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {c.matched ? c.reason : c.question}
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            'grid h-5 w-5 shrink-0 place-items-center rounded-md border',
+                            c.selected
+                              ? 'border-ink-700 bg-ink-800 text-white'
+                              : 'border-slate-300 bg-white'
+                          )}
+                        >
+                          {c.selected && <Check className="h-3.5 w-3.5" />}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="mt-2 text-xs text-slate-400">
+                  Tip: only include a department if it's genuinely involved. You can
+                  change these before submitting.
+                </p>
+              </div>
+            )}
+
+            <div className="rounded-lg bg-slate-50 p-3 text-sm">
+              <span className="font-semibold text-ink-900">
+                {finalDepartments.length}
+              </span>{' '}
+              <span className="text-slate-600">
+                department{finalDepartments.length > 1 ? 's' : ''} will be alerted:
+              </span>{' '}
+              <span className="text-slate-700">
+                {finalDepartments.map((d) => DEPARTMENTS[d].short).join(', ')}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4 — review & approve */}
+        {step === 4 && cat && (
+          <div className="animate-fade-in space-y-5">
+            <div>
+              <h2 className="text-lg font-bold text-ink-900">
+                Review &amp; approve
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Please check everything. You can edit any section, or submit as-is.
+                Nothing is sent until you confirm.
+              </p>
+            </div>
+
+            {nearby.length > 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  {nearby.length} similar report{nearby.length > 1 ? 's' : ''} nearby
+                </p>
+                <p className="mt-1 text-xs text-amber-700">
+                  Someone may have already reported this. You can still submit — or
+                  open an existing one and mark yourself "also affected".
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {nearby.slice(0, 3).map(({ issue, distance }) => (
+                    <Link
+                      key={issue.id}
+                      to={`/issue/${issue.id}`}
+                      className="flex items-center gap-2 rounded-lg bg-white/70 px-3 py-2 text-xs hover:bg-white"
+                    >
+                      <span className="min-w-0 flex-1 truncate font-medium text-ink-800">
+                        {issue.title}
+                      </span>
+                      <span className="shrink-0 text-amber-700">
+                        {formatDistance(distance)} away
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-xl border border-slate-200">
+              <div className="flex items-start gap-4 p-4">
+                <CategoryIconTile category={cat.id} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-xs font-bold uppercase tracking-wide"
+                      style={{ color: cat.color }}
+                    >
+                      {cat.name}
+                    </span>
+                    <span
+                      className="chip text-[10px]"
+                      style={{
+                        color: SEVERITIES[severity].color,
+                        backgroundColor: SEVERITIES[severity].color + '18',
+                      }}
+                    >
+                      {SEVERITIES[severity].label}
+                    </span>
+                  </div>
+                  <h3 className="mt-1 font-bold text-ink-900">{title}</h3>
+                  <p className="mt-1 text-sm text-slate-600">{description}</p>
+                  <p className="mt-2 inline-flex items-center gap-1 text-xs text-slate-500">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {address}
+                  </p>
+                  <div className="mt-2 flex gap-3 text-xs font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-ink-600 underline underline-offset-2 hover:text-ink-800"
+                    >
+                      Edit details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="text-ink-600 underline underline-offset-2 hover:text-ink-800"
+                    >
+                      Edit location
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {media.length > 0 && (
+                <div className="flex gap-2 border-t border-slate-100 p-3">
+                  {media.slice(0, 5).map((m) => (
+                    <div
+                      key={m.id}
+                      className="h-14 w-14 overflow-hidden rounded-lg border border-slate-200"
+                    >
+                      <MediaThumb item={m} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Routing preview */}
+            <div className="rounded-xl border border-saffron-200 bg-saffron-50 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-saffron-800">
+                  <BellRing className="h-4 w-4" />
+                  This report will be sent to:
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="text-xs font-semibold text-saffron-800 underline underline-offset-2 hover:text-saffron-900"
+                >
+                  Edit departments
+                </button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {finalDepartments.map((d) => {
+                  const dep = DEPARTMENTS[d]
+                  const Icon = dep.icon
+                  return (
+                    <span
+                      key={d}
+                      className="inline-flex items-center gap-2 rounded-lg border border-white bg-white px-3 py-1.5 text-sm font-semibold text-ink-800 shadow-sm"
+                    >
+                      <Icon className="h-4 w-4" style={{ color: dep.color }} />
+                      {dep.name}
+                    </span>
+                  )
+                })}
+              </div>
+              <p className="mt-2 text-xs text-saffron-700/80">
+                Only these departments will see and act on this report.
+              </p>
+            </div>
+
+            {/* Reporter */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="reporter-name" className="label">
+                  Your name
+                </label>
+                <input
+                  id="reporter-name"
+                  className="input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Full name"
+                  disabled={anonymous}
+                />
+              </div>
+              <div>
+                <label htmlFor="reporter-phone" className="label">
+                  Contact number (optional)
+                </label>
+                <input
+                  id="reporter-phone"
+                  className={cn(
+                    'input',
+                    !anonymous &&
+                      !validPhone &&
+                      'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                  )}
+                  inputMode="numeric"
+                  value={phone}
+                  onChange={(e) =>
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
+                  }
+                  placeholder="10-digit mobile for status updates"
+                  disabled={anonymous}
+                  aria-invalid={!anonymous && !validPhone}
+                />
+                {!anonymous && !validPhone && (
+                  <p className="mt-1 text-xs font-medium text-red-600">
+                    Enter a 10-digit mobile number, or leave it blank.
+                  </p>
+                )}
+              </div>
+            </div>
+            <label className="flex items-center gap-2.5 text-sm text-slate-600">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-slate-300 text-ink-800 focus:ring-ink-500"
+                checked={anonymous}
+                onChange={(e) => setAnonymous(e.target.checked)}
+              />
+              Report anonymously (your name and number won't be shared)
+            </label>
+
+            {cat.emergency && (
+              <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                For life-threatening emergencies, also call the helpline directly:{' '}
+                <b>
+                  {finalDepartments
+                    .map((d) => DEPARTMENTS[d].helpline)
+                    .join(' / ')}
+                </b>
+                .
+              </div>
+            )}
+
+            {/* Mandatory declaration / consent — nothing is filed without this */}
+            <label className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-ink-800 focus:ring-ink-500"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+              />
+              <span>
+                I confirm the information is true to the best of my knowledge and
+                consent to it being shared with the selected departments for
+                action, per the{' '}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  className="font-semibold text-ink-700 underline"
+                >
+                  Privacy Policy
+                </a>
+                . I understand filing a false report is punishable.
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* Nav buttons */}
+        <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5">
+          <button
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            className="btn-ghost"
+            disabled={step === 0}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </button>
+
+          {step < STEPS.length - 1 ? (
+            <button onClick={goNext} className="btn-primary" disabled={!canNext}>
+              Continue
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={submit}
+              className="btn-accent"
+              disabled={submitting || !consent}
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Submit report
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

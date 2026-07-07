@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-slate-50 text-ink-900 antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
+  ::selection {
+    @apply bg-saffron-200 text-ink-900;
+  }
+
+  /* Respect users who prefer reduced motion (vestibular accessibility / GIGW). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-ink-800 text-white hover:bg-ink-700 focus-visible:ring-ink-500;
+  }
+
+  .btn-accent {
+    @apply btn bg-saffron-500 text-white hover:bg-saffron-600 focus-visible:ring-saffron-400;
+  }
+
+  .btn-outline {
+    @apply btn border border-slate-300 bg-white text-ink-800 hover:border-ink-300 hover:bg-slate-50;
+  }
+
+  .btn-ghost {
+    @apply btn text-ink-700 hover:bg-slate-100;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-slate-400 focus:border-ink-500 focus:outline-none focus:ring-2 focus:ring-ink-500/20;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-ink-800;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+
+  .tester-item {
+    @apply flex w-full items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-ink-800 transition-colors hover:bg-slate-50;
+  }
+
+  /* The tricolour hairline used under the top bar */
+  .tricolour {
+    background: linear-gradient(
+      90deg,
+      #ff7d10 0 33.3%,
+      #ffffff 33.3% 66.6%,
+      #0f8a4f 66.6% 100%
+    );
+  }
+}
+
+/* Leaflet tweaks so it fits the design language */
+.leaflet-container {
+  @apply font-sans;
+  z-index: 0;
+}
+/* Our SVG pins are drawn directly — strip the default divIcon box. */
+.jv-marker {
+  background: transparent;
+  border: 0;
+}
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-lift;
+}
+.leaflet-bar a {
+  @apply text-ink-800;
+}

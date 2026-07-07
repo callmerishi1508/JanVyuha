@@ -1,0 +1,27 @@
+{
+  "name": "JanVyuha — Civic Issue Reporting",
+  "short_name": "JanVyuha",
+  "description": "Report civic and emergency issues and route them to the right department instantly.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c1226",
+  "theme_color": "#1f2a52",
+  "lang": "en",
+  "categories": ["government", "utilities", "social"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
