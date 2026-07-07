@@ -36,7 +36,11 @@ const DEPARTMENTS = [
   'animal',
 ] as const
 
-const MODEL = 'gemini-1.5-flash'
+// Gemini model for triage. Note: Google retires older model ids (gemini-1.5-flash
+// was retired in 2025 and now 404s, which surfaced as "AI could not analyse this
+// right now"). Keep this on a current, multimodal, free-tier flash model. Verify
+// availability with: GET generativelanguage.googleapis.com/v1beta/models?key=…
+const MODEL = 'gemini-2.5-flash'
 
 interface AnalyzeBody {
   description?: string

@@ -148,9 +148,10 @@ function SupabaseAuth() {
               />
             </Field>
           )}
-          <Field icon={Phone} label="Mobile number">
+          <Field label="Mobile number">
             <div className="flex">
-              <span className="inline-flex items-center rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-1.5 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
+                <Phone className="h-4 w-4" />
                 +91
               </span>
               <input
@@ -448,7 +449,7 @@ function Field({
   label,
   children,
 }: {
-  icon: typeof User
+  icon?: typeof User
   label: string
   children: React.ReactNode
 }) {
@@ -456,7 +457,9 @@ function Field({
     <div>
       <label className="label">{label}</label>
       <div className="relative">
-        <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        {Icon && (
+          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        )}
         {children}
       </div>
     </div>
