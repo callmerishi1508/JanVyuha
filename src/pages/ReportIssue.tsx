@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
   Check,
@@ -39,10 +40,18 @@ import { shortId } from '../lib/format'
 import { rememberCreated } from './MyIssues'
 import { analyzeIssue, type AiSuggestion } from '../services/ai'
 import { useTestMode } from '../store/testMode'
+import { tCategory } from '../lib/i18n'
 
-const STEPS = ['Category', 'Details', 'Location', 'Departments', 'Review'] as const
+const STEP_KEYS = [
+  'stepCategory',
+  'stepDetails',
+  'stepLocation',
+  'stepDepartments',
+  'stepReview',
+] as const
 
 export function ReportIssue() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const preset = (location.state as { category?: CategoryId })?.category
@@ -113,7 +122,7 @@ export function ReportIssue() {
       (m) => m.type === 'image' && m.url.startsWith('data:')
     )
     if (!firstImage && description.trim().length < 8) {
-      toast.error('Add a photo or a longer description for AI to analyse')
+      toast.error(t('report.aiNeedInput'))
       return
     }
     setAnalyzing(true)
@@ -126,16 +135,16 @@ export function ReportIssue() {
     if (!res.ok) {
       if (res.reason === 'unavailable') {
         setAiUnavailable(true)
-        toast('AI assist isn\'t configured — fill the form manually.', {
+        toast(t('report.aiNotConfigured'), {
           icon: 'ℹ️',
         })
       } else {
-        toast.error('AI could not analyse this right now.')
+        toast.error(t('report.aiError'))
       }
       return
     }
     setAiSuggestion(res.suggestion)
-    toast.success('AI suggestion ready')
+    toast.success(t('report.aiReady'))
   }
 
   const applyAi = () => {
@@ -145,12 +154,12 @@ export function ReportIssue() {
     if (aiSuggestion.summary && description.trim().length === 0)
       setDescription(aiSuggestion.summary)
     setSeverity(aiSuggestion.severity)
-    toast.success('Applied AI suggestion')
+    toast.success(t('report.aiApplied'))
   }
 
   const detectLocation = () => {
     if (!('geolocation' in navigator)) {
-      toast.error('Geolocation not supported on this device')
+      toast.error(t('report.geoUnsupported'))
       return
     }
     setLocating(true)
@@ -164,11 +173,11 @@ export function ReportIssue() {
         if (r.state) setState(r.state)
         if (r.district) setDistrict(r.district)
         setLocating(false)
-        toast.success('Location detected')
+        toast.success(t('report.locationDetected'))
       },
       () => {
         setLocating(false)
-        toast.error('Could not get location. Drop a pin or type it manually.')
+        toast.error(t('report.locationFailed'))
       },
       { enableHighAccuracy: true, timeout: 10000 }
     )
@@ -248,15 +257,15 @@ export function ReportIssue() {
   const submit = async () => {
     if (!category || !picked) return
     if (!anonymous && !name.trim()) {
-      toast.error('Enter your name or choose to report anonymously')
+      toast.error(t('report.errName'))
       return
     }
     if (!anonymous && !validPhone) {
-      toast.error('Enter a valid 10-digit mobile number, or leave it blank')
+      toast.error(t('report.errPhone'))
       return
     }
     if (!consent) {
-      toast.error('Please confirm the declaration before submitting')
+      toast.error(t('report.errConsent'))
       return
     }
     setSubmitting(true)
@@ -287,10 +296,10 @@ export function ReportIssue() {
       finalDepartments.forEach((d, idx) => {
         setTimeout(() => {
           toast(
-            (t) => (
-              <span className="flex items-center gap-2" onClick={() => toast.dismiss(t.id)}>
+            (tt) => (
+              <span className="flex items-center gap-2" onClick={() => toast.dismiss(tt.id)}>
                 <BellRing className="h-4 w-4 text-saffron-400" />
-                Alert sent to <b>{DEPARTMENTS[d].name}</b>
+                {t('report.alertSentTo')} <b>{DEPARTMENTS[d].name}</b>
               </span>
             ),
             { icon: null }
@@ -298,10 +307,10 @@ export function ReportIssue() {
         }, 400 + idx * 700)
       })
 
-      toast.success(`Report ${shortId(issue.id)} submitted`)
+      toast.success(t('report.reportSubmitted', { id: shortId(issue.id) }))
       setTimeout(() => navigate(`/issue/${issue.id}`), 500)
     } catch {
-      toast.error('Something went wrong. Please try again.')
+      toast.error(t('report.submitFailed'))
       setSubmitting(false)
     }
   }
@@ -310,21 +319,18 @@ export function ReportIssue() {
     <div className="container-page max-w-4xl py-8 sm:py-12">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
-          Report an issue
+          {t('report.title')}
         </h1>
-        <p className="mt-1 text-slate-600">
-          Help authorities respond faster with clear details and an accurate
-          location.
-        </p>
+        <p className="mt-1 text-slate-600">{t('report.subtitle')}</p>
       </div>
 
       {/* Stepper */}
       <ol className="mb-8 flex items-center">
-        {STEPS.map((label, i) => {
+        {STEP_KEYS.map((key, i) => {
           const done = i < step
           const active = i === step
           return (
-            <li key={label} className="flex flex-1 items-center last:flex-none">
+            <li key={key} className="flex flex-1 items-center last:flex-none">
               <div className="flex items-center gap-2.5">
                 <div
                   className={cn(
@@ -342,10 +348,10 @@ export function ReportIssue() {
                     active ? 'text-ink-900' : 'text-slate-500'
                   )}
                 >
-                  {label}
+                  {t(`report.${key}`)}
                 </span>
               </div>
-              {i < STEPS.length - 1 && (
+              {i < STEP_KEYS.length - 1 && (
                 <div
                   className={cn(
                     'mx-3 h-0.5 flex-1 rounded',
@@ -363,10 +369,10 @@ export function ReportIssue() {
         {step === 0 && (
           <div className="animate-fade-in">
             <h2 className="text-lg font-bold text-ink-900">
-              What are you reporting?
+              {t('report.whatReporting')}
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              This decides which department gets notified.
+              {t('report.decidesDept')}
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {CATEGORY_LIST.map((c) => {
@@ -385,15 +391,15 @@ export function ReportIssue() {
                     <CategoryIconTile category={c.id} />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-ink-900">{c.name}</span>
+                        <span className="font-bold text-ink-900">{tCategory(c.id)}</span>
                         {c.emergency && (
                           <span className="chip bg-red-100 text-[10px] text-red-600">
-                            Emergency
+                            {t('report.emergency')}
                           </span>
                         )}
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500">
-                        {c.description}
+                        {t(`catDesc.${c.id}`)}
                       </p>
                     </div>
                   </button>
@@ -409,19 +415,19 @@ export function ReportIssue() {
             <div className="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
               <CategoryIconTile category={cat.id} className="h-10 w-10" />
               <div>
-                <div className="text-sm font-bold text-ink-900">{cat.name}</div>
+                <div className="text-sm font-bold text-ink-900">{tCategory(cat.id)}</div>
                 <button
                   className="text-xs font-semibold text-ink-600 hover:underline"
                   onClick={() => setStep(0)}
                 >
-                  Change category
+                  {t('report.changeCategory')}
                 </button>
               </div>
             </div>
 
             <div>
               <label htmlFor="issue-title" className="label">
-                Title
+                {t('report.titleLabel')}
               </label>
               <input
                 id="issue-title"
@@ -431,7 +437,7 @@ export function ReportIssue() {
                     title.trim().length < 4 &&
                     'border-red-400 focus:border-red-500 focus:ring-red-500/20'
                 )}
-                placeholder="Briefly describe the issue"
+                placeholder={t('report.titlePlaceholder')}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={90}
@@ -439,14 +445,14 @@ export function ReportIssue() {
               />
               {title.trim().length > 0 && title.trim().length < 4 && (
                 <p className="mt-1 text-xs font-medium text-red-600">
-                  Please enter at least 4 characters.
+                  {t('report.titleMin')}
                 </p>
               )}
             </div>
 
             <div>
               <label htmlFor="issue-desc" className="label">
-                Description
+                {t('report.descLabel')}
               </label>
               <textarea
                 id="issue-desc"
@@ -456,7 +462,7 @@ export function ReportIssue() {
                     description.trim().length < 8 &&
                     'border-red-400 focus:border-red-500 focus:ring-red-500/20'
                 )}
-                placeholder="What is happening? Any details that help responders (landmarks, number of people, severity)…"
+                placeholder={t('report.descPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={600}
@@ -466,13 +472,13 @@ export function ReportIssue() {
               />
               {description.trim().length > 0 && description.trim().length < 8 && (
                 <p className="mt-1 text-xs font-medium text-red-600">
-                  Add a little more detail (at least 8 characters).
+                  {t('report.descMin')}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="label">How severe is it?</label>
+              <label className="label">{t('report.howSevere')}</label>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {(Object.keys(SEVERITIES) as Severity[]).map((s) => {
                   const active = severity === s
@@ -493,7 +499,7 @@ export function ReportIssue() {
                           : undefined
                       }
                     >
-                      {meta.label}
+                      {t(`severities.${s}`)}
                     </button>
                   )
                 })}
@@ -501,7 +507,7 @@ export function ReportIssue() {
             </div>
 
             <div>
-              <label className="label">Photo / Video evidence</label>
+              <label className="label">{t('report.evidence')}</label>
               <MediaUpload items={media} onChange={setMedia} />
             </div>
 
@@ -515,17 +521,15 @@ export function ReportIssue() {
                     </div>
                     <div>
                       <div className="text-sm font-bold text-ink-900">
-                        AI assist
+                        {t('report.aiAssist')}
                         {mockAi && (
                           <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                            Demo AI (text only)
+                            {t('report.demoAiBadge')}
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-slate-500">
-                        {mockAi
-                          ? 'Offline demo AI — classifies from your typed description (it does not read the photo). Turn off “Mock AI” in the Tester panel to use the real Gemini vision AI.'
-                          : 'Let AI read your photo and description and suggest the category, severity and a clear title.'}
+                        {mockAi ? t('report.aiDescMock') : t('report.aiDescReal')}
                       </p>
                     </div>
                   </div>
@@ -540,7 +544,7 @@ export function ReportIssue() {
                     ) : (
                       <Wand2 className="h-4 w-4" />
                     )}
-                    Analyse
+                    {t('report.analyse')}
                   </button>
                 </div>
 
@@ -549,10 +553,10 @@ export function ReportIssue() {
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       {aiSuggestion.category ? (
                         <span className="font-semibold text-ink-900">
-                          {CATEGORIES[aiSuggestion.category].name}
+                          {tCategory(aiSuggestion.category)}
                         </span>
                       ) : (
-                        <span className="text-slate-500">Unclear category</span>
+                        <span className="text-slate-500">{t('report.unclearCategory')}</span>
                       )}
                       <span
                         className="chip text-[11px]"
@@ -562,10 +566,12 @@ export function ReportIssue() {
                             SEVERITIES[aiSuggestion.severity].color + '18',
                         }}
                       >
-                        {SEVERITIES[aiSuggestion.severity].label}
+                        {t(`severities.${aiSuggestion.severity}`)}
                       </span>
                       <span className="text-xs text-slate-400">
-                        {Math.round(aiSuggestion.confidence * 100)}% confident
+                        {t('report.percentConfident', {
+                          pct: Math.round(aiSuggestion.confidence * 100),
+                        })}
                       </span>
                     </div>
                     {aiSuggestion.title && (
@@ -584,7 +590,7 @@ export function ReportIssue() {
                       className="btn-outline mt-2.5 py-1.5 text-xs"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      Use these suggestions
+                      {t('report.useSuggestions')}
                     </button>
                   </div>
                 )}
@@ -598,7 +604,7 @@ export function ReportIssue() {
           <div className="animate-fade-in space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-ink-900">
-                Where is the issue?
+                {t('report.whereIssue')}
               </h2>
               <button
                 onClick={detectLocation}
@@ -610,13 +616,13 @@ export function ReportIssue() {
                 ) : (
                   <Crosshair className="h-4 w-4" />
                 )}
-                Use my current location
+                {t('report.useCurrentLocation')}
               </button>
             </div>
 
             <div className="rounded-lg bg-blue-50 p-3 text-xs text-blue-700">
               <MapPin className="mr-1 inline h-3.5 w-3.5" />
-              Search an address, tap the map to drop a pin, or use your GPS.
+              {t('report.searchHint')}
             </div>
 
             {/* Address search */}
@@ -624,7 +630,7 @@ export function ReportIssue() {
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 className="input pl-9"
-                placeholder="Search a place or address in India…"
+                placeholder={t('report.searchPlaceholder')}
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
               />
@@ -659,36 +665,39 @@ export function ReportIssue() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="label">Address / Landmark</label>
+                <label className="label">{t('report.addressLabel')}</label>
                 <input
                   className="input"
-                  placeholder="e.g. Near City Hospital, MG Road"
+                  placeholder={t('report.addressPlaceholder')}
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
               <div>
-                <label className="label">City</label>
+                <label className="label">{t('report.cityLabel')}</label>
                 <input
                   className="input"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  placeholder="City"
+                  placeholder={t('report.cityPlaceholder')}
                 />
               </div>
               <div>
-                <label className="label">State</label>
+                <label className="label">{t('report.stateLabel')}</label>
                 <input
                   className="input"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
-                  placeholder="State"
+                  placeholder={t('report.statePlaceholder')}
                 />
               </div>
             </div>
             {picked && (
               <p className="text-xs text-slate-400">
-                Pinned at {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
+                {t('report.pinnedAt', {
+                  lat: picked.lat.toFixed(5),
+                  lng: picked.lng.toFixed(5),
+                })}
               </p>
             )}
           </div>
@@ -699,18 +708,17 @@ export function ReportIssue() {
           <div className="animate-fade-in space-y-5">
             <div>
               <h2 className="text-lg font-bold text-ink-900">
-                Who should be alerted?
+                {t('report.whoAlerted')}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                So the right teams respond — and no wrong department is disturbed —
-                confirm which departments should get this report.
+                {t('report.whoAlertedLead')}
               </p>
             </div>
 
             {/* Core — always alerted, locked */}
             <div>
               <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                Always alerted for {cat.name}
+                {t('report.alwaysAlerted', { category: tCategory(cat.id) })}
               </div>
               <div className="space-y-2">
                 {cat.core.map((d) => {
@@ -732,7 +740,7 @@ export function ReportIssue() {
                           {dep.name}
                         </div>
                         <div className="text-xs text-slate-500">
-                          Primary responder for this category
+                          {t('report.primaryResponder')}
                         </div>
                       </div>
                       <Check className="h-4 w-4 text-ashoka-600" />
@@ -746,10 +754,10 @@ export function ReportIssue() {
             {conditionals.length > 0 && (
               <div>
                 <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-                  Include if relevant
+                  {t('report.includeIfRelevant')}
                   {aiSuggestion && (
                     <span className="chip bg-indigo-100 py-0 text-[10px] text-indigo-700">
-                      <Sparkles className="h-3 w-3" /> AI-assisted
+                      <Sparkles className="h-3 w-3" /> {t('report.aiAssisted')}
                     </span>
                   )}
                 </div>
@@ -785,11 +793,11 @@ export function ReportIssue() {
                             </span>
                             {c.matched ? (
                               <span className="chip bg-amber-100 py-0 text-[10px] text-amber-700">
-                                Suggested
+                                {t('report.suggested')}
                               </span>
                             ) : (
                               <span className="chip bg-slate-100 py-0 text-[10px] text-slate-500">
-                                Optional
+                                {t('report.optional')}
                               </span>
                             )}
                           </div>
@@ -812,8 +820,7 @@ export function ReportIssue() {
                   })}
                 </div>
                 <p className="mt-2 text-xs text-slate-400">
-                  Tip: only include a department if it's genuinely involved. You can
-                  change these before submitting.
+                  {t('report.deptTip')}
                 </p>
               </div>
             )}
@@ -823,7 +830,7 @@ export function ReportIssue() {
                 {finalDepartments.length}
               </span>{' '}
               <span className="text-slate-600">
-                department{finalDepartments.length > 1 ? 's' : ''} will be alerted:
+                {t('report.willBeAlerted', { count: finalDepartments.length })}
               </span>{' '}
               <span className="text-slate-700">
                 {finalDepartments.map((d) => DEPARTMENTS[d].short).join(', ')}
@@ -837,11 +844,10 @@ export function ReportIssue() {
           <div className="animate-fade-in space-y-5">
             <div>
               <h2 className="text-lg font-bold text-ink-900">
-                Review &amp; approve
+                {t('report.reviewApprove')}
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Please check everything. You can edit any section, or submit as-is.
-                Nothing is sent until you confirm.
+                {t('report.reviewLead')}
               </p>
             </div>
 
@@ -849,11 +855,10 @@ export function ReportIssue() {
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-amber-800">
                   <AlertTriangle className="h-4 w-4" />
-                  {nearby.length} similar report{nearby.length > 1 ? 's' : ''} nearby
+                  {t('report.similarNearby', { count: nearby.length })}
                 </p>
                 <p className="mt-1 text-xs text-amber-700">
-                  Someone may have already reported this. You can still submit — or
-                  open an existing one and mark yourself "also affected".
+                  {t('report.similarLead')}
                 </p>
                 <div className="mt-2 space-y-1.5">
                   {nearby.slice(0, 3).map(({ issue, distance }) => (
@@ -866,7 +871,7 @@ export function ReportIssue() {
                         {issue.title}
                       </span>
                       <span className="shrink-0 text-amber-700">
-                        {formatDistance(distance)} away
+                        {t('report.away', { dist: formatDistance(distance) })}
                       </span>
                     </Link>
                   ))}
@@ -883,7 +888,7 @@ export function ReportIssue() {
                       className="text-xs font-bold uppercase tracking-wide"
                       style={{ color: cat.color }}
                     >
-                      {cat.name}
+                      {tCategory(cat.id)}
                     </span>
                     <span
                       className="chip text-[10px]"
@@ -892,7 +897,7 @@ export function ReportIssue() {
                         backgroundColor: SEVERITIES[severity].color + '18',
                       }}
                     >
-                      {SEVERITIES[severity].label}
+                      {t(`severities.${severity}`)}
                     </span>
                   </div>
                   <h3 className="mt-1 font-bold text-ink-900">{title}</h3>
@@ -907,14 +912,14 @@ export function ReportIssue() {
                       onClick={() => setStep(1)}
                       className="text-ink-600 underline underline-offset-2 hover:text-ink-800"
                     >
-                      Edit details
+                      {t('report.editDetails')}
                     </button>
                     <button
                       type="button"
                       onClick={() => setStep(2)}
                       className="text-ink-600 underline underline-offset-2 hover:text-ink-800"
                     >
-                      Edit location
+                      {t('report.editLocation')}
                     </button>
                   </div>
                 </div>
@@ -938,14 +943,14 @@ export function ReportIssue() {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-saffron-800">
                   <BellRing className="h-4 w-4" />
-                  This report will be sent to:
+                  {t('report.willBeSentTo')}
                 </div>
                 <button
                   type="button"
                   onClick={() => setStep(3)}
                   className="text-xs font-semibold text-saffron-800 underline underline-offset-2 hover:text-saffron-900"
                 >
-                  Edit departments
+                  {t('report.editDepartments')}
                 </button>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -964,7 +969,7 @@ export function ReportIssue() {
                 })}
               </div>
               <p className="mt-2 text-xs text-saffron-700/80">
-                Only these departments will see and act on this report.
+                {t('report.onlyTheseSee')}
               </p>
             </div>
 
@@ -972,20 +977,20 @@ export function ReportIssue() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="reporter-name" className="label">
-                  Your name
+                  {t('report.yourName')}
                 </label>
                 <input
                   id="reporter-name"
                   className="input"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Full name"
+                  placeholder={t('report.fullName')}
                   disabled={anonymous}
                 />
               </div>
               <div>
                 <label htmlFor="reporter-phone" className="label">
-                  Contact number (optional)
+                  {t('report.contactOptional')}
                 </label>
                 <input
                   id="reporter-phone"
@@ -1000,13 +1005,13 @@ export function ReportIssue() {
                   onChange={(e) =>
                     setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
                   }
-                  placeholder="10-digit mobile for status updates"
+                  placeholder={t('report.phonePlaceholder')}
                   disabled={anonymous}
                   aria-invalid={!anonymous && !validPhone}
                 />
                 {!anonymous && !validPhone && (
                   <p className="mt-1 text-xs font-medium text-red-600">
-                    Enter a 10-digit mobile number, or leave it blank.
+                    {t('report.phoneInvalid')}
                   </p>
                 )}
               </div>
@@ -1018,13 +1023,13 @@ export function ReportIssue() {
                 checked={anonymous}
                 onChange={(e) => setAnonymous(e.target.checked)}
               />
-              Report anonymously (your name and number won't be shared)
+              {t('report.reportAnon')}
             </label>
 
             {cat.emergency && (
               <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-xs text-red-700">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                For life-threatening emergencies, also call the helpline directly:{' '}
+                {t('report.emergencyCall')}{' '}
                 <b>
                   {finalDepartments
                     .map((d) => DEPARTMENTS[d].helpline)
@@ -1043,17 +1048,19 @@ export function ReportIssue() {
                 onChange={(e) => setConsent(e.target.checked)}
               />
               <span>
-                I confirm the information is true to the best of my knowledge and
-                consent to it being shared with the selected departments for
-                action, per the{' '}
-                <a
-                  href="/privacy"
-                  target="_blank"
-                  className="font-semibold text-ink-700 underline"
-                >
-                  Privacy Policy
-                </a>
-                . I understand filing a false report is punishable.
+                <Trans i18nKey="report.declaration">
+                  I confirm the information is true to the best of my knowledge and
+                  consent to it being shared with the selected departments for
+                  action, per the{' '}
+                  <a
+                    href="/privacy"
+                    target="_blank"
+                    className="font-semibold text-ink-700 underline"
+                  >
+                    Privacy Policy
+                  </a>
+                  . I understand filing a false report is punishable.
+                </Trans>
               </span>
             </label>
           </div>
@@ -1067,12 +1074,12 @@ export function ReportIssue() {
             disabled={step === 0}
           >
             <ChevronLeft className="h-4 w-4" />
-            Back
+            {t('common.back')}
           </button>
 
-          {step < STEPS.length - 1 ? (
+          {step < STEP_KEYS.length - 1 ? (
             <button onClick={goNext} className="btn-primary" disabled={!canNext}>
-              Continue
+              {t('report.continue')}
               <ChevronRight className="h-4 w-4" />
             </button>
           ) : (
@@ -1086,7 +1093,7 @@ export function ReportIssue() {
               ) : (
                 <Send className="h-4 w-4" />
               )}
-              Submit report
+              {t('report.submitReport')}
             </button>
           )}
         </div>
