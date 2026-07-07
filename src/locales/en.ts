@@ -162,6 +162,35 @@ const en = {
     invalidOtpDemo: 'Invalid OTP. For this demo, use 1234.',
     signedInDemo: 'Signed in (demo)',
   },
+  stakeholder: {
+    portalTitle: 'Official Department Portal',
+    portalSubtitle: 'Secure sign-in for authorised government responders.',
+    selectDept: '1. Select your department',
+    helplinePrefix: 'Helpline',
+    officialEmail: 'Official email',
+    emailPlaceholder: 'officer@dept.gov.in',
+    officerId: '2. Officer ID',
+    officerIdPlaceholder: 'e.g. FIRE-BLR-0421',
+    password: 'Password',
+    passwordReal: 'Your password',
+    passwordDemo: 'Enter any password (demo)',
+    signInSecure: 'Sign in securely',
+    signInDashboard: 'Sign in to dashboard',
+    authorisedOnly: 'Authorised access only',
+    provisionNote:
+      'Department and administrator accounts are provisioned by the nodal officer — there is no public self-registration. If you are a department that needs access, contact your administrator or the JanVyuha team via the <1>contact page</1>.',
+    demoNote:
+      'Demo environment — any Officer ID and password works once a department is selected.',
+    dutyOfficer: 'Duty Officer — {{dept}}',
+    errSelectDept: 'Select your department',
+    errOfficerCreds: 'Enter your officer ID and password',
+    signedInControl: 'Signed in to {{dept}} control room',
+    errOfficialCreds: 'Enter your official email and password',
+    signedInAdmin: 'Signed in as administrator',
+    signedIn: 'Signed in',
+    notAuthorised:
+      'This account is not authorised for department access. Contact your administrator.',
+  },
 }
 
 export default en

@@ -165,6 +165,35 @@ const hi: Dict = {
     invalidOtpDemo: 'अमान्य OTP। इस डेमो के लिए 1234 का उपयोग करें।',
     signedInDemo: 'साइन इन हो गए (डेमो)',
   },
+  stakeholder: {
+    portalTitle: 'आधिकारिक विभाग पोर्टल',
+    portalSubtitle: 'अधिकृत सरकारी उत्तरदाताओं के लिए सुरक्षित साइन-इन।',
+    selectDept: '1. अपना विभाग चुनें',
+    helplinePrefix: 'हेल्पलाइन',
+    officialEmail: 'आधिकारिक ईमेल',
+    emailPlaceholder: 'officer@dept.gov.in',
+    officerId: '2. अधिकारी आईडी',
+    officerIdPlaceholder: 'जैसे FIRE-BLR-0421',
+    password: 'पासवर्ड',
+    passwordReal: 'आपका पासवर्ड',
+    passwordDemo: 'कोई भी पासवर्ड दर्ज करें (डेमो)',
+    signInSecure: 'सुरक्षित रूप से साइन इन करें',
+    signInDashboard: 'डैशबोर्ड में साइन इन करें',
+    authorisedOnly: 'केवल अधिकृत पहुँच',
+    provisionNote:
+      'विभाग और प्रशासक खाते नोडल अधिकारी द्वारा प्रदान किए जाते हैं — कोई सार्वजनिक स्व-पंजीकरण नहीं है। यदि आप एक विभाग हैं जिसे पहुँच चाहिए, तो अपने प्रशासक या जनव्यूह टीम से <1>संपर्क पृष्ठ</1> के माध्यम से संपर्क करें।',
+    demoNote:
+      'डेमो वातावरण — विभाग चुनने के बाद कोई भी अधिकारी आईडी और पासवर्ड काम करता है।',
+    dutyOfficer: 'ड्यूटी अधिकारी — {{dept}}',
+    errSelectDept: 'अपना विभाग चुनें',
+    errOfficerCreds: 'अपनी अधिकारी आईडी और पासवर्ड दर्ज करें',
+    signedInControl: '{{dept}} कंट्रोल रूम में साइन इन हो गए',
+    errOfficialCreds: 'अपना आधिकारिक ईमेल और पासवर्ड दर्ज करें',
+    signedInAdmin: 'प्रशासक के रूप में साइन इन हो गए',
+    signedIn: 'साइन इन हो गए',
+    notAuthorised:
+      'यह खाता विभागीय पहुँच के लिए अधिकृत नहीं है। अपने प्रशासक से संपर्क करें।',
+  },
 }
 
 export default hi

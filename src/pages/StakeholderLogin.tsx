@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft,
@@ -17,6 +18,7 @@ import { useTestMode } from '../store/testMode'
 import { cn } from '../lib/cn'
 
 export function StakeholderLogin() {
+  const { t } = useTranslation()
   const supabase = useTestMode((s) => s.backend) === 'supabase'
   const [dept, setDept] = useState<DepartmentId | null>(null)
   const [officerId, setOfficerId] = useState('')
@@ -31,38 +33,36 @@ export function StakeholderLogin() {
 
     // Demo backend (no Supabase): instant control-room access for the pilot demo.
     if (!supabase) {
-      if (!dept) return toast.error('Select your department')
+      if (!dept) return toast.error(t('stakeholder.errSelectDept'))
       const d = DEPARTMENT_LIST.find((x) => x.id === dept)!
       if (!officerId.trim() || !password.trim())
-        return toast.error('Enter your officer ID and password')
-      loginStakeholder(dept, officerId.trim(), 'Duty Officer — ' + d.short)
-      toast.success(`Signed in to ${d.short} control room`)
+        return toast.error(t('stakeholder.errOfficerCreds'))
+      loginStakeholder(dept, officerId.trim(), t('stakeholder.dutyOfficer', { dept: d.short }))
+      toast.success(t('stakeholder.signedInControl', { dept: d.short }))
       return navigate('/dashboard')
     }
 
     // Real Supabase auth. Department accounts are provisioned by an administrator
     // (no self-registration) — the role and department come from the profile.
     if (!email || !password)
-      return toast.error('Enter your official email and password')
+      return toast.error(t('stakeholder.errOfficialCreds'))
     setBusy(true)
     try {
       const r = await signInPassword(email, password)
       if (r.error) return toast.error(r.error)
       const u = useAuth.getState().user
       if (u?.role === 'admin') {
-        toast.success('Signed in as administrator')
+        toast.success(t('stakeholder.signedInAdmin'))
         navigate('/admin')
       } else if (u?.role === 'stakeholder') {
         toast.success(
           u.department
-            ? `Signed in to ${DEPARTMENTS[u.department].short} control room`
-            : 'Signed in'
+            ? t('stakeholder.signedInControl', { dept: DEPARTMENTS[u.department].short })
+            : t('stakeholder.signedIn')
         )
         navigate('/dashboard')
       } else {
-        toast.error(
-          'This account is not authorised for department access. Contact your administrator.'
-        )
+        toast.error(t('stakeholder.notAuthorised'))
       }
     } finally {
       setBusy(false)
@@ -76,7 +76,7 @@ export function StakeholderLogin() {
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-ink-800"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back
+        {t('common.back')}
       </Link>
 
       <div className="mx-auto max-w-4xl">
@@ -85,10 +85,10 @@ export function StakeholderLogin() {
             <Building2 className="h-6 w-6" />
           </div>
           <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-ink-900">
-            Official Department Portal
+            {t('stakeholder.portalTitle')}
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Secure sign-in for authorised government responders.
+            {t('stakeholder.portalSubtitle')}
           </p>
         </div>
 
@@ -96,7 +96,7 @@ export function StakeholderLogin() {
           {/* Demo backend: pick a department for instant control-room access. */}
           {!supabase && (
             <>
-              <label className="label">1. Select your department</label>
+              <label className="label">{t('stakeholder.selectDept')}</label>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {DEPARTMENT_LIST.map((d) => {
                   const Icon = d.icon
@@ -124,7 +124,7 @@ export function StakeholderLogin() {
                           {d.short}
                         </div>
                         <div className="truncate text-xs text-slate-500">
-                          Helpline {d.helpline}
+                          {t('stakeholder.helplinePrefix')} {d.helpline}
                         </div>
                       </div>
                       {active && (
@@ -143,7 +143,7 @@ export function StakeholderLogin() {
             {supabase ? (
               <div className="sm:col-span-2">
                 <label htmlFor="dept-email" className="label">
-                  Official email
+                  {t('stakeholder.officialEmail')}
                 </label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -151,7 +151,7 @@ export function StakeholderLogin() {
                     id="dept-email"
                     type="email"
                     className="input pl-9"
-                    placeholder="officer@dept.gov.in"
+                    placeholder={t('stakeholder.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="username"
@@ -161,14 +161,14 @@ export function StakeholderLogin() {
             ) : (
               <div>
                 <label htmlFor="officer-id" className="label">
-                  2. Officer ID
+                  {t('stakeholder.officerId')}
                 </label>
                 <div className="relative">
                   <IdCard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
                     id="officer-id"
                     className="input pl-9"
-                    placeholder="e.g. FIRE-BLR-0421"
+                    placeholder={t('stakeholder.officerIdPlaceholder')}
                     value={officerId}
                     onChange={(e) => setOfficerId(e.target.value)}
                   />
@@ -178,7 +178,7 @@ export function StakeholderLogin() {
 
             <div className={supabase ? 'sm:col-span-2' : ''}>
               <label htmlFor="dept-pass" className="label">
-                Password
+                {t('stakeholder.password')}
               </label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -186,7 +186,7 @@ export function StakeholderLogin() {
                   id="dept-pass"
                   type="password"
                   className="input pl-9"
-                  placeholder={supabase ? 'Your password' : 'Enter any password (demo)'}
+                  placeholder={supabase ? t('stakeholder.passwordReal') : t('stakeholder.passwordDemo')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -201,30 +201,31 @@ export function StakeholderLogin() {
             disabled={busy}
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {supabase ? 'Sign in securely' : 'Sign in to dashboard'}
+            {supabase ? t('stakeholder.signInSecure') : t('stakeholder.signInDashboard')}
           </button>
 
           {supabase ? (
             <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
               <p className="flex items-center gap-1.5 font-semibold text-ink-800">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                Authorised access only
+                {t('stakeholder.authorisedOnly')}
               </p>
               <p className="mt-1">
-                Department and administrator accounts are provisioned by the
-                nodal officer — there is no public self-registration. If you are a
-                department that needs access, contact your administrator or the
-                JanVyuha team via the{' '}
-                <Link to="/contact" className="font-semibold text-ink-700 underline">
-                  contact page
-                </Link>
-                .
+                <Trans i18nKey="stakeholder.provisionNote">
+                  Department and administrator accounts are provisioned by the
+                  nodal officer — there is no public self-registration. If you are a
+                  department that needs access, contact your administrator or the
+                  JanVyuha team via the{' '}
+                  <Link to="/contact" className="font-semibold text-ink-700 underline">
+                    contact page
+                  </Link>
+                  .
+                </Trans>
               </p>
             </div>
           ) : (
             <p className="mt-4 text-center text-xs text-slate-400">
-              Demo environment — any Officer ID and password works once a
-              department is selected.
+              {t('stakeholder.demoNote')}
             </p>
           )}
         </form>
