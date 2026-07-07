@@ -1,6 +1,6 @@
 <div align="center">
 
-# JanVyuha
+<img src="docs/logo.svg" alt="JanVyuha — Citizen · Governance · Response" width="560" />
 
 ### Citizen reporting, routed to the right responders.
 

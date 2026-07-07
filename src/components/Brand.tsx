@@ -5,21 +5,36 @@ export function Emblem({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
       <rect width="64" height="64" rx="14" className="fill-ink-800" />
+      {/* Chakra-inspired ring — India / governance */}
       <circle
         cx="32"
         cy="32"
-        r="15"
+        r="22"
         fill="none"
         className="stroke-saffron-500"
-        strokeWidth="2.5"
+        strokeWidth="1.4"
+        opacity="0.85"
       />
-      <g className="stroke-white" strokeWidth="1.4">
-        <line x1="32" y1="17" x2="32" y2="47" />
-        <line x1="17" y1="32" x2="47" y2="32" />
-        <line x1="21.4" y1="21.4" x2="42.6" y2="42.6" />
-        <line x1="42.6" y1="21.4" x2="21.4" y2="42.6" />
+      {/* Hub-and-spoke: one report routed out to the responsible departments */}
+      <g className="stroke-white" strokeWidth="2.2" strokeLinecap="round">
+        <line x1="32" y1="32" x2="32" y2="16.5" />
+        <line x1="32" y1="32" x2="45.42" y2="24.25" />
+        <line x1="32" y1="32" x2="45.42" y2="39.75" />
+        <line x1="32" y1="32" x2="32" y2="47.5" />
+        <line x1="32" y1="32" x2="18.58" y2="39.75" />
+        <line x1="32" y1="32" x2="18.58" y2="24.25" />
       </g>
-      <circle cx="32" cy="32" r="4.2" className="fill-saffron-500" />
+      <g className="fill-white">
+        <circle cx="32" cy="16.5" r="2.8" />
+        <circle cx="45.42" cy="24.25" r="2.8" />
+        <circle cx="45.42" cy="39.75" r="2.8" />
+        <circle cx="32" cy="47.5" r="2.8" />
+        <circle cx="18.58" cy="39.75" r="2.8" />
+        <circle cx="18.58" cy="24.25" r="2.8" />
+      </g>
+      {/* Central locator target — the citizen report */}
+      <circle cx="32" cy="32" r="6" className="fill-white" />
+      <circle cx="32" cy="32" r="3.6" className="fill-saffron-500" />
     </svg>
   )
 }
