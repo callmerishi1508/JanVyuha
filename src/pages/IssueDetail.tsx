@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft,
@@ -33,9 +34,11 @@ import { CategoryPill } from '../components/CategoryPill'
 import { MediaThumb } from '../components/MediaUpload'
 import { MapView } from '../components/MapView'
 import { formatDateTime, timeAgo, shortId } from '../lib/format'
+import { tStatus } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
 export function IssueDetail() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { issues, loaded, refresh, updateDeptStatus, upvote, report, rate } =
@@ -67,9 +70,9 @@ export function IssueDetail() {
   if (loaded && !issue) {
     return (
       <div className="container-page py-20 text-center">
-        <p className="text-lg font-semibold text-ink-900">Issue not found</p>
+        <p className="text-lg font-semibold text-ink-900">{t('issueDetail.notFound')}</p>
         <Link to="/" className="btn-primary mt-4 inline-flex">
-          Go home
+          {t('issueDetail.goHome')}
         </Link>
       </div>
     )
@@ -104,12 +107,12 @@ export function IssueDetail() {
       myDept,
       to,
       note.trim() ||
-        `${DEPARTMENTS[myDept].short}: ${DEPT_STATUS_META[to].label}.`,
+        `${DEPARTMENTS[myDept].short}: ${t(`deptStatuses.${to}`)}.`,
       `${user.name} · ${DEPARTMENTS[myDept].short}`
     )
     setNote('')
     setBusy(false)
-    toast.success(`Your department marked: ${DEPT_STATUS_META[to].label}`)
+    toast.success(t('issueDetail.deptMarked', { status: t(`deptStatuses.${to}`) }))
   }
 
   return (
@@ -119,7 +122,7 @@ export function IssueDetail() {
         className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-ink-800"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back
+        {t('common.back')}
       </button>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -130,7 +133,7 @@ export function IssueDetail() {
             {cat.emergency && (
               <div className="flex items-center gap-2 bg-red-600 px-5 py-2 text-sm font-semibold text-white">
                 <BellRing className="h-4 w-4" />
-                Emergency report — priority response
+                {t('issueDetail.emergencyBanner')}
               </div>
             )}
             <div className="p-5 sm:p-6">
@@ -161,12 +164,12 @@ export function IssueDetail() {
                 <button
                   onClick={async () => {
                     await upvote(issue.id)
-                    toast.success('Marked — thanks for confirming')
+                    toast.success(t('issueDetail.markedThanks'))
                   }}
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-ink-700 hover:bg-slate-50"
                 >
                   <ArrowUp className="h-4 w-4" />
-                  {issue.upvotes} also affected
+                  {t('issueDetail.alsoAffected', { count: issue.upvotes })}
                 </button>
               </div>
             </div>
@@ -186,7 +189,7 @@ export function IssueDetail() {
           {/* Map */}
           <div className="card overflow-hidden">
             <div className="border-b border-slate-100 px-5 py-3 text-sm font-bold text-ink-900">
-              Location
+              {t('issueDetail.location')}
             </div>
             <MapView
               issues={[issue]}
@@ -201,14 +204,13 @@ export function IssueDetail() {
             <div className="card p-5">
               <h3 className="flex items-center gap-2 text-sm font-bold text-ink-900">
                 <MapPinned className="h-4 w-4 text-ink-700" />
-                {nearby.length} related report{nearby.length > 1 ? 's' : ''} nearby
+                {t('issueDetail.relatedNearby', { count: nearby.length })}
               </h3>
               <p className="mt-0.5 text-xs text-slate-500">
-                Same category within 400 m in the last 72 hours — likely the same
-                incident.
+                {t('issueDetail.relatedLeadBase')}
                 {user?.role === 'admin'
-                  ? ' Merge a duplicate into this report.'
-                  : ' Officials can merge these.'}
+                  ? t('issueDetail.relatedLeadAdmin')
+                  : t('issueDetail.relatedLeadOfficial')}
               </p>
               <div className="mt-3 space-y-2">
                 {nearby.slice(0, 5).map(({ issue: n, distance }) => (
@@ -221,7 +223,10 @@ export function IssueDetail() {
                         {n.title}
                       </div>
                       <div className="text-xs text-slate-500">
-                        {formatDistance(distance)} away · {timeAgo(n.createdAt)}
+                        {t('issueDetail.awayAgo', {
+                          dist: formatDistance(distance),
+                          ago: timeAgo(n.createdAt),
+                        })}
                       </div>
                     </Link>
                     {user?.role === 'admin' && adminBackendReady() ? (
@@ -229,7 +234,7 @@ export function IssueDetail() {
                         onClick={async () => {
                           try {
                             await adminApi.mergeDuplicate(n.id, issue.id)
-                            toast.success('Merged as duplicate')
+                            toast.success(t('issueDetail.mergedDup'))
                             refresh()
                           } catch (e) {
                             toast.error((e as Error).message)
@@ -237,7 +242,7 @@ export function IssueDetail() {
                         }}
                         className="btn-outline shrink-0 px-2.5 py-1.5 text-xs"
                       >
-                        Merge in
+                        {t('issueDetail.mergeIn')}
                       </button>
                     ) : (
                       <StatusBadge status={n.status} />
@@ -254,10 +259,10 @@ export function IssueDetail() {
           {/* Response by department (multi-department coordination) */}
           <div className="card p-5">
             <h3 className="text-sm font-bold text-ink-900">
-              Response by department
+              {t('issueDetail.responseByDept')}
             </h3>
             <p className="mt-0.5 text-xs text-slate-500">
-              Each department acts independently; the issue closes when all are done.
+              {t('issueDetail.responseByDeptLead')}
             </p>
             <div className="mt-3 space-y-2">
               {issue.routedDepartments.map((d) => {
@@ -290,19 +295,19 @@ export function IssueDetail() {
                         {dep.short}
                         {isMe && (
                           <span className="ml-1.5 text-[10px] font-bold uppercase text-ink-500">
-                            you
+                            {t('issueDetail.you')}
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-slate-400">
-                        Helpline {dep.helpline}
+                        {t('issueDetail.helpline')} {dep.helpline}
                       </div>
                     </div>
                     <span
                       className="chip shrink-0 text-[11px]"
                       style={{ color: meta.color, backgroundColor: meta.bg }}
                     >
-                      {meta.label}
+                      {t(`deptStatuses.${st}`)}
                     </span>
                   </div>
                 )
@@ -312,7 +317,7 @@ export function IssueDetail() {
 
           {/* Reporter */}
           <div className="card p-5">
-            <h3 className="text-sm font-bold text-ink-900">Reported by</h3>
+            <h3 className="text-sm font-bold text-ink-900">{t('issueDetail.reportedBy')}</h3>
             <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
               <User className="h-4 w-4 text-slate-400" />
               {issue.reporterName}
@@ -331,20 +336,20 @@ export function IssueDetail() {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-ink-700" />
                 <h3 className="text-sm font-bold text-ink-900">
-                  {DEPARTMENTS[myDept!].short} — your action
+                  {t('issueDetail.yourAction', { dept: DEPARTMENTS[myDept!].short })}
                 </h3>
               </div>
 
               {myDeptStatus === 'done' ? (
                 <div className="mt-3 flex items-center gap-2 rounded-lg bg-ashoka-500/10 p-3 text-sm font-semibold text-ashoka-600">
                   <CheckCircle2 className="h-4 w-4" />
-                  Your department has completed its response.
+                  {t('issueDetail.deptCompleted')}
                 </div>
               ) : (
                 <>
                   <textarea
                     className="input mt-3 min-h-[70px] resize-y text-sm"
-                    placeholder="Add an update note (optional)…"
+                    placeholder={t('issueDetail.updateNotePlaceholder')}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                   />
@@ -360,7 +365,9 @@ export function IssueDetail() {
                         ) : (
                           <CheckCircle2 className="h-4 w-4" />
                         )}
-                        Mark as {DEPT_STATUS_META[nextDeptStatus].label}
+                        {t('issueDetail.markAs', {
+                          status: t(`deptStatuses.${nextDeptStatus}`),
+                        })}
                       </button>
                     )}
                     {nextDeptStatus !== 'done' && (
@@ -369,13 +376,14 @@ export function IssueDetail() {
                         className="btn-outline w-full"
                         disabled={busy}
                       >
-                        Mark our part complete
+                        {t('issueDetail.markComplete')}
                       </button>
                     )}
                   </div>
                   <p className="mt-2 text-[11px] text-slate-400">
-                    This updates only {DEPARTMENTS[myDept!].short}. The issue is
-                    fully resolved once every department completes.
+                    {t('issueDetail.updatesOnly', {
+                      dept: DEPARTMENTS[myDept!].short,
+                    })}
                   </p>
                 </>
               )}
@@ -384,13 +392,13 @@ export function IssueDetail() {
             !user && (
               <div className="card bg-ink-50/50 p-5 text-sm text-slate-600">
                 <p className="font-semibold text-ink-900">
-                  Are you the responsible department?
+                  {t('issueDetail.respDeptQ')}
                 </p>
                 <p className="mt-1">
-                  Log in as a stakeholder to acknowledge and act on this report.
+                  {t('issueDetail.respDeptLead')}
                 </p>
                 <Link to="/login/stakeholder" className="btn-primary mt-3 w-full">
-                  Stakeholder login
+                  {t('issueDetail.stakeholderLogin')}
                 </Link>
               </div>
             )
@@ -406,11 +414,11 @@ export function IssueDetail() {
                 : issue.reporterName === user.name)) && (
               <div className="card border-ashoka-200 bg-ashoka-500/5 p-5">
                 <h3 className="text-sm font-bold text-ink-900">
-                  How was the resolution?
+                  {t('issueDetail.howResolution')}
                 </h3>
                 {rated ? (
                   <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-ashoka-600">
-                    <CheckCircle2 className="h-4 w-4" /> Thank you for your feedback.
+                    <CheckCircle2 className="h-4 w-4" /> {t('issueDetail.thankFeedback')}
                   </p>
                 ) : (
                   <>
@@ -421,7 +429,7 @@ export function IssueDetail() {
                           onClick={() => setStars(n)}
                           role="radio"
                           aria-checked={stars === n}
-                          aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                          aria-label={t('issueDetail.starAria', { count: n })}
                           className="p-0.5"
                         >
                           <Star
@@ -437,20 +445,20 @@ export function IssueDetail() {
                     </div>
                     <textarea
                       className="input mt-3 min-h-[60px] resize-y text-sm"
-                      placeholder="Any comments? (optional)"
+                      placeholder={t('issueDetail.ratingCommentPlaceholder')}
                       value={ratingComment}
                       onChange={(e) => setRatingComment(e.target.value)}
                     />
                     <button
                       onClick={async () => {
-                        if (stars === 0) return toast.error('Pick a rating')
+                        if (stars === 0) return toast.error(t('issueDetail.pickRating'))
                         await rate(issue.id, stars, ratingComment.trim())
                         setRated(true)
-                        toast.success('Feedback submitted')
+                        toast.success(t('issueDetail.feedbackSubmitted'))
                       }}
                       className="btn-primary mt-3 w-full"
                     >
-                      Submit feedback
+                      {t('issueDetail.submitFeedback')}
                     </button>
                   </>
                 )}
@@ -459,7 +467,7 @@ export function IssueDetail() {
 
           {/* Timeline */}
           <div className="card p-5">
-            <h3 className="text-sm font-bold text-ink-900">Activity timeline</h3>
+            <h3 className="text-sm font-bold text-ink-900">{t('issueDetail.activityTimeline')}</h3>
             <ol className="mt-4 space-y-0">
               {issue.updates
                 .slice()
@@ -480,7 +488,7 @@ export function IssueDetail() {
                       />
                       <div className="min-w-0">
                         <div className="text-sm font-semibold text-ink-900">
-                          {meta.label}
+                          {tStatus(u.status)}
                         </div>
                         <p className="text-xs text-slate-600">{u.note}</p>
                         <div className="mt-0.5 text-[11px] text-slate-400">
@@ -502,12 +510,14 @@ export function IssueDetail() {
                   issue.id,
                   'Reported by a citizen as spam / not genuine'
                 )
-                toast.success('Reported for review. Thank you.')
+                toast.success(t('issueDetail.reportedThanks'))
               }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600"
             >
               <Flag className="h-3.5 w-3.5" />
-              {issue.flagged ? 'Reported for review' : 'Report this as not genuine'}
+              {issue.flagged
+                ? t('issueDetail.reportedForReview')
+                : t('issueDetail.reportNotGenuine')}
             </button>
           )}
         </div>

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { PlusCircle, Inbox, Loader2, Trash2, BellRing } from 'lucide-react'
 import { useAuth } from '../store/auth'
 import { useIssues } from '../store/issues'
 import { IssueCard } from '../components/IssueCard'
 import { STATUS_FLOW, STATUS_META, type IssueStatus } from '../data/categories'
+import { tStatus } from '../lib/i18n'
 import { isPushSupported, enablePush } from '../lib/push'
 import { cn } from '../lib/cn'
 
@@ -25,20 +27,16 @@ function readCreatedIds(): string[] {
 }
 
 export function MyIssues() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { issues, loaded, loading, refresh, remove } = useIssues()
   const [filter, setFilter] = useState<IssueStatus | 'all'>('all')
 
   const deleteReport = async (id: string) => {
-    if (
-      !window.confirm(
-        'Delete this report permanently? This exercises your right to erasure and cannot be undone.'
-      )
-    )
-      return
+    if (!window.confirm(t('myIssues.confirmDelete'))) return
     try {
       await remove(id)
-      toast.success('Report deleted')
+      toast.success(t('myIssues.deleted'))
     } catch (e) {
       toast.error((e as Error).message)
     }
@@ -72,11 +70,9 @@ export function MyIssues() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink-900 sm:text-3xl">
-            My Reports
+            {t('myIssues.title')}
           </h1>
-          <p className="mt-1 text-slate-600">
-            Track the issues you've reported and their resolution status.
-          </p>
+          <p className="mt-1 text-slate-600">{t('myIssues.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           {isPushSupported() && (
@@ -84,18 +80,18 @@ export function MyIssues() {
               onClick={async () => {
                 const ok = await enablePush()
                 toast[ok ? 'success' : 'error'](
-                  ok ? 'Alerts enabled on this device' : 'Could not enable alerts'
+                  ok ? t('myIssues.alertsEnabled') : t('myIssues.alertsFailed')
                 )
               }}
               className="btn-outline"
             >
               <BellRing className="h-4 w-4" />
-              Enable alerts
+              {t('myIssues.enableAlerts')}
             </button>
           )}
           <Link to="/report" className="btn-accent">
             <PlusCircle className="h-4 w-4" />
-            New report
+            {t('myIssues.newReport')}
           </Link>
         </div>
       </div>
@@ -103,7 +99,7 @@ export function MyIssues() {
       {/* Filter chips */}
       <div className="mt-6 flex flex-wrap gap-2">
         <FilterChip
-          label="All"
+          label={t('myIssues.all')}
           count={counts.all}
           active={filter === 'all'}
           onClick={() => setFilter('all')}
@@ -111,7 +107,7 @@ export function MyIssues() {
         {STATUS_FLOW.map((s) => (
           <FilterChip
             key={s}
-            label={STATUS_META[s].label}
+            label={tStatus(s)}
             count={counts[s]}
             active={filter === s}
             color={STATUS_META[s].color}
@@ -133,17 +129,16 @@ export function MyIssues() {
             <div>
               <p className="font-semibold text-ink-900">
                 {mine.length === 0
-                  ? "You haven't reported anything yet"
-                  : 'No reports in this status'}
+                  ? t('myIssues.emptyNone')
+                  : t('myIssues.emptyStatus')}
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Reports you submit will appear here so you can follow their
-                progress.
+                {t('myIssues.emptyLead')}
               </p>
             </div>
             <Link to="/report" className="btn-primary mt-2">
               <PlusCircle className="h-4 w-4" />
-              Report an issue
+              {t('myIssues.reportIssue')}
             </Link>
           </div>
         ) : (
@@ -155,7 +150,7 @@ export function MyIssues() {
                 className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete report (right to erasure)
+                {t('myIssues.deleteReport')}
               </button>
             </div>
           ))
