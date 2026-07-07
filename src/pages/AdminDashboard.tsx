@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
   ShieldCheck,
@@ -31,6 +32,7 @@ import {
 } from '../lib/analytics'
 import { adminApi, adminBackendReady, type ProfileRow } from '../services/admin'
 import { BRAND } from '../config/brand'
+import { tStatus } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
 type Tab = 'overview' | 'moderation' | 'accounts' | 'audit'
@@ -46,6 +48,7 @@ function download(name: string, content: string, type = 'text/csv') {
 }
 
 export function AdminDashboard() {
+  const { t } = useTranslation()
   const { issues, loaded, refresh } = useIssues()
   const user = useAuth((s) => s.user)
   const [tab, setTab] = useState<Tab>('overview')
@@ -60,26 +63,26 @@ export function AdminDashboard() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-extrabold text-ink-900">
             <ShieldCheck className="h-6 w-6 text-ink-700" />
-            Administration Console
+            {t('admin.title')}
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Cross-department oversight · {BRAND.jurisdiction}
-            {user?.jurisdiction ? ` · scope: ${user.jurisdiction}` : ''}
+            {t('admin.subtitle', { jurisdiction: BRAND.jurisdiction })}
+            {user?.jurisdiction ? t('admin.scope', { scope: user.jurisdiction }) : ''}
           </p>
         </div>
         <Link to="/analytics" className="btn-outline">
           <BarChart3 className="h-4 w-4" />
-          Full analytics
+          {t('admin.fullAnalytics')}
         </Link>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-1 border-b border-slate-200">
         {(
           [
-            ['overview', 'Overview', Gauge],
-            ['moderation', 'Moderation', Flag],
-            ['accounts', 'Accounts', Users],
-            ['audit', 'Audit log', ScrollText],
+            ['overview', t('admin.tabOverview'), Gauge],
+            ['moderation', t('admin.tabModeration'), Flag],
+            ['accounts', t('admin.tabAccounts'), Users],
+            ['audit', t('admin.tabAudit'), ScrollText],
           ] as [Tab, string, typeof Gauge][]
         ).map(([id, label, Icon]) => (
           <button
@@ -111,6 +114,7 @@ export function AdminDashboard() {
 
 // ── Overview ────────────────────────────────────────────────────────────────
 function Overview({ issues }: { issues: Issue[] }) {
+  const { t } = useTranslation()
   const [dept, setDept] = useState<'all' | DepartmentId>('all')
   const [q, setQ] = useState('')
 
@@ -137,13 +141,13 @@ function Overview({ issues }: { issues: Issue[] }) {
   return (
     <div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        <Tile label="Total" value={s.total} icon={Gauge} tone="slate" />
-        <Tile label="Open" value={s.open} icon={Clock} tone="blue" />
-        <Tile label="Critical open" value={s.critical} icon={AlertTriangle} tone="red" />
-        <Tile label="Resolved" value={s.resolved} icon={CheckCircle2} tone="green" />
-        <Tile label="SLA breached" value={s.breached} icon={AlertTriangle} tone="amber" />
+        <Tile label={t('admin.tileTotal')} value={s.total} icon={Gauge} tone="slate" />
+        <Tile label={t('admin.tileOpen')} value={s.open} icon={Clock} tone="blue" />
+        <Tile label={t('admin.tileCriticalOpen')} value={s.critical} icon={AlertTriangle} tone="red" />
+        <Tile label={t('admin.tileResolved')} value={s.resolved} icon={CheckCircle2} tone="green" />
+        <Tile label={t('admin.tileSlaBreached')} value={s.breached} icon={AlertTriangle} tone="amber" />
         <Tile
-          label="Avg resolve"
+          label={t('admin.tileAvgResolve')}
           value={s.avgResolutionMs == null ? '—' : humanizeMs(s.avgResolutionMs)}
           icon={Gauge}
           tone="slate"
@@ -158,18 +162,18 @@ function Overview({ issues }: { issues: Issue[] }) {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search title, ref-id or district…"
-                aria-label="Search issues"
+                placeholder={t('admin.searchPlaceholder')}
+                aria-label={t('admin.searchAria')}
                 className="input pl-9"
               />
             </div>
             <select
               value={dept}
               onChange={(e) => setDept(e.target.value as 'all' | DepartmentId)}
-              aria-label="Filter by department"
+              aria-label={t('admin.filterByDept')}
               className="input max-w-[190px]"
             >
-              <option value="all">All departments</option>
+              <option value="all">{t('admin.allDepartments')}</option>
               {DEPARTMENT_LIST.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.short}
@@ -183,7 +187,7 @@ function Overview({ issues }: { issues: Issue[] }) {
               className="btn-outline"
             >
               <Download className="h-4 w-4" />
-              CSV
+              {t('admin.csv')}
             </button>
           </div>
 
@@ -191,11 +195,11 @@ function Overview({ issues }: { issues: Issue[] }) {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">Ref</th>
-                  <th className="px-3 py-2">Issue</th>
-                  <th className="px-3 py-2">Severity</th>
-                  <th className="px-3 py-2">Status</th>
-                  <th className="px-3 py-2">SLA</th>
+                  <th className="px-3 py-2">{t('admin.thRef')}</th>
+                  <th className="px-3 py-2">{t('admin.thIssue')}</th>
+                  <th className="px-3 py-2">{t('admin.thSeverity')}</th>
+                  <th className="px-3 py-2">{t('admin.thStatus')}</th>
+                  <th className="px-3 py-2">{t('admin.thSla')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -214,15 +218,15 @@ function Overview({ issues }: { issues: Issue[] }) {
                         {i.location.district || i.location.city || '—'}
                       </div>
                     </td>
-                    <td className="px-3 py-2 capitalize">{i.severity}</td>
+                    <td className="px-3 py-2">{t(`severities.${i.severity}`)}</td>
                     <td className="px-3 py-2">
-                      <span className="capitalize">{i.status.replace('_', ' ')}</span>
+                      <span>{tStatus(i.status)}</span>
                     </td>
                     <td className="px-3 py-2">
                       {isResolutionBreached(i) ? (
-                        <span className="chip bg-red-100 text-red-700">Breached</span>
+                        <span className="chip bg-red-100 text-red-700">{t('admin.breached')}</span>
                       ) : (
-                        <span className="chip bg-emerald-100 text-emerald-700">On track</span>
+                        <span className="chip bg-emerald-100 text-emerald-700">{t('admin.onTrack')}</span>
                       )}
                     </td>
                   </tr>
@@ -230,7 +234,7 @@ function Overview({ issues }: { issues: Issue[] }) {
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-3 py-8 text-center text-slate-400">
-                      No issues match.
+                      {t('admin.noIssuesMatch')}
                     </td>
                   </tr>
                 )}
@@ -241,9 +245,9 @@ function Overview({ issues }: { issues: Issue[] }) {
 
         <div>
           <div className="card p-5">
-            <h3 className="text-sm font-bold text-ink-900">Top districts</h3>
+            <h3 className="text-sm font-bold text-ink-900">{t('admin.topDistricts')}</h3>
             <p className="mb-3 text-xs text-slate-500">
-              Where reports are concentrated.
+              {t('admin.whereConcentrated')}
             </p>
             <div className="space-y-2">
               {districts.map((d) => (
@@ -261,7 +265,7 @@ function Overview({ issues }: { issues: Issue[] }) {
                 </div>
               ))}
               {districts.length === 0 && (
-                <p className="text-xs text-slate-400">No data.</p>
+                <p className="text-xs text-slate-400">{t('admin.noData')}</p>
               )}
             </div>
           </div>
@@ -279,6 +283,7 @@ function Moderation({
   issues: Issue[]
   onChange: () => void
 }) {
+  const { t } = useTranslation()
   const ready = adminBackendReady()
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set())
 
@@ -299,12 +304,12 @@ function Moderation({
 
   const act = async (id: string, status: ModerationStatus) => {
     if (!ready) {
-      toast.error('Moderation actions need the Supabase backend')
+      toast.error(t('admin.modNeedsSupabase'))
       return
     }
     try {
       await adminApi.moderate(id, status)
-      toast.success(`Marked ${status}`)
+      toast.success(t('admin.marked', { status }))
       onChange()
     } catch (e) {
       toast.error((e as Error).message)
@@ -315,14 +320,13 @@ function Moderation({
     <div>
       {!ready && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          You are on the demo (mock) backend. The moderation queue lists flagged
-          items, but taking action writes to the database and needs Supabase.
+          {t('admin.demoBackendNote')}
         </div>
       )}
       {queue.length === 0 ? (
         <div className="card grid place-items-center gap-2 p-12 text-center text-slate-500">
           <Flag className="h-8 w-8 text-slate-300" />
-          <p>Nothing awaiting moderation. The queue is clear.</p>
+          <p>{t('admin.queueClear')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -331,7 +335,7 @@ function Moderation({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="chip bg-red-100 text-red-700">
-                    {i.flagged ? 'Flagged' : i.moderationStatus}
+                    {i.flagged ? t('admin.flagged') : i.moderationStatus}
                   </span>
                   <Link
                     to={`/issue/${i.id}`}
@@ -346,13 +350,13 @@ function Moderation({
               </div>
               <div className="flex gap-2">
                 <button onClick={() => act(i.id, 'held')} className="btn-outline text-xs">
-                  <Ban className="h-3.5 w-3.5" /> Hold
+                  <Ban className="h-3.5 w-3.5" /> {t('admin.hold')}
                 </button>
                 <button onClick={() => act(i.id, 'rejected')} className="btn-outline text-xs">
-                  Reject
+                  {t('admin.reject')}
                 </button>
                 <button onClick={() => act(i.id, 'active')} className="btn-outline text-xs">
-                  <RotateCcw className="h-3.5 w-3.5" /> Restore
+                  <RotateCcw className="h-3.5 w-3.5" /> {t('admin.restore')}
                 </button>
               </div>
             </div>
@@ -365,6 +369,7 @@ function Moderation({
 
 // ── Accounts ────────────────────────────────────────────────────────────────
 function Accounts() {
+  const { t } = useTranslation()
   const ready = adminBackendReady()
   const [profiles, setProfiles] = useState<ProfileRow[]>([])
   const [email, setEmail] = useState('')
@@ -385,7 +390,7 @@ function Accounts() {
   }, [ready])
 
   const invite = async () => {
-    if (!email) return toast.error('Enter an email')
+    if (!email) return toast.error(t('admin.enterEmail'))
     setBusy(true)
     try {
       await adminApi.invite(
@@ -394,7 +399,7 @@ function Accounts() {
         role === 'admin' ? null : dept,
         jurisdiction || null
       )
-      toast.success('Invite saved — they get the role on sign-up')
+      toast.success(t('admin.inviteSaved'))
       setEmail('')
       load()
     } catch (e) {
@@ -408,34 +413,31 @@ function Accounts() {
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="card p-5">
         <h3 className="flex items-center gap-2 text-sm font-bold text-ink-900">
-          <UserPlus className="h-4 w-4" /> Provision a department / admin account
+          <UserPlus className="h-4 w-4" /> {t('admin.provisionTitle')}
         </h3>
         <p className="mt-1 text-xs text-slate-500">
-          Officials can never self-register. You add them to the allow-list here;
-          when they sign up with this email they are granted the role
-          automatically — enforced in the database.
+          {t('admin.provisionLead')}
         </p>
         {!ready && (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            Requires the Supabase backend. On the demo backend, use the Tester
-            panel to switch roles instantly.
+            {t('admin.provisionNeedsSupabase')}
           </div>
         )}
         <div className="mt-4 space-y-3">
           <div>
-            <label htmlFor="inv-email" className="label">Government email</label>
+            <label htmlFor="inv-email" className="label">{t('admin.govEmail')}</label>
             <input
               id="inv-email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="officer@dept.gov.in"
+              placeholder={t('admin.emailPlaceholder')}
               className="input"
               disabled={!ready}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="inv-role" className="label">Role</label>
+              <label htmlFor="inv-role" className="label">{t('admin.role')}</label>
               <select
                 id="inv-role"
                 value={role}
@@ -443,12 +445,12 @@ function Accounts() {
                 className="input"
                 disabled={!ready}
               >
-                <option value="stakeholder">Department stakeholder</option>
-                <option value="admin">Administrator</option>
+                <option value="stakeholder">{t('admin.roleStakeholder')}</option>
+                <option value="admin">{t('admin.roleAdmin')}</option>
               </select>
             </div>
             <div>
-              <label htmlFor="inv-dept" className="label">Department</label>
+              <label htmlFor="inv-dept" className="label">{t('admin.department')}</label>
               <select
                 id="inv-dept"
                 value={dept}
@@ -466,25 +468,25 @@ function Accounts() {
           </div>
           <div>
             <label htmlFor="inv-jur" className="label">
-              Jurisdiction (district or state; blank = all)
+              {t('admin.jurisdictionLabel')}
             </label>
             <input
               id="inv-jur"
               value={jurisdiction}
               onChange={(e) => setJurisdiction(e.target.value)}
-              placeholder="e.g. Hyderabad"
+              placeholder={t('admin.jurisdictionPlaceholder')}
               className="input"
               disabled={!ready}
             />
           </div>
           <button onClick={invite} disabled={!ready || busy} className="btn-primary w-full">
-            {busy ? 'Saving…' : 'Add to allow-list'}
+            {busy ? t('admin.saving') : t('admin.addAllowlist')}
           </button>
         </div>
       </div>
 
       <div className="card p-5">
-        <h3 className="text-sm font-bold text-ink-900">Accounts</h3>
+        <h3 className="text-sm font-bold text-ink-900">{t('admin.accounts')}</h3>
         <div className="mt-3 divide-y divide-slate-100">
           {profiles.map((p) => (
             <div key={p.id} className="flex items-center justify-between py-2">
@@ -503,7 +505,7 @@ function Accounts() {
                   onClick={async () => {
                     try {
                       await adminApi.setSuspended(p.id, !p.suspended)
-                      toast.success(p.suspended ? 'Reinstated' : 'Suspended')
+                      toast.success(p.suspended ? t('admin.reinstated') : t('admin.suspended'))
                       load()
                     } catch (e) {
                       toast.error((e as Error).message)
@@ -516,14 +518,14 @@ function Accounts() {
                       : 'bg-emerald-100 text-emerald-700'
                   )}
                 >
-                  {p.suspended ? 'Suspended' : 'Active'}
+                  {p.suspended ? t('admin.suspended') : t('admin.active')}
                 </button>
               )}
             </div>
           ))}
           {profiles.length === 0 && (
             <p className="py-6 text-center text-sm text-slate-400">
-              {ready ? 'No accounts yet.' : 'Connect Supabase to manage accounts.'}
+              {ready ? t('admin.noAccounts') : t('admin.connectSupabaseAccounts')}
             </p>
           )}
         </div>
@@ -534,6 +536,7 @@ function Accounts() {
 
 // ── Audit ───────────────────────────────────────────────────────────────────
 function Audit() {
+  const { t } = useTranslation()
   const ready = adminBackendReady()
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminApi.auditLog>>>([])
   useEffect(() => {
@@ -543,8 +546,7 @@ function Audit() {
   if (!ready)
     return (
       <div className="card p-8 text-center text-sm text-slate-500">
-        The tamper-evident audit trail (who changed what, when) is recorded in the
-        database. Connect Supabase to view it.
+        {t('admin.auditNeedsSupabase')}
       </div>
     )
 
@@ -553,10 +555,10 @@ function Audit() {
       <table className="w-full text-sm">
         <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            <th className="px-3 py-2">When</th>
-            <th className="px-3 py-2">Actor</th>
-            <th className="px-3 py-2">Action</th>
-            <th className="px-3 py-2">Detail</th>
+            <th className="px-3 py-2">{t('admin.thWhen')}</th>
+            <th className="px-3 py-2">{t('admin.thActor')}</th>
+            <th className="px-3 py-2">{t('admin.thAction')}</th>
+            <th className="px-3 py-2">{t('admin.thDetail')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
@@ -575,7 +577,7 @@ function Audit() {
           {rows.length === 0 && (
             <tr>
               <td colSpan={4} className="px-3 py-8 text-center text-slate-400">
-                No audit entries yet.
+                {t('admin.noAudit')}
               </td>
             </tr>
           )}
