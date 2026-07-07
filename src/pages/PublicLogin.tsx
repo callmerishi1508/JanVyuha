@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation, Trans } from 'react-i18next'
 import toast from 'react-hot-toast'
 import {
   Users,
@@ -36,6 +37,7 @@ function GoogleIcon() {
 }
 
 function SupabaseAuth() {
+  const { t } = useTranslation()
   const [method, setMethod] = useState<'phone' | 'email'>('phone')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -74,16 +76,18 @@ function SupabaseAuth() {
     setBusy(true)
     try {
       if (!otpSent) {
-        if (!validPhone) return toast.error('Enter a valid 10-digit mobile number')
+        if (!validPhone) return toast.error(t('auth.errValidPhone'))
         const r = await sendPhoneOtp(phone, name)
         if (r.error) return toast.error(r.error)
         setOtpSent(true)
-        return toast.success('OTP sent to your phone')
+        return toast.success(t('auth.otpSentPhone'))
       }
-      if (code.length < 4) return toast.error('Enter the OTP you received')
+      if (code.length < 4) return toast.error(t('auth.errEnterOtp'))
       const r = await verifyPhoneOtp(phone, code)
       if (r.error) return toast.error(r.error)
-      toast.success(`Welcome${name ? ', ' + name.split(' ')[0] : ''}!`)
+      toast.success(
+        name ? t('auth.welcomeName', { name: name.split(' ')[0] }) : t('auth.welcome'),
+      )
       navigate(dest)
     } finally {
       setBusy(false)
@@ -92,21 +96,21 @@ function SupabaseAuth() {
 
   const emailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email) return toast.error('Enter your email')
+    if (!email) return toast.error(t('auth.errEnterEmail'))
     setBusy(true)
     try {
       if (emailMode === 'magic') {
         const r = await sendMagicLink(email, { name, role: 'public' })
         if (r.error) return toast.error(r.error)
-        return toast.success('Magic link sent — check your email inbox.')
+        return toast.success(t('auth.magicSent'))
       }
       const r =
         emailMode === 'signup'
           ? await signUpPassword(email, password, { name, role: 'public' })
           : await signInPassword(email, password)
       if (r.error) return toast.error(r.error)
-      if (r.pending) return toast.success('Confirm your email, then sign in.')
-      toast.success('Welcome to JanVyuha!')
+      if (r.pending) return toast.success(t('auth.confirmEmail'))
+      toast.success(t('auth.welcomeApp'))
       navigate(dest)
     } finally {
       setBusy(false)
@@ -115,10 +119,8 @@ function SupabaseAuth() {
 
   return (
     <Shell>
-      <h1 className="text-xl font-bold text-ink-900">Citizen sign-in</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        Report issues and track them to resolution.
-      </p>
+      <h1 className="text-xl font-bold text-ink-900">{t('auth.title')}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t('auth.subtitle')}</p>
 
       {/* Google */}
       <button
@@ -127,28 +129,28 @@ function SupabaseAuth() {
         className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white py-3 text-sm font-semibold text-ink-800 transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         <GoogleIcon />
-        Continue with Google
+        {t('auth.continueGoogle')}
       </button>
 
       <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
         <span className="h-px flex-1 bg-slate-200" />
-        or
+        {t('auth.or')}
         <span className="h-px flex-1 bg-slate-200" />
       </div>
 
       {method === 'phone' ? (
         <form onSubmit={phoneSubmit} className="space-y-4">
           {!otpSent && (
-            <Field icon={User} label="Full name (optional)">
+            <Field icon={User} label={t('auth.fullNameOptional')}>
               <input
                 className="input pl-9"
-                placeholder="e.g. Rohan Sharma"
+                placeholder={t('auth.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </Field>
           )}
-          <Field label="Mobile number">
+          <Field label={t('auth.mobileNumber')}>
             <div className="flex">
               <span className="inline-flex items-center gap-1.5 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-500">
                 <Phone className="h-4 w-4" />
@@ -156,7 +158,7 @@ function SupabaseAuth() {
               </span>
               <input
                 className="input rounded-l-none pl-3"
-                placeholder="10-digit number"
+                placeholder={t('auth.mobilePlaceholder')}
                 inputMode="numeric"
                 maxLength={10}
                 value={phone}
@@ -170,7 +172,7 @@ function SupabaseAuth() {
           {otpSent && (
             <div className="animate-fade-in">
               <label htmlFor="otp" className="label">
-                Enter the OTP sent to +91 {phone}
+                {t('auth.otpSentToNumber', { phone })}
               </label>
               <input
                 id="otp"
@@ -189,20 +191,20 @@ function SupabaseAuth() {
                 }}
                 className="mt-1.5 text-xs font-semibold text-slate-500 hover:text-ink-800"
               >
-                Change number
+                {t('auth.changeNumber')}
               </button>
             </div>
           )}
           <button type="submit" className="btn-accent w-full py-3" disabled={busy}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {otpSent ? 'Verify & continue' : 'Send OTP'}
+            {otpSent ? t('auth.verifyContinue') : t('auth.sendOtp')}
           </button>
           <button
             type="button"
             onClick={() => setMethod('email')}
             className="w-full text-center text-xs font-semibold text-slate-500 hover:text-ink-800"
           >
-            Use email instead
+            {t('auth.useEmail')}
           </button>
         </form>
       ) : (
@@ -210,9 +212,9 @@ function SupabaseAuth() {
           <div className="flex gap-1 rounded-lg bg-slate-100 p-1 text-sm font-semibold">
             {(
               [
-                ['signin', 'Sign in'],
-                ['signup', 'Sign up'],
-                ['magic', 'Magic link'],
+                ['signin', t('auth.signIn')],
+                ['signup', t('auth.signUp')],
+                ['magic', t('auth.magicLink')],
               ] as const
             ).map(([m, label]) => (
               <button
@@ -228,30 +230,30 @@ function SupabaseAuth() {
             ))}
           </div>
           {emailMode !== 'signin' && (
-            <Field icon={User} label="Full name">
+            <Field icon={User} label={t('auth.fullName')}>
               <input
                 className="input pl-9"
-                placeholder="e.g. Rohan Sharma"
+                placeholder={t('auth.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </Field>
           )}
-          <Field icon={Mail} label="Email">
+          <Field icon={Mail} label={t('auth.email')}>
             <input
               type="email"
               className="input pl-9"
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </Field>
           {emailMode !== 'magic' && (
-            <Field icon={Lock} label="Password">
+            <Field icon={Lock} label={t('auth.password')}>
               <input
                 type="password"
                 className="input pl-9"
-                placeholder="At least 6 characters"
+                placeholder={t('auth.passwordPlaceholder')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -264,28 +266,28 @@ function SupabaseAuth() {
               <Sparkles className="h-4 w-4" />
             ) : null}
             {emailMode === 'signup'
-              ? 'Create account'
+              ? t('auth.createAccount')
               : emailMode === 'magic'
-                ? 'Send magic link'
-                : 'Sign in'}
+                ? t('auth.sendMagicLink')
+                : t('auth.signIn')}
           </button>
           <button
             type="button"
             onClick={() => setMethod('phone')}
             className="w-full text-center text-xs font-semibold text-slate-500 hover:text-ink-800"
           >
-            Use phone number instead
+            {t('auth.usePhone')}
           </button>
         </form>
       )}
 
       <p className="mt-6 text-center text-xs text-slate-400">
-        Department official?{' '}
+        {t('auth.deptOfficialShort')}{' '}
         <Link
           to="/login/stakeholder"
           className="font-semibold text-ink-700 hover:underline"
         >
-          Official portal
+          {t('auth.officialPortal')}
         </Link>
       </p>
     </Shell>
@@ -296,6 +298,7 @@ function SupabaseAuth() {
 /* Demo flow (mock backend / Tester Mode) — name + phone + OTP 1234    */
 /* ------------------------------------------------------------------ */
 function DemoAuth() {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -310,53 +313,53 @@ function DemoAuth() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!otpSent) {
-      if (!validPhone) return toast.error('Enter a valid 10-digit mobile number')
+      if (!validPhone) return toast.error(t('auth.errValidPhone'))
       setOtpSent(true)
-      return toast.success('OTP sent (demo): use 1234')
+      return toast.success(t('auth.otpSentDemo'))
     }
-    if (otp !== '1234') return toast.error('Invalid OTP. For this demo, use 1234.')
+    if (otp !== '1234') return toast.error(t('auth.invalidOtpDemo'))
     loginPublic(name, phone)
-    toast.success(`Welcome${name ? ', ' + name.split(' ')[0] : ''}!`)
+    toast.success(
+      name ? t('auth.welcomeName', { name: name.split(' ')[0] }) : t('auth.welcome'),
+    )
     navigate(from && from !== '/login/public' ? from : '/report')
   }
 
   return (
     <Shell>
-      <h1 className="text-xl font-bold text-ink-900">Citizen sign-in</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        We use your mobile number to send status updates.
-      </p>
+      <h1 className="text-xl font-bold text-ink-900">{t('auth.title')}</h1>
+      <p className="mt-1 text-sm text-slate-500">{t('auth.subtitleDemo')}</p>
 
       <button
         onClick={() => {
           loginPublic(name || 'Google User', phone)
-          toast.success('Signed in (demo)')
+          toast.success(t('auth.signedInDemo'))
           navigate(from && from !== '/login/public' ? from : '/report')
         }}
         className="mt-5 flex w-full items-center justify-center gap-2.5 rounded-lg border border-slate-300 bg-white py-3 text-sm font-semibold text-ink-800 hover:bg-slate-50"
       >
         <GoogleIcon />
-        Continue with Google
+        {t('auth.continueGoogle')}
       </button>
       <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
         <span className="h-px flex-1 bg-slate-200" />
-        or
+        {t('auth.or')}
         <span className="h-px flex-1 bg-slate-200" />
       </div>
 
       <form onSubmit={submit} className="space-y-4">
-        <Field icon={User} label="Full name (optional)">
+        <Field icon={User} label={t('auth.fullNameOptional')}>
           <input
             className="input pl-9"
-            placeholder="e.g. Rohan Sharma"
+            placeholder={t('auth.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </Field>
-        <Field icon={Phone} label="Mobile number">
+        <Field icon={Phone} label={t('auth.mobileNumber')}>
           <input
             className="input pl-9"
-            placeholder="10-digit number"
+            placeholder={t('auth.mobilePlaceholder')}
             inputMode="numeric"
             maxLength={10}
             value={phone}
@@ -368,7 +371,7 @@ function DemoAuth() {
         </Field>
         {otpSent && (
           <div className="animate-fade-in">
-            <label className="label">Enter OTP</label>
+            <label className="label">{t('auth.enterOtp')}</label>
             <input
               className="input tracking-[0.5em]"
               placeholder="1234"
@@ -378,22 +381,24 @@ function DemoAuth() {
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
             />
             <p className="mt-1.5 text-xs text-slate-400">
-              Demo OTP is <span className="font-semibold">1234</span>.
+              <Trans i18nKey="auth.demoOtpHint">
+                Demo OTP is <span className="font-semibold">1234</span>.
+              </Trans>
             </p>
           </div>
         )}
         <button type="submit" className="btn-accent w-full py-3">
-          {otpSent ? 'Verify & continue' : 'Send OTP'}
+          {otpSent ? t('auth.verifyContinue') : t('auth.sendOtp')}
         </button>
       </form>
 
       <p className="mt-6 text-center text-xs text-slate-400">
-        Are you a department official?{' '}
+        {t('auth.deptOfficialLong')}{' '}
         <Link
           to="/login/stakeholder"
           className="font-semibold text-ink-700 hover:underline"
         >
-          Stakeholder login
+          {t('auth.stakeholderLogin')}
         </Link>
       </p>
     </Shell>
@@ -404,6 +409,7 @@ function DemoAuth() {
 /* Shared layout                                                       */
 /* ------------------------------------------------------------------ */
 function Shell({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="container-page py-12 sm:py-16">
       <Link
@@ -411,7 +417,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-ink-800"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back
+        {t('common.back')}
       </Link>
 
       <div className="mx-auto grid max-w-4xl overflow-hidden rounded-2xl border border-slate-200 shadow-card lg:grid-cols-2">
@@ -419,22 +425,17 @@ function Shell({ children }: { children: React.ReactNode }) {
           <div className="grid h-14 w-14 place-items-center rounded-xl bg-white/20">
             <Users className="h-7 w-7" />
           </div>
-          <h2 className="mt-6 text-2xl font-bold">Citizen Sign-in</h2>
-          <p className="mt-3 text-white/85">
-            Your voice keeps the city safe and running. Report an issue and we'll
-            make sure it reaches the right people.
-          </p>
+          <h2 className="mt-6 text-2xl font-bold">{t('auth.panelTitle')}</h2>
+          <p className="mt-3 text-white/85">{t('auth.panelLead')}</p>
           <ul className="mt-8 space-y-3 text-sm text-white/90">
             <li className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Reports routed to the right
-              department
+              <ShieldCheck className="h-4 w-4" /> {t('auth.panelPoint1')}
             </li>
             <li className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Track status from report to
-              resolution
+              <ShieldCheck className="h-4 w-4" /> {t('auth.panelPoint2')}
             </li>
             <li className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Option to report anonymously
+              <ShieldCheck className="h-4 w-4" /> {t('auth.panelPoint3')}
             </li>
           </ul>
         </div>
