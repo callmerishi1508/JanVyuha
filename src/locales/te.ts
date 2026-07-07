@@ -375,6 +375,28 @@ const te: Dict = {
     reportedThanks: 'సమీక్ష కోసం నివేదించబడింది. ధన్యవాదాలు.',
     deptMarked: 'మీ శాఖ గుర్తించింది: {{status}}',
   },
+  dashboard: {
+    controlRoom: 'స్పందన డాష్‌బోర్డ్ · కంట్రోల్ రూమ్ · హెల్ప్‌లైన్ {{helpline}}',
+    searchIssues: 'సమస్యలను వెతకండి…',
+    totalRouted: 'మొత్తం పంపబడినవి',
+    open: 'తెరిచినవి',
+    critical: 'క్లిష్టమైనవి',
+    inProgress: 'ప్రగతిలో',
+    slaOverdue: 'SLA మించింది',
+    resolved: 'పరిష్కరించబడినవి',
+    filterOpen: 'తెరిచినవి',
+    filterAll: 'అన్నీ',
+    filterReported: 'నివేదించబడింది',
+    filterAcknowledged: 'గుర్తించబడింది',
+    filterInProgress: 'ప్రగతిలో',
+    filterResolved: 'పరిష్కరించబడింది',
+    emergency: 'అత్యవసరం',
+    slaOverdueChip: 'SLA మించింది',
+    awaitingAck: 'గుర్తింపు కోసం వేచి ఉంది',
+    emptyTitle: 'చూపించడానికి సమస్యలు లేవు',
+    emptyLead:
+      'మీ శాఖ నిర్వహిస్తుంది: {{cats}}. ఈ వర్గాలలో కొత్త నివేదికలు ఇక్కడ వెంటనే కనిపిస్తాయి.',
+  },
 }
 
 export default te

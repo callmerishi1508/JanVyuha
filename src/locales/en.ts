@@ -372,6 +372,28 @@ const en = {
     reportedThanks: 'Reported for review. Thank you.',
     deptMarked: 'Your department marked: {{status}}',
   },
+  dashboard: {
+    controlRoom: 'Response Dashboard · Control room · Helpline {{helpline}}',
+    searchIssues: 'Search issues…',
+    totalRouted: 'Total routed',
+    open: 'Open',
+    critical: 'Critical',
+    inProgress: 'In progress',
+    slaOverdue: 'SLA overdue',
+    resolved: 'Resolved',
+    filterOpen: 'Open',
+    filterAll: 'All',
+    filterReported: 'Reported',
+    filterAcknowledged: 'Acknowledged',
+    filterInProgress: 'In Progress',
+    filterResolved: 'Resolved',
+    emergency: 'Emergency',
+    slaOverdueChip: 'SLA overdue',
+    awaitingAck: 'Awaiting ack',
+    emptyTitle: 'No issues to show',
+    emptyLead:
+      'Your department handles: {{cats}}. New reports in these categories will appear here instantly.',
+  },
 }
 
 export default en

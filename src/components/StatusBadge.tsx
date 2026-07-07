@@ -21,6 +21,7 @@ export function StatusBadge({ status }: { status: IssueStatus }) {
 }
 
 export function SeverityBadge({ severity }: { severity: Severity }) {
+  const { t } = useTranslation()
   const meta = SEVERITIES[severity]
   return (
     <span
@@ -31,7 +32,7 @@ export function SeverityBadge({ severity }: { severity: Severity }) {
         backgroundColor: meta.color + '12',
       }}
     >
-      {meta.label}
+      {t(`severities.${severity}`)}
     </span>
   )
 }

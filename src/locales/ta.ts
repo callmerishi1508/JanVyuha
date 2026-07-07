@@ -375,6 +375,28 @@ const ta: Dict = {
     reportedThanks: 'மறுஆய்வுக்குப் புகாரளிக்கப்பட்டது. நன்றி.',
     deptMarked: 'உங்கள் துறை குறித்தது: {{status}}',
   },
+  dashboard: {
+    controlRoom: 'பதில் டாஷ்போர்டு · கட்டுப்பாட்டு அறை · உதவி எண் {{helpline}}',
+    searchIssues: 'சிக்கல்களைத் தேடு…',
+    totalRouted: 'மொத்தம் அனுப்பப்பட்டவை',
+    open: 'திறந்தவை',
+    critical: 'மிக மோசமானவை',
+    inProgress: 'செயலில்',
+    slaOverdue: 'SLA தாமதம்',
+    resolved: 'தீர்க்கப்பட்டவை',
+    filterOpen: 'திறந்தவை',
+    filterAll: 'அனைத்தும்',
+    filterReported: 'புகாரளிக்கப்பட்டது',
+    filterAcknowledged: 'ஏற்கப்பட்டது',
+    filterInProgress: 'செயலில்',
+    filterResolved: 'தீர்க்கப்பட்டது',
+    emergency: 'அவசரம்',
+    slaOverdueChip: 'SLA தாமதம்',
+    awaitingAck: 'ஏற்பை எதிர்பார்க்கிறது',
+    emptyTitle: 'காட்ட சிக்கல்கள் இல்லை',
+    emptyLead:
+      'உங்கள் துறை கையாள்வது: {{cats}}. இந்த வகைகளில் புதிய புகார்கள் இங்கே உடனடியாகத் தோன்றும்.',
+  },
 }
 
 export default ta

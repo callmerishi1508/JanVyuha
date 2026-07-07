@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Inbox,
   Flame,
@@ -26,13 +27,16 @@ import { StatusBadge, SeverityBadge } from '../components/StatusBadge'
 import { CategoryPill } from '../components/CategoryPill'
 import { MapView } from '../components/MapView'
 import { timeAgo, shortId } from '../lib/format'
+import { tCategory } from '../lib/i18n'
 import { isResolutionBreached, isAckBreached } from '../lib/analytics'
 import { AlarmClock } from 'lucide-react'
 import { cn } from '../lib/cn'
+import type { TFunction } from 'i18next'
 
 type StatusFilter = IssueStatus | 'all' | 'open'
 
 export function Dashboard() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { issues, loaded, loading, refresh } = useIssues()
   const navigate = useNavigate()
@@ -111,7 +115,7 @@ export function Dashboard() {
                   {department.name}
                 </h1>
                 <p className="text-xs text-slate-500">
-                  Response Dashboard · Control room · Helpline {department.helpline}
+                  {t('dashboard.controlRoom', { helpline: department.helpline })}
                 </p>
               </div>
             </div>
@@ -121,7 +125,7 @@ export function Dashboard() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   className="input w-56 pl-9"
-                  placeholder="Search issues…"
+                  placeholder={t('dashboard.searchIssues')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -131,28 +135,28 @@ export function Dashboard() {
 
           {/* Stats */}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <StatTile label="Total routed" value={stats.total} icon={Inbox} />
-            <StatTile label="Open" value={stats.open} icon={CircleDot} tone="amber" />
+            <StatTile label={t('dashboard.totalRouted')} value={stats.total} icon={Inbox} />
+            <StatTile label={t('dashboard.open')} value={stats.open} icon={CircleDot} tone="amber" />
             <StatTile
-              label="Critical"
+              label={t('dashboard.critical')}
               value={stats.critical}
               icon={Flame}
               tone="red"
             />
             <StatTile
-              label="In progress"
+              label={t('dashboard.inProgress')}
               value={stats.inProgress}
               icon={Loader2}
               tone="amber"
             />
             <StatTile
-              label="SLA overdue"
+              label={t('dashboard.slaOverdue')}
               value={stats.breached}
               icon={AlarmClock}
               tone={stats.breached > 0 ? 'red' : 'green'}
             />
             <StatTile
-              label="Resolved"
+              label={t('dashboard.resolved')}
               value={stats.resolved}
               icon={CheckCircle2}
               tone="green"
@@ -168,12 +172,12 @@ export function Dashboard() {
             <Filter className="mr-1 h-4 w-4 shrink-0 text-slate-400" />
             {(
               [
-                ['open', 'Open'],
-                ['all', 'All'],
-                ['reported', 'Reported'],
-                ['acknowledged', 'Acknowledged'],
-                ['in_progress', 'In Progress'],
-                ['resolved', 'Resolved'],
+                ['open', t('dashboard.filterOpen')],
+                ['all', t('dashboard.filterAll')],
+                ['reported', t('dashboard.filterReported')],
+                ['acknowledged', t('dashboard.filterAcknowledged')],
+                ['in_progress', t('dashboard.filterInProgress')],
+                ['resolved', t('dashboard.filterResolved')],
               ] as [StatusFilter, string][]
             ).map(([key, label]) => (
               <button
@@ -228,7 +232,7 @@ export function Dashboard() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState catNames={responsibleCats.map((c) => c.name)} />
+            <EmptyState catNames={responsibleCats.map((c) => tCategory(c.id))} t={t} />
           ) : (
             <div className="space-y-3">
               {filtered.map((issue) => (
@@ -236,6 +240,7 @@ export function Dashboard() {
                   key={issue.id}
                   issue={issue}
                   onOpen={() => navigate(`/issue/${issue.id}`)}
+                  t={t}
                 />
               ))}
             </div>
@@ -264,9 +269,11 @@ export function Dashboard() {
 function DashboardRow({
   issue,
   onOpen,
+  t,
 }: {
   issue: Issue
   onOpen: () => void
+  t: TFunction
 }) {
   const cat = CATEGORIES[issue.category]
   const overdue = isResolutionBreached(issue)
@@ -284,16 +291,16 @@ function DashboardRow({
           <span>{shortId(issue.id)}</span>
           {cat.emergency && (
             <span className="chip bg-red-100 py-0 text-[9px] text-red-600">
-              Emergency
+              {t('dashboard.emergency')}
             </span>
           )}
           {overdue ? (
             <span className="chip bg-red-100 py-0 text-[9px] text-red-700">
-              <AlarmClock className="h-2.5 w-2.5" /> SLA overdue
+              <AlarmClock className="h-2.5 w-2.5" /> {t('dashboard.slaOverdueChip')}
             </span>
           ) : ackLate ? (
             <span className="chip bg-amber-100 py-0 text-[9px] text-amber-700">
-              Awaiting ack
+              {t('dashboard.awaitingAck')}
             </span>
           ) : null}
         </div>
@@ -317,17 +324,16 @@ function DashboardRow({
   )
 }
 
-function EmptyState({ catNames }: { catNames: string[] }) {
+function EmptyState({ catNames, t }: { catNames: string[]; t: TFunction }) {
   return (
     <div className="card grid place-items-center gap-3 py-16 text-center">
       <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-400">
         <Inbox className="h-7 w-7" />
       </div>
       <div>
-        <p className="font-semibold text-ink-900">No issues to show</p>
+        <p className="font-semibold text-ink-900">{t('dashboard.emptyTitle')}</p>
         <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-          Your department handles: {catNames.join(', ')}. New reports in these
-          categories will appear here instantly.
+          {t('dashboard.emptyLead', { cats: catNames.join(', ') })}
         </p>
       </div>
     </div>

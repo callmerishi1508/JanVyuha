@@ -375,6 +375,28 @@ const hi: Dict = {
     reportedThanks: 'समीक्षा के लिए रिपोर्ट किया गया। धन्यवाद।',
     deptMarked: 'आपके विभाग ने चिह्नित किया: {{status}}',
   },
+  dashboard: {
+    controlRoom: 'प्रतिक्रिया डैशबोर्ड · कंट्रोल रूम · हेल्पलाइन {{helpline}}',
+    searchIssues: 'समस्याएँ खोजें…',
+    totalRouted: 'कुल भेजी गईं',
+    open: 'खुली',
+    critical: 'गंभीर',
+    inProgress: 'प्रगति पर',
+    slaOverdue: 'SLA विलंबित',
+    resolved: 'हल',
+    filterOpen: 'खुली',
+    filterAll: 'सभी',
+    filterReported: 'दर्ज',
+    filterAcknowledged: 'स्वीकृत',
+    filterInProgress: 'प्रगति पर',
+    filterResolved: 'हल',
+    emergency: 'आपातकाल',
+    slaOverdueChip: 'SLA विलंबित',
+    awaitingAck: 'स्वीकृति प्रतीक्षित',
+    emptyTitle: 'दिखाने के लिए कोई समस्या नहीं',
+    emptyLead:
+      'आपका विभाग संभालता है: {{cats}}। इन श्रेणियों में नई रिपोर्टें यहाँ तुरंत दिखेंगी।',
+  },
 }
 
 export default hi
