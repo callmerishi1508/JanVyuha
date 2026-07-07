@@ -4,12 +4,34 @@
  * in-browser mock so it always runs.
  */
 
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as
-  | string
-  | undefined
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as
-  | string
-  | undefined
+/**
+ * Normalise a pasted Supabase Project URL down to its bare origin.
+ *
+ * `createClient()` expects only the project root (e.g.
+ * `https://xyz.supabase.co`) and appends the service sub-paths itself
+ * (`/auth/v1`, `/rest/v1`, `/storage/v1`). A URL that already carries one of
+ * those suffixes — a very easy copy-paste mistake from the Supabase dashboard —
+ * yields broken calls like `.../rest/v1/auth/v1/authorize`, which hit PostgREST
+ * and fail with "No API key found in request". We strip trailing slashes and any
+ * accidental service path so a mispaste can't break auth again.
+ */
+export function normalizeSupabaseUrl(raw: string | undefined): string | undefined {
+  if (!raw) return raw
+  let url = raw.trim()
+  if (!url) return undefined
+  // Drop an accidental /rest/v1, /auth/v1, /storage/v1 (with optional trailing slash).
+  url = url.replace(/\/(rest|auth|storage)\/v1\/?$/i, '')
+  // Drop any remaining trailing slash(es).
+  url = url.replace(/\/+$/, '')
+  return url
+}
+
+export const SUPABASE_URL = normalizeSupabaseUrl(
+  import.meta.env.VITE_SUPABASE_URL as string | undefined,
+)
+export const SUPABASE_ANON_KEY = (
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+)?.trim()
 
 /** True when both Supabase credentials are present. */
 export const hasSupabase = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY)
