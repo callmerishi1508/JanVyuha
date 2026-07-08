@@ -1,8 +1,14 @@
 # JanVyuha — Pre-Launch Gaps, Fixes & Improvements
 
 **Purpose:** everything worth closing before you send the outreach mail / record the demo, ranked so you can stop at any line and still be in a defensible place.
-**Legend:** 🔴 Blocker (do before sending) · 🟡 Strongly recommended · 🟢 Polish / nice-to-have
+**Legend:** 🔴 Blocker (do before sending) · 🟡 Strongly recommended · 🟢 Polish / nice-to-have · ✅ Done
 **Status date:** 2026-07-08
+
+> **Update (2026-07-08):** Everything code-side on this list is now DONE and committed —
+> helpline (1.1), error boundary (2.2), OG/social tags (2.3), code-split + lazy routes (2.4),
+> robots/sitemap (2.5), data-layer i18n (2.1), console cleanup (3.1), build stamp (3.5).
+> What remains is **cloud-console / account work only you can do** — see the checklist at the bottom
+> (§6) and the 🔴 items 1.2–1.5, which are verification steps on Vercel / Supabase / Google.
 
 ---
 
@@ -70,3 +76,57 @@ So the list below reads as "finishing touches," not "it's broken":
 - "Available in **English, Hindi, Telugu, Tamil**" — headline; make sure §2.1/§3.6 are clean if you say it.
 - "**Neutral/white-label** — presented as a *proposed pilot*, not an unauthorized GoI claim" — `official=false` is deliberate and honest; call it out.
 - Attach: one-pager + 2–3 screenshots + the live demo link.
+
+---
+
+## 6. 🔧 Cloud-console / account changes — ONLY YOU can do these (code can't)
+Everything above is committed. These are the external settings to check/change. Nothing here needs a code edit.
+
+### A. Vercel — Environment Variables (Settings → Environment Variables)
+| Variable | Correct value | Notes |
+|----------|---------------|-------|
+| `VITE_SUPABASE_URL` | `https://vfbotszzyvefiparesbf.supabase.co` | **Bare project root** — no `/rest/v1`, no trailing slash. (Code now self-heals a mispaste, but fix the source too.) |
+| `VITE_SUPABASE_ANON_KEY` | your anon key | No leading/trailing spaces. |
+| `GEMINI_API_KEY` | your key | Already set (confirmed). Server-only — must NOT start with `VITE_`. |
+| `ALLOWED_ORIGINS` | *(optional)* `https://jan-vyuha.vercel.app` | Now optional — same-origin is always allowed. Leave blank, or set to your final custom domain if/when you add one. |
+| `VITE_ENABLE_TESTER` | **leave unset / delete** | If set to `true`, the Tester panel (instant admin/role switch) shows in production. Keep it OFF on the URL you share. |
+| `VITE_BRAND` | *(optional)* e.g. `telangana` | Only if you want the Telangana-branded preset instead of neutral. Leave unset for neutral white-label. |
+
+**After ANY env change:** you must **Redeploy** (Deployments → ⋯ → Redeploy). Vite bakes `VITE_*` values at build time; an env change does NOT affect the currently-live build until you rebuild.
+
+### B. Vercel — trigger a fresh deploy now
+The latest commits (all today's fixes) need to be live. Either push auto-deploys, or Deployments → Redeploy the latest. Then hard-refresh the site.
+
+### C. Supabase — Auth → URL Configuration
+- **Site URL:** `https://jan-vyuha.vercel.app` (or your custom domain).
+- **Redirect URLs (allow-list):** add `https://jan-vyuha.vercel.app/**`
+  Without this, Google login silently fails to return to the app after sign-in.
+- If you add a custom domain later, add its `/**` here too.
+
+### D. Google Cloud Console — OAuth (only if using real Google login)
+In **APIs & Services → Credentials → your OAuth 2.0 Client** (the one whose ID Supabase uses for the Google provider):
+- **Authorized JavaScript origins:** `https://jan-vyuha.vercel.app`
+- **Authorized redirect URIs:** `https://vfbotszzyvefiparesbf.supabase.co/auth/v1/callback`
+  (Supabase is the OAuth callback target, not your app.)
+- Make sure the OAuth consent screen is Published (or your test Google account is added as a test user), else login is blocked.
+
+### E. Supabase — schema & seed (if not already applied to this project)
+- Run `supabase/schema.sql` then `supabase/seed.sql` in the SQL editor so the demo has data and RLS/policies exist. If your dashboards look empty on the live site, this is why.
+- Confirm the private **`evidence`** storage bucket exists (schema creates it) so photo upload + signed URLs work.
+
+### F. Google AI Studio — Gemini key sanity
+- Key is set and verified working (we tested `/api/analyze` returns 200 with a real classification).
+- Free tier is rate-limited; fine for a demo. If you expect heavy demo traffic, note the quota.
+
+### G. (Optional) Custom domain
+If you point a custom domain (e.g. `janvyuha.in`) at Vercel:
+1. Add it in Vercel → Domains.
+2. Update Supabase Site URL + Redirect URLs (C) and Google origins (D) to the new domain.
+3. Update `og:url`/canonical if you add one.
+
+### Final go-live smoke test (2 minutes, on the real URL)
+1. Landing loads, switch language EN→TE→TA→HI — UI + department names + report wizard all translate.
+2. Login (Google or phone/demo) → succeeds and returns to the app.
+3. Report an issue → upload a real photo → **Analyse** → sensible category (or the "not a civic issue" notice for a non-photo).
+4. Submit → appears in **My Reports** and on the relevant **department dashboard**.
+5. Footer shows a `build <sha>` stamp (confirms the new deploy is live, not a stale cache).

@@ -12,3 +12,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+/** Build stamp injected by Vite `define` (short commit SHA, or "dev"). */
+declare const __BUILD_ID__: string

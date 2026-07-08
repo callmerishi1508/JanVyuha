@@ -83,6 +83,7 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} {BRAND.product} · {BRAND.authority}.
             {!BRAND.official && ` ${t('footer.pilotNote')}`}
+            <span className="ml-1 text-slate-400">· build {__BUILD_ID__}</span>
           </p>
           <p className="flex items-center gap-3">
             <Link to="/privacy" className="hover:text-ink-800">
