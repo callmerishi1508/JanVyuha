@@ -5,7 +5,7 @@
 // app didn't render. This version RUNTIME-CACHES same-origin static assets with
 // a stale-while-revalidate strategy, so after one online visit the app works
 // offline. API / Supabase / map-tile requests are never cached.
-const CACHE = 'janvyuha-v2'
+const CACHE = 'janvyuha-v3'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/favicon.svg']
 
 self.addEventListener('install', (e) => {

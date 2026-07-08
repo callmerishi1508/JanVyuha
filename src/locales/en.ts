@@ -14,7 +14,7 @@ const en = {
     addMedia: 'Add media',
     camera: 'Camera',
     fromDevice: 'From device',
-    hint: 'Take a photo or video with your camera, or add one from your device.',
+    hint: 'Take a photo with your camera, or add a photo or video from your device.',
     video: 'Video',
     remove: 'Remove',
   },

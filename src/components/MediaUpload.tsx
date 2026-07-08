@@ -79,11 +79,16 @@ export function MediaUpload({
 
   return (
     <div>
-      {/* Camera — opens the device camera on phone / installed PWA (photo or video). */}
+      {/* Camera — opens the device camera to take a photo. IMPORTANT: the accept
+          list must be a SINGLE media type for `capture` to reliably open the
+          camera; combining image + video makes many Android/iOS browsers ignore
+          `capture` and fall back to the normal picker (which made this behave
+          identically to "From device"). Photo is the primary evidence and is what
+          the AI triage reads; videos come from "From device". */}
       <input
         ref={cameraRef}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*"
         capture="environment"
         hidden
         onChange={onPick}
