@@ -27,7 +27,7 @@ import { StatusBadge, SeverityBadge } from '../components/StatusBadge'
 import { CategoryPill } from '../components/CategoryPill'
 import { MapView } from '../components/MapView'
 import { timeAgo, shortId } from '../lib/format'
-import { tCategory } from '../lib/i18n'
+import { tCategory, tDept } from '../lib/i18n'
 import { isResolutionBreached, isAckBreached } from '../lib/analytics'
 import { AlarmClock } from 'lucide-react'
 import { cn } from '../lib/cn'
@@ -112,7 +112,7 @@ export function Dashboard() {
               </div>
               <div>
                 <h1 className="text-lg font-extrabold leading-tight text-ink-900">
-                  {department.name}
+                  {tDept(department.id)}
                 </h1>
                 <p className="text-xs text-slate-500">
                   {t('dashboard.controlRoom', { helpline: department.helpline })}

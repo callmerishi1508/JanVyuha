@@ -13,6 +13,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { DEPARTMENT_LIST, DEPARTMENTS, type DepartmentId } from '../data/categories'
+import { tDeptShort } from '../lib/i18n'
 import { useAuth } from '../store/auth'
 import { useTestMode } from '../store/testMode'
 import { cn } from '../lib/cn'
@@ -121,7 +122,7 @@ export function StakeholderLogin() {
                       </div>
                       <div className="min-w-0">
                         <div className="truncate text-sm font-bold text-ink-900">
-                          {d.short}
+                          {tDeptShort(d.id)}
                         </div>
                         <div className="truncate text-xs text-slate-500">
                           {t('stakeholder.helplinePrefix')} {d.helpline}

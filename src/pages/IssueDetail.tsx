@@ -34,7 +34,7 @@ import { CategoryPill } from '../components/CategoryPill'
 import { MediaThumb } from '../components/MediaUpload'
 import { MapView } from '../components/MapView'
 import { formatDateTime, timeAgo, shortId } from '../lib/format'
-import { tStatus } from '../lib/i18n'
+import { tStatus, tDeptShort } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
 export function IssueDetail() {
@@ -292,7 +292,7 @@ export function IssueDetail() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-ink-900">
-                        {dep.short}
+                        {tDeptShort(d)}
                         {isMe && (
                           <span className="ml-1.5 text-[10px] font-bold uppercase text-ink-500">
                             {t('issueDetail.you')}
@@ -336,7 +336,7 @@ export function IssueDetail() {
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-ink-700" />
                 <h3 className="text-sm font-bold text-ink-900">
-                  {t('issueDetail.yourAction', { dept: DEPARTMENTS[myDept!].short })}
+                  {t('issueDetail.yourAction', { dept: tDeptShort(myDept!) })}
                 </h3>
               </div>
 
@@ -382,7 +382,7 @@ export function IssueDetail() {
                   </div>
                   <p className="mt-2 text-[11px] text-slate-400">
                     {t('issueDetail.updatesOnly', {
-                      dept: DEPARTMENTS[myDept!].short,
+                      dept: tDeptShort(myDept!),
                     })}
                   </p>
                 </>

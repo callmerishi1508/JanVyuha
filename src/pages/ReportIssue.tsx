@@ -40,7 +40,7 @@ import { shortId } from '../lib/format'
 import { rememberCreated } from './MyIssues'
 import { analyzeIssue, type AiSuggestion } from '../services/ai'
 import { useTestMode } from '../store/testMode'
-import { tCategory } from '../lib/i18n'
+import { tCategory, tDept, tDeptShort, tReason, tQuestion } from '../lib/i18n'
 
 const STEP_KEYS = [
   'stepCategory',
@@ -299,7 +299,7 @@ export function ReportIssue() {
             (tt) => (
               <span className="flex items-center gap-2" onClick={() => toast.dismiss(tt.id)}>
                 <BellRing className="h-4 w-4 text-saffron-400" />
-                {t('report.alertSentTo')} <b>{DEPARTMENTS[d].name}</b>
+                {t('report.alertSentTo')} <b>{tDept(d)}</b>
               </span>
             ),
             { icon: null }
@@ -761,7 +761,7 @@ export function ReportIssue() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-ink-900">
-                          {dep.name}
+                          {tDept(dep.id)}
                         </div>
                         <div className="text-xs text-slate-500">
                           {t('report.primaryResponder')}
@@ -813,7 +813,7 @@ export function ReportIssue() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-ink-900">
-                              {dep.name}
+                              {tDept(dep.id)}
                             </span>
                             {c.matched ? (
                               <span className="chip bg-amber-100 py-0 text-[10px] text-amber-700">
@@ -826,7 +826,9 @@ export function ReportIssue() {
                             )}
                           </div>
                           <div className="text-xs text-slate-500">
-                            {c.matched ? c.reason : c.question}
+                            {c.matched
+                              ? tReason(cat.id, c.department, c.reason)
+                              : tQuestion(cat.id, c.department, c.question)}
                           </div>
                         </div>
                         <span
@@ -857,7 +859,7 @@ export function ReportIssue() {
                 {t('report.willBeAlerted', { count: finalDepartments.length })}
               </span>{' '}
               <span className="text-slate-700">
-                {finalDepartments.map((d) => DEPARTMENTS[d].short).join(', ')}
+                {finalDepartments.map((d) => tDeptShort(d)).join(', ')}
               </span>
             </div>
           </div>
@@ -987,7 +989,7 @@ export function ReportIssue() {
                       className="inline-flex items-center gap-2 rounded-lg border border-white bg-white px-3 py-1.5 text-sm font-semibold text-ink-800 shadow-sm"
                     >
                       <Icon className="h-4 w-4" style={{ color: dep.color }} />
-                      {dep.name}
+                      {tDept(dep.id)}
                     </span>
                   )
                 })}

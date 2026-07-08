@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { CATEGORY_LIST, DEPARTMENT_LIST } from '../data/categories'
 import { CategoryIconTile } from '../components/CategoryPill'
 import { BRAND } from '../config/brand'
-import { tCategory } from '../lib/i18n'
+import { tCategory, tDeptShort } from '../lib/i18n'
 
 export function Landing() {
   const { t } = useTranslation()
@@ -238,7 +238,7 @@ export function Landing() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="text-xs font-semibold text-white/80">
-                    {d.short}
+                    {tDeptShort(d.id)}
                   </div>
                 </div>
               )

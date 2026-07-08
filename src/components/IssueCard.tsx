@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { MapPin, ArrowUp, Clock } from 'lucide-react'
 import type { Issue } from '../data/types'
-import { CATEGORIES, DEPARTMENTS } from '../data/categories'
+import { CATEGORIES } from '../data/categories'
 import { StatusBadge, SeverityBadge } from './StatusBadge'
 import { CategoryIconTile } from './CategoryPill'
 import { MediaThumb } from './MediaUpload'
 import { timeAgo, shortId } from '../lib/format'
+import { tCategory, tDeptShort } from '../lib/i18n'
 
 export function IssueCard({
   issue,
@@ -14,6 +16,7 @@ export function IssueCard({
   issue: Issue
   showRouting?: boolean
 }) {
+  const { t } = useTranslation()
   const cat = CATEGORIES[issue.category]
   return (
     <Link
@@ -38,7 +41,7 @@ export function IssueCard({
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
               <span>{shortId(issue.id)}</span>
-              <span style={{ color: cat.color }}>{cat.name}</span>
+              <span style={{ color: cat.color }}>{tCategory(issue.category)}</span>
             </div>
             <h3 className="mt-0.5 truncate text-sm font-bold text-ink-900 group-hover:text-ink-700 sm:text-base">
               {issue.title}
@@ -70,14 +73,14 @@ export function IssueCard({
         {showRouting && (
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <span className="text-[11px] font-semibold text-slate-400">
-              Routed to:
+              {t('common.routedTo')}
             </span>
             {issue.routedDepartments.map((d) => (
               <span
                 key={d}
                 className="chip bg-slate-100 text-[11px] text-slate-600"
               >
-                {DEPARTMENTS[d].short}
+                {tDeptShort(d)}
               </span>
             ))}
           </div>

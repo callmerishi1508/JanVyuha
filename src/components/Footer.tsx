@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { tDeptShort } from '../lib/i18n'
 import { Wordmark } from './Brand'
 import { DEPARTMENT_LIST } from '../data/categories'
 import { BRAND } from '../config/brand'
@@ -59,7 +60,7 @@ export function Footer() {
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
             {DEPARTMENT_LIST.slice(0, 5).map((d) => (
-              <li key={d.id}>{d.short}</li>
+              <li key={d.id}>{tDeptShort(d.id)}</li>
             ))}
           </ul>
         </div>

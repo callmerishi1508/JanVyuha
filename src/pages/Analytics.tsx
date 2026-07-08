@@ -28,7 +28,7 @@ import {
 } from '../lib/analytics'
 import { BarChart, TrendChart, Donut, Legend } from '../components/charts'
 import { BRAND } from '../config/brand'
-import { tCategory } from '../lib/i18n'
+import { tCategory, tDeptShort } from '../lib/i18n'
 
 function download(name: string, content: string, type = 'text/csv') {
   const blob = new Blob([content], { type })
@@ -101,7 +101,7 @@ export function Analytics() {
               <option value="all">{t('analytics.allDepartments')}</option>
               {DEPARTMENT_LIST.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.short}
+                  {tDeptShort(d.id)}
                 </option>
               ))}
             </select>

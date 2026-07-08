@@ -7,8 +7,9 @@ import te from '../locales/te'
 import ta from '../locales/ta'
 import { BRAND } from '../config/brand'
 import { DEFAULT_LOCALE } from './config'
-import type { CategoryId } from '../data/categories'
+import type { CategoryId, DepartmentId } from '../data/categories'
 import type { IssueStatus } from '../data/categories'
+import { DEPARTMENTS } from '../data/categories'
 
 export const SUPPORTED = ['en', 'hi', 'te', 'ta'] as const
 export type Locale = (typeof SUPPORTED)[number]
@@ -65,6 +66,30 @@ export function tCategory(id: CategoryId): string {
 /** Localised issue status label. */
 export function tStatus(status: IssueStatus): string {
   return i18n.t(`statuses.${status}`, { defaultValue: status })
+}
+
+/** Localised department name (falls back to the English data constant). */
+export function tDept(id: DepartmentId): string {
+  return i18n.t(`deptNames.${id}`, { defaultValue: DEPARTMENTS[id].name })
+}
+
+/** Localised short department label (falls back to the English data constant). */
+export function tDeptShort(id: DepartmentId): string {
+  return i18n.t(`deptShort.${id}`, { defaultValue: DEPARTMENTS[id].short })
+}
+
+/**
+ * Localised "why this department is involved" reason for a conditional routing
+ * suggestion. Keyed by category+department; falls back to the English data
+ * string, so a missing translation degrades gracefully instead of breaking.
+ */
+export function tReason(category: CategoryId, dept: DepartmentId, fallback: string): string {
+  return i18n.t(`routing.${category}_${dept}.reason`, { defaultValue: fallback })
+}
+
+/** Localised plain-language confirmation question for a conditional department. */
+export function tQuestion(category: CategoryId, dept: DepartmentId, fallback: string): string {
+  return i18n.t(`routing.${category}_${dept}.question`, { defaultValue: fallback })
 }
 
 export default i18n

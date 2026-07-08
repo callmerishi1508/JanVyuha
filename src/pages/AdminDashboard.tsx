@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { useIssues } from '../store/issues'
 import { useAuth } from '../store/auth'
-import { DEPARTMENT_LIST, DEPARTMENTS } from '../data/categories'
+import { DEPARTMENT_LIST } from '../data/categories'
 import type { DepartmentId } from '../data/categories'
 import type { Issue, ModerationStatus } from '../data/types'
 import {
@@ -32,7 +32,7 @@ import {
 } from '../lib/analytics'
 import { adminApi, adminBackendReady, type ProfileRow } from '../services/admin'
 import { BRAND } from '../config/brand'
-import { tStatus } from '../lib/i18n'
+import { tStatus, tDeptShort } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
 type Tab = 'overview' | 'moderation' | 'accounts' | 'audit'
@@ -176,7 +176,7 @@ function Overview({ issues }: { issues: Issue[] }) {
               <option value="all">{t('admin.allDepartments')}</option>
               {DEPARTMENT_LIST.map((d) => (
                 <option key={d.id} value={d.id}>
-                  {d.short}
+                  {tDeptShort(d.id)}
                 </option>
               ))}
             </select>
@@ -460,7 +460,7 @@ function Accounts() {
               >
                 {DEPARTMENT_LIST.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.short}
+                    {tDeptShort(d.id)}
                   </option>
                 ))}
               </select>
@@ -496,7 +496,7 @@ function Accounts() {
                 </div>
                 <div className="text-xs text-slate-500">
                   {p.role}
-                  {p.department ? ` · ${DEPARTMENTS[p.department].short}` : ''}
+                  {p.department ? ` · ${tDeptShort(p.department)}` : ''}
                   {p.jurisdiction ? ` · ${p.jurisdiction}` : ''}
                 </div>
               </div>

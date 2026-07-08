@@ -11,11 +11,11 @@ import {
   X,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { tDeptShort } from '../lib/i18n'
 import { Wordmark } from './Brand'
 import { NotificationBell } from './NotificationBell'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { useAuth } from '../store/auth'
-import { DEPARTMENTS } from '../data/categories'
 import { cn } from '../lib/cn'
 
 interface NavDef {
@@ -113,7 +113,7 @@ export function Header() {
                   {user.role === 'stakeholder' && user.department ? (
                     <span className="inline-flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3" />
-                      {DEPARTMENTS[user.department].short}
+                      {tDeptShort(user.department)}
                     </span>
                   ) : user.role === 'admin' ? (
                     <span className="inline-flex items-center gap-1">
