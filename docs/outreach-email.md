@@ -12,36 +12,38 @@ zero-cost pilot **proposal**, not an official service.
 
 ## A · State government (Telangana / Andhra Pradesh / Tamil Nadu)
 
-**Subject:** Zero-cost civic-issue & emergency reporting pilot for [State] — request for a short evaluation
+**Subject:** Zero-cost civic & emergency reporting pilot for [State] — 15-min evaluation request
 
 Respected [Sir/Madam / Name, Designation],
 
-I'm [Your name], an independent [developer / civic-technology builder]. I've built
-**JanVyuha**, a working platform that lets citizens report civic and emergency
-issues with a photo and location, and **automatically routes each report to the
-correct department(s)** — Fire, Police, Ambulance, Municipal, Electricity, Water,
-Animal Welfare — so only the responsible team sees it and acts.
+I'm [Your name], an independent civic-technology builder. I've built **JanVyuha**,
+a **working, live** platform that lets a citizen report a civic or emergency issue
+with a photo and location, and **automatically routes it to the correct
+department(s)** — Fire, Police, Ambulance, Municipal, Electricity, Water, Animal
+Welfare — so only the responsible team sees it and acts.
 
-Three reasons I'm writing to [Department / Office of …]:
+Three reasons it may be worth 15 minutes of [Department / Office of …]'s time:
 
-1. **It runs at zero cost.** The entire platform is built on free infrastructure,
-   so a single-district pilot needs no budget or procurement to evaluate.
-2. **It's built for [State].** Multilingual (English, [Telugu / Tamil], Hindi),
-   works on low-end Android phones, and installable like an app.
-3. **Security and privacy are real, not cosmetic.** Access control is enforced in
-   the database (a department cannot see another's reports), evidence is private,
-   and it is designed to India's DPDP Act, 2023.
+1. **₹0 to pilot.** It runs entirely on free-tier infrastructure — a single-district
+   trial needs no budget, procurement, or new hardware to evaluate.
+2. **Built for [State]'s citizens.** Fully multilingual — **English, Hindi,
+   [Telugu / Tamil]** end-to-end — works on low-end Android phones, installs like an
+   app, and works offline. Photo-based reporting with **AI-assisted triage** that
+   suggests the category and severity.
+3. **Privacy & security are real, not cosmetic.** Access is enforced in the database
+   (one department cannot see another's reports), evidence photos are private, and
+   it's designed to India's **DPDP Act, 2023**, with a tamper-evident audit trail.
 
-Officials also get an **oversight console** (account management, moderation, audit
-trail) and **analytics** — SLA compliance, resolution times, department
-performance, and district heatmaps.
+Officials get an **oversight console** (account management, moderation, audit log)
+and **analytics** — SLA compliance, resolution times, department performance, and
+district heatmaps, all exportable to CSV/PDF.
 
-I'd be grateful for **15 minutes** to demonstrate it, or you can try the live demo
-here: **[demo link]** (2-minute video: **[video link]**).
+You can try the **live demo** right now: **[demo link]** (2-minute video:
+**[video link]**), or I'd be grateful for **15 minutes** to walk you through it.
 
-My ask is modest: a **supervised pilot in one district** for 8–12 weeks, with a
-nominated nodal officer, to measure routing accuracy and response times. There is
-no cost and no obligation.
+My ask is modest: a **supervised pilot in one district for 8–12 weeks**, with a
+nominated nodal officer, to measure routing accuracy and response times. No cost,
+no obligation.
 
 A one-page brief and a short proposal are attached.
 
@@ -71,6 +73,8 @@ Why it may interest NITI Aayog as a national pattern:
 
 - **Zero marginal cost** to pilot (free-tier infrastructure), with a documented,
   costed path to state scale.
+- **Multilingual by design** (English, Hindi, Telugu, Tamil today; the string
+  layer is built to add any Indian language) — essential for national reach.
 - **Digital-public-goods aligned:** open mapping data, standard components,
   white-label so any state can deploy under its own identity.
 - **Compliance-first:** DPDP Act 2023 mapping, India data residency, accessibility
@@ -110,3 +114,16 @@ you can try it directly: **[demo link]**. Thank you. — [Your name]
 - **PDF attachments** (one-pager + proposal), **links** for the demo and video.
 - Keep the body under ~200 words; let the attachments and demo carry the detail.
 - Never claim an authorization you don't have. "Proposal / pilot" everywhere.
+
+### Lead with these three, in this order (they answer an official's first questions)
+1. **"₹0 to evaluate"** — removes the budget/procurement objection before it's raised.
+2. **"Multilingual, works on cheap Android phones"** — proves it's built for real
+   citizens in *their* state, not a metro-only English app.
+3. **"Privacy enforced in the database, DPDP-aligned"** — pre-empts the data-safety
+   question that always comes up with citizen data.
+Everything else (analytics, audit, AI triage) is a bonus you mention *after* these land.
+
+### One honest strength that builds trust
+Say plainly that it's presented as a **proposal, not an official service** — the app
+itself carries that disclosure. Officials trust a builder who doesn't overclaim, and
+it removes any "is this pretending to be government?" hesitation.
