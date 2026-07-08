@@ -499,6 +499,115 @@ const en = {
     thDetail: 'Detail',
     noAudit: 'No audit entries yet.',
   },
+  info: {
+    updated: 'July 2026',
+    contactPage: 'contact page',
+    privacyPolicy: 'Privacy Policy',
+    privacyTitle: 'Privacy Policy',
+    privacySubtitle:
+      "How {{product}} collects, uses and protects your data. Aligned to India's Digital Personal Data Protection Act, 2023 (DPDP). Last updated {{updated}}.",
+    privacyPilot:
+      '{{product}} is currently a pilot ({{authority}}) and not yet an official government service. This policy describes how the pilot handles data and will be finalised with the sponsoring authority before launch.',
+    privacyS1Title: '1. Data we collect',
+    privacyS1Body:
+      'When you report an issue we collect: the report details (category, description, severity), the location you set (GPS or a map pin), any photos/videos you attach, and — unless you choose to report anonymously — your name and phone number so responders can reach you.',
+    privacyS2Title: '2. Why we use it (purpose limitation)',
+    privacyS2Body:
+      'Your data is used solely to route the report to the relevant government department(s), enable their response, keep you informed of progress, and produce anonymised, aggregated statistics for public transparency and service improvement. We do not sell your data or use it for advertising.',
+    privacyS3Title: '3. Who can see it (data minimisation)',
+    privacyS3Body:
+      'Access is enforced in the database, not just the interface. Only the department(s) your report is routed to — within the relevant jurisdiction — and authorised administrators can see it. Your phone number is shown only to the responding department. The public transparency view shows no personal identity and only a coarsened (~1 km) location.',
+    privacyS4Title: '4. Storage & security',
+    privacyS4Body:
+      'Data is stored on managed infrastructure in an India region. Evidence photos/videos are kept in private storage and served only via short-lived signed links. Access is protected by row-level security, guard rules and an audit trail.',
+    privacyS5Title: '5. Retention',
+    privacyS5Body:
+      "Reports and evidence are retained while a case is open and for a limited period after resolution for accountability, after which personal identifiers are removed or the record is deleted, in line with the sponsoring authority's records policy.",
+    privacyS6Title: '6. Your rights (DPDP)',
+    privacyS6Intro: 'As a Data Principal you may:',
+    privacyS6Li1: 'Access the reports linked to your account (see “My Reports”).',
+    privacyS6Li2: 'Correct inaccurate information.',
+    privacyS6Li3: 'Erase a report you filed — use “Delete report” on any of your reports.',
+    privacyS6Li4: 'Withdraw consent and raise a grievance (below).',
+    privacyS7Title: '7. Consent',
+    privacyS7Body:
+      'You provide consent when you submit a report. You may withdraw it by deleting the report or contacting the Grievance Officer. Withdrawing consent does not affect action already lawfully taken on an emergency.',
+    privacyS8Title: '8. Grievance Officer',
+    privacyS8Body:
+      'Questions or complaints about your data can be raised via our <1>contact page</1>. A Grievance Officer will be designated with the sponsoring authority on official launch, per the DPDP Act.',
+    termsTitle: 'Terms of Use',
+    termsSubtitle: 'The terms for using {{product}}. Last updated {{updated}}.',
+    termsPurposeTitle: 'Purpose',
+    termsPurposeBody:
+      '{{product}} lets citizens report civic and emergency issues and routes them to the appropriate authorities. It does not replace official emergency numbers. In a life-threatening emergency, call 112 (or 100/101/108) immediately.',
+    termsAcceptableTitle: 'Acceptable use',
+    termsAcceptableLi1: 'Report genuine issues with accurate information.',
+    termsAcceptableLi2: 'Do not submit false, malicious, defamatory or unlawful content.',
+    termsAcceptableLi3: "Do not upload media that violates others' privacy or the law.",
+    termsAcceptableLi4: 'Misuse may lead to moderation, suspension, or referral to authorities.',
+    termsWarrantyTitle: 'No warranty',
+    termsWarrantyBody:
+      'The service is provided on a best-effort basis. Response times depend on the concerned departments. During the pilot phase, availability and data are provided without warranty.',
+    termsContentTitle: 'Content you submit',
+    termsContentBody:
+      'You retain your rights to media you upload, and grant the authorities a licence to use it for responding to and resolving your report.',
+    a11yTitle: 'Accessibility Statement',
+    a11ySubtitle:
+      '{{product}} aims to be usable by everyone, following the Guidelines for Indian Government Websites (GIGW) and WCAG 2.1 Level AA. Last updated {{updated}}.',
+    a11yCommitTitle: 'Our commitment',
+    a11yCommitBody:
+      'We build for low-end Android phones and slow networks, support multiple languages, and follow accessibility best practices: keyboard navigation, screen-reader labels, sufficient colour contrast, resizable text, a skip-to-content link, and reduced-motion support.',
+    a11yLangTitle: 'Languages',
+    a11yLangBody:
+      'The citizen interface is available in English, हिन्दी (Hindi), తెలుగు (Telugu) and தமிழ் (Tamil), with more planned.',
+    a11yLimitsTitle: 'Known limitations & feedback',
+    a11yLimitsBody:
+      'As a pilot we are actively improving accessibility. If you encounter a barrier, please tell us via the <1>contact page</1> and we will address it.',
+    aboutTitle: 'About {{product}}',
+    aboutWhatTitle: 'What it is',
+    aboutWhatBody:
+      '{{product}} is a unified civic-issue and emergency reporting platform. A citizen reports a problem with a photo and location; the system routes it to exactly the right department(s) — and only they see it — so help reaches people faster and nothing falls through the cracks.',
+    aboutRoutingTitle: 'How routing works',
+    aboutRoutingBody:
+      'Every report has a category. Each category alerts a set of core departments always, plus context-dependent departments only when warranted — confirmed by the citizen — so no unrelated department is ever alerted.',
+    aboutCostTitle: 'Built to run at near-zero cost',
+    aboutCostBody:
+      '{{product}} runs on free-tier infrastructure and open data (OpenStreetMap), making a city-scale pilot possible without a large budget, with a clear upgrade path for a full state rollout.',
+    aboutStatusTitle: 'Status',
+    aboutStatusOfficial: 'This is an official deployment.',
+    aboutStatusPilot:
+      'This is a pilot ({{authority}}), presented for evaluation and partnership. It is not yet an official government service.',
+    helpTitle: 'Help & FAQ',
+    helpSubtitle: 'Answers to common questions.',
+    helpQ1: 'How do I report an issue?',
+    helpA1:
+      "Tap “Report an issue”, choose a category, add a photo/video, set the location on the map, confirm the departments, and submit. You'll get a reference id to track it.",
+    helpQ2: 'Can I report anonymously?',
+    helpA2:
+      "Yes. Toggle “Report anonymously” — your name won't be shown to departments. Note that responders then can't call you for details.",
+    helpQ3: 'How do I track my report?',
+    helpA3:
+      'Open “My Reports” to see status and the response timeline for each report you filed.',
+    helpQ4: 'Is this the emergency number?',
+    helpA4:
+      'No. For an immediate life-threatening emergency, call 112. {{product}} complements, and does not replace, emergency services.',
+    helpQ5: 'Who sees my report?',
+    helpA5:
+      'Only the routed department(s) and authorised administrators — enforced in the database. See our <1>Privacy Policy</1>.',
+    contactTitle: 'Contact & Grievances',
+    contactSubtitle: 'Reach the team behind the pilot.',
+    contactGeneralTitle: 'General & data-privacy queries',
+    contactGeneralBody:
+      'For questions, feedback, accessibility issues, or to exercise your data rights, write to the pilot team. A designated Grievance Officer will be published with the sponsoring authority on official launch.',
+    contactEmail: 'Email:',
+    contactEmergTitle: 'Emergencies',
+    contactEmergBody:
+      'Do not use this form for emergencies. Call 112 (unified), 100 (police), 101 (fire) or 108 (ambulance).',
+    notFoundTitle: 'Page not found',
+    notFoundBody: "The page you're looking for doesn't exist or has moved.",
+    goHome: 'Go home',
+    reportIssue: 'Report an issue',
+  },
 }
 
 export default en
