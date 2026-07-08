@@ -240,6 +240,10 @@ const en = {
     unclearCategory: 'Unclear category',
     percentConfident: '{{pct}}% confident',
     useSuggestions: 'Use these suggestions',
+    notCivicTitle: "This doesn't look like a civic issue",
+    notCivicBody:
+      "The AI isn't confident this photo shows a reportable civic or emergency problem. Add a clear photo of the actual issue, or pick the category and fill the form yourself.",
+    useAnyway: 'Use the guess anyway',
     whereIssue: 'Where is the issue?',
     useCurrentLocation: 'Use my current location',
     searchHint: 'Search an address, tap the map to drop a pin, or use your GPS.',

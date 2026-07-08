@@ -548,52 +548,76 @@ export function ReportIssue() {
                   </button>
                 </div>
 
-                {aiSuggestion && (
-                  <div className="mt-3 animate-fade-in rounded-lg border border-indigo-200 bg-white p-3">
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      {aiSuggestion.category ? (
+                {aiSuggestion &&
+                  (aiSuggestion.flagged ||
+                  !aiSuggestion.category ||
+                  aiSuggestion.confidence < 0.4 ? (
+                    // The photo/description doesn't clearly show a civic issue —
+                    // don't present a confident-looking (and likely wrong) guess.
+                    <div className="mt-3 animate-fade-in rounded-lg border border-amber-200 bg-amber-50 p-3">
+                      <p className="flex items-center gap-2 text-sm font-semibold text-amber-800">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        {t('report.notCivicTitle')}
+                      </p>
+                      <p className="mt-1 text-xs text-amber-700">
+                        {t('report.notCivicBody')}
+                      </p>
+                      {aiSuggestion.category && (
+                        <button
+                          type="button"
+                          onClick={applyAi}
+                          className="mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 hover:text-amber-900"
+                        >
+                          {t('report.useAnyway')} ({tCategory(aiSuggestion.category)},{' '}
+                          {t('report.percentConfident', {
+                            pct: Math.round(aiSuggestion.confidence * 100),
+                          })}
+                          )
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="mt-3 animate-fade-in rounded-lg border border-indigo-200 bg-white p-3">
+                      <div className="flex flex-wrap items-center gap-2 text-sm">
                         <span className="font-semibold text-ink-900">
                           {tCategory(aiSuggestion.category)}
                         </span>
-                      ) : (
-                        <span className="text-slate-500">{t('report.unclearCategory')}</span>
+                        <span
+                          className="chip text-[11px]"
+                          style={{
+                            color: SEVERITIES[aiSuggestion.severity].color,
+                            backgroundColor:
+                              SEVERITIES[aiSuggestion.severity].color + '18',
+                          }}
+                        >
+                          {t(`severities.${aiSuggestion.severity}`)}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          {t('report.percentConfident', {
+                            pct: Math.round(aiSuggestion.confidence * 100),
+                          })}
+                        </span>
+                      </div>
+                      {aiSuggestion.title && (
+                        <p className="mt-1.5 text-sm font-medium text-ink-800">
+                          “{aiSuggestion.title}”
+                        </p>
                       )}
-                      <span
-                        className="chip text-[11px]"
-                        style={{
-                          color: SEVERITIES[aiSuggestion.severity].color,
-                          backgroundColor:
-                            SEVERITIES[aiSuggestion.severity].color + '18',
-                        }}
+                      {aiSuggestion.summary && (
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {aiSuggestion.summary}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={applyAi}
+                        className="btn-outline mt-2.5 py-1.5 text-xs"
                       >
-                        {t(`severities.${aiSuggestion.severity}`)}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {t('report.percentConfident', {
-                          pct: Math.round(aiSuggestion.confidence * 100),
-                        })}
-                      </span>
+                        <Check className="h-3.5 w-3.5" />
+                        {t('report.useSuggestions')}
+                      </button>
                     </div>
-                    {aiSuggestion.title && (
-                      <p className="mt-1.5 text-sm font-medium text-ink-800">
-                        “{aiSuggestion.title}”
-                      </p>
-                    )}
-                    {aiSuggestion.summary && (
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {aiSuggestion.summary}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={applyAi}
-                      className="btn-outline mt-2.5 py-1.5 text-xs"
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      {t('report.useSuggestions')}
-                    </button>
-                  </div>
-                )}
+                  ))}
               </div>
             )}
           </div>
