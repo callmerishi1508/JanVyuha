@@ -10,6 +10,13 @@ const en = {
     skipToContent: 'Skip to main content',
     routedTo: 'Routed to:',
   },
+  media: {
+    takePhoto: 'Take photo',
+    fromDevice: 'From device',
+    hint: 'Take a photo with your camera, or add a photo/short video from your device.',
+    video: 'Video',
+    remove: 'Remove',
+  },
   nav: {
     report: 'Report Issue',
     how: 'How it works',

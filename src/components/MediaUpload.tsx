@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ImagePlus, Video, X, Camera } from 'lucide-react'
 import type { MediaItem } from '../data/types'
 
@@ -36,7 +37,13 @@ export function MediaUpload({
   items: MediaItem[]
   onChange: (items: MediaItem[]) => void
 }) {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const { t } = useTranslation()
+  // Two separate inputs so the citizen can choose: the camera input carries
+  // `capture` (opens the camera on a phone / PWA), the device input omits it
+  // (opens the gallery / file picker and allows multiple). On desktop the
+  // `capture` hint is ignored and simply falls back to the file picker.
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return
@@ -57,16 +64,32 @@ export function MediaUpload({
     Promise.all(readers).then((newItems) => onChange([...items, ...newItems]))
   }
 
+  // Reset the input value after each pick so selecting the same file twice
+  // (e.g. retaking a photo) still fires onChange.
+  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleFiles(e.target.files)
+    e.target.value = ''
+  }
+
   return (
     <div>
+      {/* Camera — opens the device camera on phone / installed PWA. */}
       <input
-        ref={inputRef}
+        ref={cameraRef}
         type="file"
         accept="image/*,video/*"
         capture="environment"
+        hidden
+        onChange={onPick}
+      />
+      {/* Device — gallery / file picker, multiple selection, no camera capture. */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*"
         multiple
         hidden
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={onPick}
       />
 
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -80,34 +103,44 @@ export function MediaUpload({
               type="button"
               onClick={() => onChange(items.filter((i) => i.id !== item.id))}
               className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
-              aria-label="Remove"
+              aria-label={t('media.remove')}
             >
               <X className="h-3.5 w-3.5" />
             </button>
             {item.type === 'video' && (
               <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
                 <Video className="mr-1 inline h-3 w-3" />
-                Video
+                {t('media.video')}
               </span>
             )}
           </div>
         ))}
 
+        {/* Take photo — camera */}
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => cameraRef.current?.click()}
+          className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 transition-colors hover:border-ink-400 hover:bg-slate-50 hover:text-ink-700"
+        >
+          <div className="text-center">
+            <Camera className="mx-auto h-6 w-6" />
+            <span className="mt-1 block text-xs font-semibold">{t('media.takePhoto')}</span>
+          </div>
+        </button>
+
+        {/* From device — gallery / files */}
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
           className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 transition-colors hover:border-ink-400 hover:bg-slate-50 hover:text-ink-700"
         >
           <div className="text-center">
             <ImagePlus className="mx-auto h-6 w-6" />
-            <span className="mt-1 block text-xs font-semibold">Add media</span>
+            <span className="mt-1 block text-xs font-semibold">{t('media.fromDevice')}</span>
           </div>
         </button>
       </div>
-      <p className="mt-2 text-xs text-slate-500">
-        Add a photo or a short recorded video as evidence. On a phone, this opens
-        the camera directly.
-      </p>
+      <p className="mt-2 text-xs text-slate-500">{t('media.hint')}</p>
     </div>
   )
 }
