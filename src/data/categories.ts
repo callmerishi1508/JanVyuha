@@ -68,7 +68,9 @@ export const DEPARTMENTS: Record<DepartmentId, Department> = {
     authority: 'Urban Local Body & PWD',
     color: '#0f8a4f',
     icon: Construction,
-    helpline: '1800-XXX',
+    // National urban-services / municipal grievance helpline. Swap for the
+    // target city's ULB control-room number on a specific state rollout.
+    helpline: '1913',
   },
   electricity: {
     id: 'electricity',

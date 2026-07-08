@@ -1,33 +1,43 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 import { Header } from './components/Header'
 import { RoleGuard } from './components/RoleGuard'
+// Landing is the first paint for most visitors — keep it eager. Everything else
+// is code-split so the initial bundle (and low-end-phone load time) stays small.
 import { Landing } from './pages/Landing'
-import { LoginChoose } from './pages/LoginChoose'
-import { PublicLogin } from './pages/PublicLogin'
-import { StakeholderLogin } from './pages/StakeholderLogin'
-import { ReportIssue } from './pages/ReportIssue'
-import { MyIssues } from './pages/MyIssues'
-import { Dashboard } from './pages/Dashboard'
-import { AdminDashboard } from './pages/AdminDashboard'
-import { Analytics } from './pages/Analytics'
-import { Transparency } from './pages/Transparency'
-import {
-  Privacy,
-  Terms,
-  AccessibilityPage,
-  About,
-  Help,
-  Contact,
-  NotFound,
-} from './pages/info'
-import { IssueDetail } from './pages/IssueDetail'
 import { Footer } from './components/Footer'
 import { TesterPanel } from './components/TesterPanel'
 import { useAuth } from './store/auth'
 import { useIssues } from './store/issues'
+
+const LoginChoose = lazy(() => import('./pages/LoginChoose').then((m) => ({ default: m.LoginChoose })))
+const PublicLogin = lazy(() => import('./pages/PublicLogin').then((m) => ({ default: m.PublicLogin })))
+const StakeholderLogin = lazy(() => import('./pages/StakeholderLogin').then((m) => ({ default: m.StakeholderLogin })))
+const ReportIssue = lazy(() => import('./pages/ReportIssue').then((m) => ({ default: m.ReportIssue })))
+const MyIssues = lazy(() => import('./pages/MyIssues').then((m) => ({ default: m.MyIssues })))
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
+const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
+const Transparency = lazy(() => import('./pages/Transparency').then((m) => ({ default: m.Transparency })))
+const IssueDetail = lazy(() => import('./pages/IssueDetail').then((m) => ({ default: m.IssueDetail })))
+const Privacy = lazy(() => import('./pages/info').then((m) => ({ default: m.Privacy })))
+const Terms = lazy(() => import('./pages/info').then((m) => ({ default: m.Terms })))
+const AccessibilityPage = lazy(() => import('./pages/info').then((m) => ({ default: m.AccessibilityPage })))
+const About = lazy(() => import('./pages/info').then((m) => ({ default: m.About })))
+const Help = lazy(() => import('./pages/info').then((m) => ({ default: m.Help })))
+const Contact = lazy(() => import('./pages/info').then((m) => ({ default: m.Contact })))
+const NotFound = lazy(() => import('./pages/info').then((m) => ({ default: m.NotFound })))
+
+function RouteFallback() {
+  return (
+    <div className="grid place-items-center py-32 text-slate-400">
+      <Loader2 className="h-6 w-6 animate-spin" />
+    </div>
+  )
+}
 
 export default function App() {
   const location = useLocation()
@@ -68,6 +78,7 @@ export default function App() {
       </a>
       <Header />
       <main id="main-content" className="flex-1">
+        <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<LoginChoose />} />
@@ -116,6 +127,7 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </main>
       {!isDashboard && <Footer />}
       <Toaster

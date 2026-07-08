@@ -47,7 +47,7 @@ export const useIssues = create<IssuesState>((set, get) => ({
       set({ issues, loading: false, loaded: true })
     } catch (e) {
       // Surface nothing to the UI beyond an empty list; keep app alive.
-      console.error('Failed to load issues', e)
+      if (import.meta.env.DEV) console.error('Failed to load issues', e)
       set({ loading: false, loaded: true })
     }
   },
