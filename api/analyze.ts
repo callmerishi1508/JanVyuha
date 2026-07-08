@@ -58,7 +58,9 @@ function json(res: any, status: number, body: unknown) {
 // Best-effort, zero-dependency guards. For a production state rollout, add a
 // proper edge rate-limiter (Vercel WAF or Upstash free tier) — documented in
 // docs/security.md. These caps still stop the obvious script-it-in-a-loop abuse.
-const MAX_IMAGE_BYTES = 1_600_000 // ~1.6MB of base64 ≈ a phone photo
+// ~3.5MB of base64 ≈ a 2.6MB image. Kept safely under Vercel's 4.5MB request
+// body limit (base64 inflates the raw image ~1.33×, plus prompt/JSON overhead).
+const MAX_IMAGE_BYTES = 3_500_000
 const MAX_DESC_CHARS = 4000
 const RATE_MAX = 20 // requests
 const RATE_WINDOW_MS = 60_000 // per minute, per IP (per warm instance)
@@ -74,10 +76,28 @@ function rateLimited(ip: string): boolean {
 }
 
 function originAllowed(req: any): boolean {
+  const origin = req.headers?.origin || ''
+  const host = req.headers?.host || ''
+
+  // Same-origin requests — the deployed app calling its own /api — are always
+  // allowed. This automatically covers every Vercel domain (production, preview
+  // deployments, and custom domains) without needing to enumerate them, which
+  // was the bug: an exact ALLOWED_ORIGINS prefix rejected preview URLs (and even
+  // a hyphen/no-hyphen typo) with 403, so the request never reached Gemini.
+  if (origin && host) {
+    try {
+      if (new URL(origin).host === host) return true
+    } catch {
+      /* malformed Origin header — fall through to the allow-list */
+    }
+  }
+
+  // Otherwise honour an explicit cross-origin allow-list. Blank = allow all
+  // (dev / preview / unconfigured).
   const allow = (process.env.ALLOWED_ORIGINS || '').trim()
-  if (!allow) return true // not configured → allow (dev / preview)
-  const origin = req.headers?.origin || req.headers?.referer || ''
-  return allow.split(',').some((o) => o.trim() && origin.startsWith(o.trim()))
+  if (!allow) return true
+  const ref = origin || req.headers?.referer || ''
+  return allow.split(',').some((o) => o.trim() && ref.startsWith(o.trim()))
 }
 
 export default async function handler(req: any, res: any) {
