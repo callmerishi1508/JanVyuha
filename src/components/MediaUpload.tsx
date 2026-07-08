@@ -44,6 +44,7 @@ export function MediaUpload({
   // (opens the gallery / file picker, multiple). On desktop `capture` is ignored
   // and both simply open the file picker — expected, since there's no camera.
   const cameraRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const pickFrom = (ref: React.RefObject<HTMLInputElement | null>) => {
@@ -89,6 +90,16 @@ export function MediaUpload({
         ref={cameraRef}
         type="file"
         accept="image/*"
+        capture="environment"
+        hidden
+        onChange={onPick}
+      />
+      {/* Video — opens the camera in video mode. Single media type (video only)
+          for the same reason: `capture` is reliable only with one accept type. */}
+      <input
+        ref={videoRef}
+        type="file"
+        accept="video/*"
         capture="environment"
         hidden
         onChange={onPick}
@@ -152,7 +163,7 @@ export function MediaUpload({
               />
               <div
                 role="menu"
-                className="absolute left-1/2 top-full z-20 mt-1.5 w-44 -translate-x-1/2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lift"
+                className="absolute left-1/2 top-full z-20 mt-1.5 w-48 -translate-x-1/2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lift"
               >
                 <button
                   type="button"
@@ -161,7 +172,16 @@ export function MediaUpload({
                   className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-ink-800 hover:bg-slate-50"
                 >
                   <Camera className="h-4 w-4 text-slate-500" />
-                  {t('media.camera')}
+                  {t('media.takePhoto')}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => pickFrom(videoRef)}
+                  className="flex w-full items-center gap-2.5 border-t border-slate-100 px-3.5 py-2.5 text-left text-sm font-semibold text-ink-800 hover:bg-slate-50"
+                >
+                  <Video className="h-4 w-4 text-slate-500" />
+                  {t('media.recordVideo')}
                 </button>
                 <button
                   type="button"
