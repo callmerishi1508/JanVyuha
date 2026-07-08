@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ImagePlus, Video, X, Camera } from 'lucide-react'
 import type { MediaItem } from '../data/types'
@@ -38,12 +38,18 @@ export function MediaUpload({
   onChange: (items: MediaItem[]) => void
 }) {
   const { t } = useTranslation()
-  // Two separate inputs so the citizen can choose: the camera input carries
-  // `capture` (opens the camera on a phone / PWA), the device input omits it
-  // (opens the gallery / file picker and allows multiple). On desktop the
-  // `capture` hint is ignored and simply falls back to the file picker.
+  const [menuOpen, setMenuOpen] = useState(false)
+  // One "Add media" affordance, two sources behind it. The camera input carries
+  // `capture` (opens the camera on a phone / PWA); the device input omits it
+  // (opens the gallery / file picker, multiple). On desktop `capture` is ignored
+  // and both simply open the file picker — expected, since there's no camera.
   const cameraRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  const pickFrom = (ref: React.RefObject<HTMLInputElement | null>) => {
+    setMenuOpen(false)
+    ref.current?.click()
+  }
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return
@@ -73,7 +79,7 @@ export function MediaUpload({
 
   return (
     <div>
-      {/* Camera — opens the device camera on phone / installed PWA. */}
+      {/* Camera — opens the device camera on phone / installed PWA (photo or video). */}
       <input
         ref={cameraRef}
         type="file"
@@ -116,29 +122,55 @@ export function MediaUpload({
           </div>
         ))}
 
-        {/* Take photo — camera */}
-        <button
-          type="button"
-          onClick={() => cameraRef.current?.click()}
-          className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 transition-colors hover:border-ink-400 hover:bg-slate-50 hover:text-ink-700"
-        >
-          <div className="text-center">
-            <Camera className="mx-auto h-6 w-6" />
-            <span className="mt-1 block text-xs font-semibold">{t('media.takePhoto')}</span>
-          </div>
-        </button>
+        {/* One "Add media" tile → menu with Camera / From device. */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className="grid aspect-square w-full place-items-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 transition-colors hover:border-ink-400 hover:bg-slate-50 hover:text-ink-700"
+          >
+            <div className="text-center">
+              <ImagePlus className="mx-auto h-6 w-6" />
+              <span className="mt-1 block text-xs font-semibold">{t('media.addMedia')}</span>
+            </div>
+          </button>
 
-        {/* From device — gallery / files */}
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          className="grid aspect-square place-items-center rounded-lg border-2 border-dashed border-slate-300 text-slate-500 transition-colors hover:border-ink-400 hover:bg-slate-50 hover:text-ink-700"
-        >
-          <div className="text-center">
-            <ImagePlus className="mx-auto h-6 w-6" />
-            <span className="mt-1 block text-xs font-semibold">{t('media.fromDevice')}</span>
-          </div>
-        </button>
+          {menuOpen && (
+            <>
+              {/* click-away backdrop */}
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setMenuOpen(false)}
+                aria-hidden="true"
+              />
+              <div
+                role="menu"
+                className="absolute left-1/2 top-full z-20 mt-1.5 w-44 -translate-x-1/2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lift"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => pickFrom(cameraRef)}
+                  className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm font-semibold text-ink-800 hover:bg-slate-50"
+                >
+                  <Camera className="h-4 w-4 text-slate-500" />
+                  {t('media.camera')}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => pickFrom(fileRef)}
+                  className="flex w-full items-center gap-2.5 border-t border-slate-100 px-3.5 py-2.5 text-left text-sm font-semibold text-ink-800 hover:bg-slate-50"
+                >
+                  <ImagePlus className="h-4 w-4 text-slate-500" />
+                  {t('media.fromDevice')}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <p className="mt-2 text-xs text-slate-500">{t('media.hint')}</p>
     </div>

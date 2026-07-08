@@ -11,9 +11,10 @@ const en = {
     routedTo: 'Routed to:',
   },
   media: {
-    takePhoto: 'Take photo',
+    addMedia: 'Add media',
+    camera: 'Camera',
     fromDevice: 'From device',
-    hint: 'Take a photo with your camera, or add a photo/short video from your device.',
+    hint: 'Take a photo or video with your camera, or add one from your device.',
     video: 'Video',
     remove: 'Remove',
   },
