@@ -12,6 +12,8 @@ const te: Dict = {
     loading: 'లోడ్ అవుతోంది…',
     skipToContent: 'ముఖ్య విషయానికి వెళ్లండి',
     routedTo: 'పంపబడింది:',
+    selectedLocation: 'ఎంచుకున్న స్థానం',
+    rating: 'రేటింగ్',
   },
   media: {
     addMedia: 'మీడియా జోడించండి',
@@ -21,6 +23,14 @@ const te: Dict = {
     hint: 'మీ కెమెరాతో ఫోటో తీయండి లేదా వీడియో రికార్డ్ చేయండి, లేదా మీ పరికరం నుండి జోడించండి.',
     video: 'వీడియో',
     remove: 'తీసివేయండి',
+  },
+  time: {
+    justNow: 'ఇప్పుడే',
+    minAgo: '{{count}} నిమిషాల క్రితం',
+    hrAgo_one: '{{count}} గంట క్రితం',
+    hrAgo_other: '{{count}} గంటల క్రితం',
+    dayAgo_one: '{{count}} రోజు క్రితం',
+    dayAgo_other: '{{count}} రోజుల క్రితం',
   },
   nav: {
     report: 'సమస్యను నివేదించండి',
@@ -491,6 +501,23 @@ const te: Dict = {
     thSlaBreaches: 'SLA ఉల్లంఘనలు',
     noIssuesYet: 'ఇంకా సమస్యలు లేవు.',
     backToConsole: '← పరిపాలన కన్సోల్‌కు తిరిగి',
+  },
+  transparency: {
+    title: 'ప్రజా పారదర్శకత డాష్‌బోర్డ్',
+    subtitle:
+      '{{jurisdiction}} కోసం అనామక, రియల్-టైమ్ పౌర-స్పందన డేటా. ఎటువంటి వ్యక్తిగత సమాచారం చూపబడదు — స్థానాలు సుమారుగా ఉంటాయి.',
+    reports: 'నివేదికలు',
+    resolved: 'పరిష్కరించబడినవి',
+    open: 'తెరిచినవి',
+    avgResolution: 'సగటు పరిష్కారం',
+    byCategory: 'వర్గం ఆధారంగా నివేదికలు',
+    resolutionSplit: 'పరిష్కార విభజన',
+    resolvedVsOpen: 'పరిష్కరించబడినవి vs తెరిచినవి',
+    byDistrict: 'జిల్లా ఆధారంగా',
+    noData: 'డేటా లేదు.',
+    recentReports: 'ఇటీవలి ప్రజా నివేదికలు',
+    identityHidden: 'గుర్తింపు దాచబడింది · సుమారు ప్రాంతం',
+    noReportsYet: 'ఇంకా ప్రజా నివేదికలు లేవు.',
   },
   admin: {
     title: 'పరిపాలన కన్సోల్',

@@ -33,7 +33,7 @@ const NotFound = lazy(() => import('./pages/info').then((m) => ({ default: m.Not
 
 function RouteFallback() {
   return (
-    <div className="grid place-items-center py-32 text-slate-400">
+    <div className="grid place-items-center py-32 text-slate-500">
       <Loader2 className="h-6 w-6 animate-spin" />
     </div>
   )

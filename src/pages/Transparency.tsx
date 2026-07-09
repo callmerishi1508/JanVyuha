@@ -51,20 +51,19 @@ export function Transparency() {
           <Globe2 className="h-6 w-6" />
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight text-ink-900">
-          Public Transparency Dashboard
+          {t('transparency.title')}
         </h1>
         <p className="mt-2 text-slate-600">
-          Anonymised, real-time civic-response data for {BRAND.jurisdiction}. No
-          personal information is shown — locations are approximate.
+          {t('transparency.subtitle', { jurisdiction: BRAND.jurisdiction })}
         </p>
       </div>
 
       <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Tile label="Reports" value={s.total} icon={Gauge} />
-        <Tile label="Resolved" value={s.resolved} icon={CheckCircle2} tone="green" />
-        <Tile label="Open" value={s.open} icon={Clock} tone="amber" />
+        <Tile label={t('transparency.reports')} value={s.total} icon={Gauge} />
+        <Tile label={t('transparency.resolved')} value={s.resolved} icon={CheckCircle2} tone="green" />
+        <Tile label={t('transparency.open')} value={s.open} icon={Clock} tone="amber" />
         <Tile
-          label="Avg resolution"
+          label={t('transparency.avgResolution')}
           value={s.avgResolutionMs == null ? '—' : humanizeMs(s.avgResolutionMs)}
           icon={Gauge}
         />
@@ -72,30 +71,30 @@ export function Transparency() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card p-5 lg:col-span-2">
-          <h3 className="text-sm font-bold text-ink-900">Reports by category</h3>
+          <h3 className="text-sm font-bold text-ink-900">{t('transparency.byCategory')}</h3>
           <div className="mt-3">
             {cats.length ? (
-              <BarChart data={cats} title="Reports by category" />
+              <BarChart data={cats} title={t('transparency.byCategory')} />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-400">No data.</p>
+              <p className="py-6 text-center text-sm text-slate-500">{t('transparency.noData')}</p>
             )}
           </div>
         </div>
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-ink-900">Resolution split</h3>
+          <h3 className="text-sm font-bold text-ink-900">{t('transparency.resolutionSplit')}</h3>
           <div className="mt-3">
             <Donut
               data={[
-                { label: 'Resolved', value: s.resolved, color: '#0f8a4f' },
-                { label: 'Open', value: s.open, color: '#ea580c' },
+                { label: t('transparency.resolved'), value: s.resolved, color: '#0f8a4f' },
+                { label: t('transparency.open'), value: s.open, color: '#ea580c' },
               ]}
-              title="Resolved vs open"
+              title={t('transparency.resolvedVsOpen')}
             />
             <div className="mt-3">
               <Legend
                 data={[
-                  { label: 'Resolved', value: s.resolved, color: '#0f8a4f' },
-                  { label: 'Open', value: s.open, color: '#ea580c' },
+                  { label: t('transparency.resolved'), value: s.resolved, color: '#0f8a4f' },
+                  { label: t('transparency.open'), value: s.open, color: '#ea580c' },
                 ]}
               />
             </div>
@@ -105,19 +104,19 @@ export function Transparency() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-ink-900">By district</h3>
+          <h3 className="text-sm font-bold text-ink-900">{t('transparency.byDistrict')}</h3>
           <div className="mt-3">
             {districts.length ? (
-              <BarChart data={districts} accent="#0f8a4f" title="Reports by district" />
+              <BarChart data={districts} accent="#0f8a4f" title={t('transparency.byDistrict')} />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-400">No data.</p>
+              <p className="py-6 text-center text-sm text-slate-500">{t('transparency.noData')}</p>
             )}
           </div>
         </div>
 
         <div className="card p-5 lg:col-span-2">
-          <h3 className="text-sm font-bold text-ink-900">Recent public reports</h3>
-          <p className="text-xs text-slate-500">Identity hidden · approximate area</p>
+          <h3 className="text-sm font-bold text-ink-900">{t('transparency.recentReports')}</h3>
+          <p className="text-xs text-slate-500">{t('transparency.identityHidden')}</p>
           <div className="mt-3 divide-y divide-slate-100">
             {active.slice(0, 8).map((i) => (
               <div key={i.id} className="flex items-center gap-3 py-2.5">
@@ -135,8 +134,8 @@ export function Transparency() {
               </div>
             ))}
             {active.length === 0 && (
-              <p className="py-6 text-center text-sm text-slate-400">
-                No public reports yet.
+              <p className="py-6 text-center text-sm text-slate-500">
+                {t('transparency.noReportsYet')}
               </p>
             )}
           </div>

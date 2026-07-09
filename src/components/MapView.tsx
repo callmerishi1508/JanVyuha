@@ -7,6 +7,7 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet'
+import { useTranslation } from 'react-i18next'
 import { CATEGORIES } from '../data/categories'
 import type { Issue } from '../data/types'
 import { makeMarkerIcon, INDIA_CENTER } from '../lib/leaflet'
@@ -56,6 +57,7 @@ export function MapView({
   picked,
   onSelectIssue,
 }: MapViewProps) {
+  const { t } = useTranslation()
   const initial: [number, number] =
     center ??
     (picked
@@ -85,7 +87,7 @@ export function MapView({
             position={[picked.lat, picked.lng]}
             icon={makeMarkerIcon('#ff7d10', true)}
           >
-            <Popup>Selected location</Popup>
+            <Popup>{t('common.selectedLocation')}</Popup>
           </Marker>
         )}
 
@@ -100,7 +102,7 @@ export function MapView({
           >
             <Popup>
               <div className="min-w-[180px]">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   {shortId(issue.id)} · {CATEGORIES[issue.category].name}
                 </div>
                 <div className="mt-0.5 text-sm font-semibold text-ink-900">

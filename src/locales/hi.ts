@@ -12,6 +12,8 @@ const hi: Dict = {
     loading: 'लोड हो रहा है…',
     skipToContent: 'मुख्य सामग्री पर जाएँ',
     routedTo: 'भेजा गया:',
+    selectedLocation: 'चयनित स्थान',
+    rating: 'रेटिंग',
   },
   media: {
     addMedia: 'मीडिया जोड़ें',
@@ -21,6 +23,14 @@ const hi: Dict = {
     hint: 'अपने कैमरे से फोटो लें या वीडियो रिकॉर्ड करें, या अपने डिवाइस से जोड़ें।',
     video: 'वीडियो',
     remove: 'हटाएँ',
+  },
+  time: {
+    justNow: 'अभी',
+    minAgo: '{{count}} मिनट पहले',
+    hrAgo_one: '{{count}} घंटा पहले',
+    hrAgo_other: '{{count}} घंटे पहले',
+    dayAgo_one: '{{count}} दिन पहले',
+    dayAgo_other: '{{count}} दिन पहले',
   },
   nav: {
     report: 'समस्या दर्ज करें',
@@ -491,6 +501,23 @@ const hi: Dict = {
     thSlaBreaches: 'SLA उल्लंघन',
     noIssuesYet: 'अभी तक कोई समस्या नहीं।',
     backToConsole: '← प्रशासन कंसोल पर वापस',
+  },
+  transparency: {
+    title: 'सार्वजनिक पारदर्शिता डैशबोर्ड',
+    subtitle:
+      '{{jurisdiction}} के लिए गुमनाम, रीयल-टाइम नागरिक-प्रतिक्रिया डेटा। कोई व्यक्तिगत जानकारी नहीं दिखाई जाती — स्थान अनुमानित हैं।',
+    reports: 'रिपोर्टें',
+    resolved: 'हल',
+    open: 'खुली',
+    avgResolution: 'औसत समाधान',
+    byCategory: 'श्रेणी के अनुसार रिपोर्टें',
+    resolutionSplit: 'समाधान विभाजन',
+    resolvedVsOpen: 'हल बनाम खुली',
+    byDistrict: 'जिले के अनुसार',
+    noData: 'कोई डेटा नहीं।',
+    recentReports: 'हाल की सार्वजनिक रिपोर्टें',
+    identityHidden: 'पहचान छिपी · अनुमानित क्षेत्र',
+    noReportsYet: 'अभी तक कोई सार्वजनिक रिपोर्ट नहीं।',
   },
   admin: {
     title: 'प्रशासन कंसोल',

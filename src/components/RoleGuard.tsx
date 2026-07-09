@@ -21,7 +21,7 @@ export function RoleGuard({
   // so a page refresh doesn't briefly bounce a logged-in user to login.
   if (backend === 'supabase' && !ready) {
     return (
-      <div className="grid place-items-center py-32 text-slate-400">
+      <div className="grid place-items-center py-32 text-slate-500">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     )

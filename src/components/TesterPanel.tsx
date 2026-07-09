@@ -197,7 +197,7 @@ export function TesterPanel() {
                 ))}
               </div>
               {!hasSupabase && (
-                <p className="mt-1.5 text-[11px] text-slate-400">
+                <p className="mt-1.5 text-[11px] text-slate-500">
                   Supabase keys not found in <code>.env</code> — mock only.
                 </p>
               )}
@@ -217,7 +217,7 @@ export function TesterPanel() {
                   onChange={(e) => setMockAi(e.target.checked)}
                 />
               </label>
-              <p className="mt-1.5 text-[11px] text-slate-400">
+              <p className="mt-1.5 text-[11px] text-slate-500">
                 On = instant canned suggestions. Off = calls the /api/analyze
                 Gemini proxy (needs a deployed function + key).
               </p>
@@ -266,7 +266,7 @@ export function TesterPanel() {
               </div>
             </Section>
 
-            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-400">
+            <div className="mt-3 flex items-center gap-1.5 text-[11px] text-slate-500">
               <Building2 className="h-3 w-3" />
               Dev-only tools. Hidden from end-users in production builds.
             </div>
@@ -286,7 +286,7 @@ function Section({
 }) {
   return (
     <div className="mb-4">
-      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+      <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">
         {title}
       </div>
       {children}

@@ -31,7 +31,7 @@ export function StatTile({
         <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
           {label}
         </div>
-        {hint && <div className="text-[11px] text-slate-400">{hint}</div>}
+        {hint && <div className="text-[11px] text-slate-500">{hint}</div>}
       </div>
     </div>
   )

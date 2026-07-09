@@ -158,7 +158,7 @@ function Overview({ issues }: { issues: Issue[] }) {
         <div className="lg:col-span-2">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -233,7 +233,7 @@ function Overview({ issues }: { issues: Issue[] }) {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-slate-400">
+                    <td colSpan={5} className="px-3 py-8 text-center text-slate-500">
                       {t('admin.noIssuesMatch')}
                     </td>
                   </tr>
@@ -265,7 +265,7 @@ function Overview({ issues }: { issues: Issue[] }) {
                 </div>
               ))}
               {districts.length === 0 && (
-                <p className="text-xs text-slate-400">{t('admin.noData')}</p>
+                <p className="text-xs text-slate-500">{t('admin.noData')}</p>
               )}
             </div>
           </div>
@@ -524,7 +524,7 @@ function Accounts() {
             </div>
           ))}
           {profiles.length === 0 && (
-            <p className="py-6 text-center text-sm text-slate-400">
+            <p className="py-6 text-center text-sm text-slate-500">
               {ready ? t('admin.noAccounts') : t('admin.connectSupabaseAccounts')}
             </p>
           )}
@@ -576,7 +576,7 @@ function Audit() {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-3 py-8 text-center text-slate-400">
+              <td colSpan={4} className="px-3 py-8 text-center text-slate-500">
                 {t('admin.noAudit')}
               </td>
             </tr>

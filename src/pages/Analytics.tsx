@@ -168,7 +168,7 @@ export function Analytics() {
             {districts.length ? (
               <BarChart data={districts} accent="#0f8a4f" title={t('analytics.districtChartTitle')} />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-400">{t('analytics.noData')}</p>
+              <p className="py-6 text-center text-sm text-slate-500">{t('analytics.noData')}</p>
             )}
           </div>
         </div>
@@ -210,14 +210,14 @@ export function Analytics() {
                     {p.breached > 0 ? (
                       <span className="chip bg-red-100 text-red-700">{p.breached}</span>
                     ) : (
-                      <span className="text-slate-400">0</span>
+                      <span className="text-slate-500">0</span>
                     )}
                   </td>
                 </tr>
               ))}
               {perf.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-400">
+                  <td colSpan={7} className="py-6 text-center text-slate-500">
                     {t('analytics.noIssuesYet')}
                   </td>
                 </tr>

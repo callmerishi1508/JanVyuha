@@ -100,11 +100,11 @@ export function NotificationBell() {
         <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] animate-fade-in overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lift">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
             <span className="text-sm font-bold text-ink-900">Notifications</span>
-            <span className="text-xs text-slate-400">{relevant.length}</span>
+            <span className="text-xs text-slate-500">{relevant.length}</span>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {relevant.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-400">
+              <div className="px-4 py-8 text-center text-sm text-slate-500">
                 Nothing yet.
               </div>
             ) : (

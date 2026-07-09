@@ -67,7 +67,7 @@ export function LoginChoose() {
       </div>
 
       {isDemoMode() && (
-        <p className="mx-auto mt-8 max-w-md text-center text-xs text-slate-400">
+        <p className="mx-auto mt-8 max-w-md text-center text-xs text-slate-500">
           This is a demonstration environment. Authentication is simulated — no
           real credentials or OTP are required.
         </p>

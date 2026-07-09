@@ -122,10 +122,11 @@ export function Dashboard() {
 
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
                   className="input w-56 pl-9"
                   placeholder={t('dashboard.searchIssues')}
+                  aria-label={t('dashboard.searchIssues')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -169,7 +170,7 @@ export function Dashboard() {
       <div className="border-b border-slate-200 bg-white/70">
         <div className="container-page flex items-center justify-between gap-3 py-2.5">
           <div className="flex items-center gap-1.5 overflow-x-auto">
-            <Filter className="mr-1 h-4 w-4 shrink-0 text-slate-400" />
+            <Filter className="mr-1 h-4 w-4 shrink-0 text-slate-500" />
             {(
               [
                 ['open', t('dashboard.filterOpen')],
@@ -228,7 +229,7 @@ export function Dashboard() {
           )}
         >
           {loading && !loaded ? (
-            <div className="grid place-items-center py-20 text-slate-400">
+            <div className="grid place-items-center py-20 text-slate-500">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
@@ -287,7 +288,7 @@ function DashboardRow({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
           <span>{shortId(issue.id)}</span>
           {cat.emergency && (
             <span className="chip bg-red-100 py-0 text-[9px] text-red-600">
@@ -316,7 +317,7 @@ function DashboardRow({
         <CategoryPill category={issue.category} />
         <SeverityBadge severity={issue.severity} />
         <span className="text-xs text-slate-500">{issue.location.address}</span>
-        <span className="ml-auto text-xs text-slate-400">
+        <span className="ml-auto text-xs text-slate-500">
           {timeAgo(issue.createdAt)}
         </span>
       </div>
@@ -327,7 +328,7 @@ function DashboardRow({
 function EmptyState({ catNames, t }: { catNames: string[]; t: TFunction }) {
   return (
     <div className="card grid place-items-center gap-3 py-16 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-400">
+      <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-500">
         <Inbox className="h-7 w-7" />
       </div>
       <div>

@@ -147,7 +147,7 @@ export function StakeholderLogin() {
                   {t('stakeholder.officialEmail')}
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                   <input
                     id="dept-email"
                     type="email"
@@ -165,7 +165,7 @@ export function StakeholderLogin() {
                   {t('stakeholder.officerId')}
                 </label>
                 <div className="relative">
-                  <IdCard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <IdCard className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                   <input
                     id="officer-id"
                     className="input pl-9"
@@ -182,7 +182,7 @@ export function StakeholderLogin() {
                 {t('stakeholder.password')}
               </label>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                 <input
                   id="dept-pass"
                   type="password"
@@ -225,7 +225,7 @@ export function StakeholderLogin() {
               </p>
             </div>
           ) : (
-            <p className="mt-4 text-center text-xs text-slate-400">
+            <p className="mt-4 text-center text-xs text-slate-500">
               {t('stakeholder.demoNote')}
             </p>
           )}

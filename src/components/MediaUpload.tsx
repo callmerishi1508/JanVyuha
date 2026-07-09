@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ImagePlus, Video, X, Camera } from 'lucide-react'
 import type { MediaItem } from '../data/types'
+import { toCompressedDataURL } from '../lib/image'
 
 /** Renders either an uploaded data-URL or a seed "gradient:" placeholder. */
 export function MediaThumb({
@@ -52,23 +53,20 @@ export function MediaUpload({
     ref.current?.click()
   }
 
-  const handleFiles = (files: FileList | null) => {
+  const handleFiles = async (files: FileList | null) => {
     if (!files) return
-    const readers = Array.from(files).map(
-      (file) =>
-        new Promise<MediaItem>((resolve) => {
-          const reader = new FileReader()
-          reader.onload = () =>
-            resolve({
-              id: 'm_' + Math.random().toString(36).slice(2, 8),
-              type: file.type.startsWith('video') ? 'video' : 'image',
-              url: reader.result as string,
-              label: file.name,
-            })
-          reader.readAsDataURL(file)
-        })
+    // Downscale images before they enter state / upload (see lib/image.ts).
+    const newItems = await Promise.all(
+      Array.from(files).map(async (file) => ({
+        id: 'm_' + Math.random().toString(36).slice(2, 8),
+        type: (file.type.startsWith('video') ? 'video' : 'image') as
+          | 'video'
+          | 'image',
+        url: await toCompressedDataURL(file),
+        label: file.name,
+      }))
     )
-    Promise.all(readers).then((newItems) => onChange([...items, ...newItems]))
+    onChange([...items, ...newItems])
   }
 
   // Reset the input value after each pick so selecting the same file twice
@@ -124,7 +122,7 @@ export function MediaUpload({
             <button
               type="button"
               onClick={() => onChange(items.filter((i) => i.id !== item.id))}
-              className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white opacity-100 transition-opacity focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
               aria-label={t('media.remove')}
             >
               <X className="h-3.5 w-3.5" />

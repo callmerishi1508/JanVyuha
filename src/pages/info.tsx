@@ -278,7 +278,7 @@ export function NotFound() {
   const { t } = useTranslation()
   return (
     <div className="container-page grid place-items-center py-24 text-center">
-      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-400">
+      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-500">
         <Home className="h-8 w-8" />
       </div>
       <h1 className="mt-5 text-3xl font-extrabold text-ink-900">{t('info.notFoundTitle')}</h1>

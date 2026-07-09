@@ -118,12 +118,12 @@ export function MyIssues() {
 
       <div className="mt-6 space-y-3">
         {loading && !loaded ? (
-          <div className="grid place-items-center py-20 text-slate-400">
+          <div className="grid place-items-center py-20 text-slate-500">
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : shown.length === 0 ? (
           <div className="card grid place-items-center gap-3 py-16 text-center">
-            <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-400">
+            <div className="grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-500">
               <Inbox className="h-7 w-7" />
             </div>
             <div>
@@ -147,7 +147,7 @@ export function MyIssues() {
               <IssueCard issue={issue} showRouting />
               <button
                 onClick={() => deleteReport(issue.id)}
-                className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600"
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 {t('myIssues.deleteReport')}

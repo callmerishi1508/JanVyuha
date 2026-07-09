@@ -17,7 +17,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">
             {t('footer.citizens')}
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
@@ -55,7 +55,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">
             {t('footer.departments')}
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
@@ -66,7 +66,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h4 className="text-xs font-bold uppercase tracking-wide text-slate-500">
             {t('footer.helplines')}
           </h4>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
@@ -83,7 +83,7 @@ export function Footer() {
           <p>
             © {new Date().getFullYear()} {BRAND.product} · {BRAND.authority}.
             {!BRAND.official && ` ${t('footer.pilotNote')}`}
-            <span className="ml-1 text-slate-400">· build {__BUILD_ID__}</span>
+            <span className="ml-1 text-slate-500">· build {__BUILD_ID__}</span>
           </p>
           <p className="flex items-center gap-3">
             <Link to="/privacy" className="hover:text-ink-800">

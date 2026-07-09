@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation, Trans } from 'react-i18next'
 import toast from 'react-hot-toast'
@@ -93,6 +93,19 @@ export function ReportIssue() {
   useEffect(() => {
     if (!loaded) refresh()
   }, [loaded, refresh])
+
+  // Accessibility: when the wizard step changes, move focus to the step panel so
+  // screen-reader users are taken to the new content (not left on the old button).
+  // Skip the very first render so we don't steal focus on page load.
+  const stepRef = useRef<HTMLDivElement>(null)
+  const firstRender = useRef(true)
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+    stepRef.current?.focus()
+  }, [step])
 
   const cat = category ? CATEGORIES[category] : null
 
@@ -364,7 +377,12 @@ export function ReportIssue() {
         })}
       </ol>
 
-      <div className="card p-6 sm:p-8">
+      <div
+        ref={stepRef}
+        tabIndex={-1}
+        aria-live="polite"
+        className="card p-6 sm:p-8 focus:outline-none"
+      >
         {/* Step 0 — category */}
         {step === 0 && (
           <div className="animate-fade-in">
@@ -592,7 +610,7 @@ export function ReportIssue() {
                         >
                           {t(`severities.${aiSuggestion.severity}`)}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-slate-500">
                           {t('report.percentConfident', {
                             pct: Math.round(aiSuggestion.confidence * 100),
                           })}
@@ -651,15 +669,16 @@ export function ReportIssue() {
 
             {/* Address search */}
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
               <input
                 className="input pl-9"
                 placeholder={t('report.searchPlaceholder')}
+                aria-label={t('report.searchPlaceholder')}
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
               />
               {searching && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-500" />
               )}
               {searchResults.length > 0 && (
                 <ul className="absolute z-[500] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lift">
@@ -689,8 +708,9 @@ export function ReportIssue() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="label">{t('report.addressLabel')}</label>
+                <label htmlFor="loc-address" className="label">{t('report.addressLabel')}</label>
                 <input
+                  id="loc-address"
                   className="input"
                   placeholder={t('report.addressPlaceholder')}
                   value={address}
@@ -698,8 +718,9 @@ export function ReportIssue() {
                 />
               </div>
               <div>
-                <label className="label">{t('report.cityLabel')}</label>
+                <label htmlFor="loc-city" className="label">{t('report.cityLabel')}</label>
                 <input
+                  id="loc-city"
                   className="input"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
@@ -707,8 +728,9 @@ export function ReportIssue() {
                 />
               </div>
               <div>
-                <label className="label">{t('report.stateLabel')}</label>
+                <label htmlFor="loc-state" className="label">{t('report.stateLabel')}</label>
                 <input
+                  id="loc-state"
                   className="input"
                   value={state}
                   onChange={(e) => setState(e.target.value)}
@@ -717,7 +739,7 @@ export function ReportIssue() {
               </div>
             </div>
             {picked && (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {t('report.pinnedAt', {
                   lat: picked.lat.toFixed(5),
                   lng: picked.lng.toFixed(5),
@@ -741,7 +763,7 @@ export function ReportIssue() {
 
             {/* Core — always alerted, locked */}
             <div>
-              <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+              <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                 {t('report.alwaysAlerted', { category: tCategory(cat.id) })}
               </div>
               <div className="space-y-2">
@@ -777,7 +799,7 @@ export function ReportIssue() {
             {/* Conditional — user confirms */}
             {conditionals.length > 0 && (
               <div>
-                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                   {t('report.includeIfRelevant')}
                   {aiSuggestion && (
                     <span className="chip bg-indigo-100 py-0 text-[10px] text-indigo-700">
@@ -845,7 +867,7 @@ export function ReportIssue() {
                     )
                   })}
                 </div>
-                <p className="mt-2 text-xs text-slate-400">
+                <p className="mt-2 text-xs text-slate-500">
                   {t('report.deptTip')}
                 </p>
               </div>

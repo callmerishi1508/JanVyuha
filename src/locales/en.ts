@@ -9,6 +9,8 @@ const en = {
     loading: 'Loading…',
     skipToContent: 'Skip to main content',
     routedTo: 'Routed to:',
+    selectedLocation: 'Selected location',
+    rating: 'Rating',
   },
   media: {
     addMedia: 'Add media',
@@ -18,6 +20,14 @@ const en = {
     hint: 'Take a photo or record a video with your camera, or add one from your device.',
     video: 'Video',
     remove: 'Remove',
+  },
+  time: {
+    justNow: 'just now',
+    minAgo: '{{count}} min ago',
+    hrAgo_one: '{{count}} hr ago',
+    hrAgo_other: '{{count}} hrs ago',
+    dayAgo_one: '{{count}} day ago',
+    dayAgo_other: '{{count}} days ago',
   },
   nav: {
     report: 'Report Issue',
@@ -488,6 +498,23 @@ const en = {
     thSlaBreaches: 'SLA breaches',
     noIssuesYet: 'No issues yet.',
     backToConsole: '← Back to Administration Console',
+  },
+  transparency: {
+    title: 'Public Transparency Dashboard',
+    subtitle:
+      'Anonymised, real-time civic-response data for {{jurisdiction}}. No personal information is shown — locations are approximate.',
+    reports: 'Reports',
+    resolved: 'Resolved',
+    open: 'Open',
+    avgResolution: 'Avg resolution',
+    byCategory: 'Reports by category',
+    resolutionSplit: 'Resolution split',
+    resolvedVsOpen: 'Resolved vs open',
+    byDistrict: 'By district',
+    noData: 'No data.',
+    recentReports: 'Recent public reports',
+    identityHidden: 'Identity hidden · approximate area',
+    noReportsYet: 'No public reports yet.',
   },
   admin: {
     title: 'Administration Console',

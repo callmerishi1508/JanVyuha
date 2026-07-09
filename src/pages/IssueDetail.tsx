@@ -80,7 +80,7 @@ export function IssueDetail() {
 
   if (!issue) {
     return (
-      <div className="grid place-items-center py-32 text-slate-400">
+      <div className="grid place-items-center py-32 text-slate-500">
         <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     )
@@ -137,7 +137,7 @@ export function IssueDetail() {
               </div>
             )}
             <div className="p-5 sm:p-6">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
                 <span>{shortId(issue.id)}</span>
                 <span>·</span>
                 <span>{formatDateTime(issue.createdAt)}</span>
@@ -299,7 +299,7 @@ export function IssueDetail() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-slate-500">
                         {t('issueDetail.helpline')} {dep.helpline}
                       </div>
                     </div>
@@ -319,12 +319,12 @@ export function IssueDetail() {
           <div className="card p-5">
             <h3 className="text-sm font-bold text-ink-900">{t('issueDetail.reportedBy')}</h3>
             <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="h-4 w-4 text-slate-500" />
               {issue.reporterName}
             </div>
             {issue.reporterPhone && isOwningDept && (
               <div className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-                <Phone className="h-4 w-4 text-slate-400" />
+                <Phone className="h-4 w-4 text-slate-500" />
                 {issue.reporterPhone}
               </div>
             )}
@@ -380,7 +380,7 @@ export function IssueDetail() {
                       </button>
                     )}
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-400">
+                  <p className="mt-2 text-[11px] text-slate-500">
                     {t('issueDetail.updatesOnly', {
                       dept: tDeptShort(myDept!),
                     })}
@@ -422,7 +422,7 @@ export function IssueDetail() {
                   </p>
                 ) : (
                   <>
-                    <div className="mt-3 flex gap-1" role="radiogroup" aria-label="Rating">
+                    <div className="mt-3 flex gap-1" role="radiogroup" aria-label={t('common.rating')}>
                       {[1, 2, 3, 4, 5].map((n) => (
                         <button
                           key={n}
@@ -491,7 +491,7 @@ export function IssueDetail() {
                           {tStatus(u.status)}
                         </div>
                         <p className="text-xs text-slate-600">{u.note}</p>
-                        <div className="mt-0.5 text-[11px] text-slate-400">
+                        <div className="mt-0.5 text-[11px] text-slate-500">
                           {u.by} · {formatDateTime(u.at)}
                         </div>
                       </div>
@@ -512,7 +512,7 @@ export function IssueDetail() {
                 )
                 toast.success(t('issueDetail.reportedThanks'))
               }}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-red-600"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600"
             >
               <Flag className="h-3.5 w-3.5" />
               {issue.flagged

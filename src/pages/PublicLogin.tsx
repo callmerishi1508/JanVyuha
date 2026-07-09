@@ -132,7 +132,7 @@ function SupabaseAuth() {
         {t('auth.continueGoogle')}
       </button>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
         <span className="h-px flex-1 bg-slate-200" />
         {t('auth.or')}
         <span className="h-px flex-1 bg-slate-200" />
@@ -281,7 +281,7 @@ function SupabaseAuth() {
         </form>
       )}
 
-      <p className="mt-6 text-center text-xs text-slate-400">
+      <p className="mt-6 text-center text-xs text-slate-500">
         {t('auth.deptOfficialShort')}{' '}
         <Link
           to="/login/stakeholder"
@@ -341,7 +341,7 @@ function DemoAuth() {
         <GoogleIcon />
         {t('auth.continueGoogle')}
       </button>
-      <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
+      <div className="my-5 flex items-center gap-3 text-xs text-slate-500">
         <span className="h-px flex-1 bg-slate-200" />
         {t('auth.or')}
         <span className="h-px flex-1 bg-slate-200" />
@@ -380,7 +380,7 @@ function DemoAuth() {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
             />
-            <p className="mt-1.5 text-xs text-slate-400">
+            <p className="mt-1.5 text-xs text-slate-500">
               <Trans i18nKey="auth.demoOtpHint">
                 Demo OTP is <span className="font-semibold">1234</span>.
               </Trans>
@@ -392,7 +392,7 @@ function DemoAuth() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-slate-400">
+      <p className="mt-6 text-center text-xs text-slate-500">
         {t('auth.deptOfficialLong')}{' '}
         <Link
           to="/login/stakeholder"
@@ -459,7 +459,7 @@ function Field({
       <label className="label">{label}</label>
       <div className="relative">
         {Icon && (
-          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
         )}
         {children}
       </div>
