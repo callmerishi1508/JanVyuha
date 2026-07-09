@@ -376,6 +376,10 @@ const hi: Dict = {
     alertSentTo: 'अलर्ट भेजा गया',
     reportSubmitted: 'रिपोर्ट {{id}} सबमिट की गई',
     submitFailed: 'कुछ गड़बड़ हो गई। कृपया पुनः प्रयास करें।',
+    queuedOffline: 'आप ऑफ़लाइन हैं — आपकी रिपोर्ट सहेजी गई है और ऑनलाइन होने पर स्वचालित रूप से भेजी जाएगी।',
+    queuedSynced_one: '{{count}} सहेजी गई रिपोर्ट अब भेज दी गई है।',
+    queuedSynced_other: '{{count}} सहेजी गई रिपोर्टें अब भेज दी गई हैं।',
+    draftRestored: 'ड्राफ़्ट पुनर्स्थापित किया गया।',
   },
   myIssues: {
     title: 'मेरी रिपोर्टें',

@@ -373,6 +373,10 @@ const en = {
     alertSentTo: 'Alert sent to',
     reportSubmitted: 'Report {{id}} submitted',
     submitFailed: 'Something went wrong. Please try again.',
+    queuedOffline: "You're offline — your report is saved and will be sent automatically when you're back online.",
+    queuedSynced_one: '{{count}} saved report has now been sent.',
+    queuedSynced_other: '{{count}} saved reports have now been sent.',
+    draftRestored: 'Draft restored.',
   },
   myIssues: {
     title: 'My Reports',

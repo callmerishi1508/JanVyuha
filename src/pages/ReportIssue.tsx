@@ -41,6 +41,17 @@ import { rememberCreated } from './MyIssues'
 import { analyzeIssue, type AiSuggestion } from '../services/ai'
 import { useTestMode } from '../store/testMode'
 import { tCategory, tDept, tDeptShort, tReason, tQuestion } from '../lib/i18n'
+import { enqueue } from '../lib/outbox'
+
+/** Draft persistence — survive a refresh or the OS killing a low-RAM tab. */
+const DRAFT_KEY = 'janvyuha.reportDraft.v1'
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY)
+  } catch {
+    /* ignore */
+  }
+}
 
 const STEP_KEYS = [
   'stepCategory',
@@ -106,6 +117,64 @@ export function ReportIssue() {
     }
     stepRef.current?.focus()
   }, [step])
+
+  // Restore a saved draft once on mount (unless a category preset was passed).
+  // Restored step is clamped to <=2 so the departments step recomputes cleanly.
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    if (!preset) {
+      try {
+        const raw = localStorage.getItem(DRAFT_KEY)
+        if (raw) {
+          const d = JSON.parse(raw)
+          if (d.category) setCategory(d.category)
+          if (d.title) setTitle(d.title)
+          if (d.description) setDescription(d.description)
+          if (d.severity) setSeverity(d.severity)
+          if (Array.isArray(d.media)) setMedia(d.media)
+          if (d.picked) setPicked(d.picked)
+          if (d.address) setAddress(d.address)
+          if (d.city) setCity(d.city)
+          if (d.state) setState(d.state)
+          if (d.district) setDistrict(d.district)
+          if (d.name) setName(d.name)
+          if (d.phone) setPhone(d.phone)
+          if (typeof d.anonymous === 'boolean') setAnonymous(d.anonymous)
+          if (typeof d.step === 'number') setStep(Math.min(d.step, 2))
+          toast(t('report.draftRestored'), { icon: '📝' })
+        }
+      } catch {
+        /* ignore a corrupt draft */
+      }
+    }
+    setHydrated(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Persist the draft as the citizen fills it in (debounced).
+  useEffect(() => {
+    if (!hydrated) return
+    const handle = setTimeout(() => {
+      const draft = {
+        category, title, description, severity, media, picked,
+        address, city, state, district, name, phone, anonymous, step,
+      }
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+      } catch {
+        // Quota (large media) — keep the text so it's not lost.
+        try {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ ...draft, media: [] }))
+        } catch {
+          /* give up silently */
+        }
+      }
+    }, 500)
+    return () => clearTimeout(handle)
+  }, [
+    hydrated, category, title, description, severity, media, picked,
+    address, city, state, district, name, phone, anonymous, step,
+  ])
 
   const cat = category ? CATEGORIES[category] : null
 
@@ -290,19 +359,20 @@ export function ReportIssue() {
       state: state.trim() || undefined,
       district: district.trim() || city.trim() || undefined,
     }
+    const input = {
+      title: title.trim(),
+      category,
+      description: description.trim(),
+      severity,
+      location: loc,
+      media,
+      reporterName: name,
+      reporterPhone: phone || undefined,
+      anonymous,
+      routedDepartments: finalDepartments,
+    }
     try {
-      const issue = await createIssue({
-        title: title.trim(),
-        category,
-        description: description.trim(),
-        severity,
-        location: loc,
-        media,
-        reporterName: name,
-        reporterPhone: phone || undefined,
-        anonymous,
-        routedDepartments: finalDepartments,
-      })
+      const issue = await createIssue(input)
       rememberCreated(issue.id)
 
       // Simulate the routed-department notifications (only confirmed departments).
@@ -320,11 +390,21 @@ export function ReportIssue() {
         }, 400 + idx * 700)
       })
 
+      clearDraft()
       toast.success(t('report.reportSubmitted', { id: shortId(issue.id) }))
       setTimeout(() => navigate(`/issue/${issue.id}`), 500)
     } catch {
-      toast.error(t('report.submitFailed'))
-      setSubmitting(false)
+      // Offline (or the network dropped mid-submit): queue the report and let it
+      // send automatically when connectivity returns, instead of losing it.
+      if (!navigator.onLine) {
+        enqueue(input)
+        clearDraft()
+        toast.success(t('report.queuedOffline'), { duration: 6000 })
+        setTimeout(() => navigate('/my-issues'), 800)
+      } else {
+        toast.error(t('report.submitFailed'))
+        setSubmitting(false)
+      }
     }
   }
 

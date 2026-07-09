@@ -1,10 +1,11 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
 import { Header } from './components/Header'
 import { RoleGuard } from './components/RoleGuard'
+import { flushOutbox } from './lib/outbox'
 // Landing is the first paint for most visitors — keep it eager. Everything else
 // is code-split so the initial bundle (and low-end-phone load time) stays small.
 import { Landing } from './pages/Landing'
@@ -59,6 +60,21 @@ export default function App() {
     const stop = startRealtime()
     return stop
   }, [startRealtime])
+
+  // Deliver any reports queued while offline — on app start and when the
+  // connection returns. See lib/outbox.ts.
+  useEffect(() => {
+    const flush = async () => {
+      const sent = await flushOutbox((input) => useIssues.getState().create(input))
+      if (sent > 0) {
+        useIssues.getState().refresh()
+        toast.success(t('report.queuedSynced', { count: sent }))
+      }
+    }
+    flush()
+    window.addEventListener('online', flush)
+    return () => window.removeEventListener('online', flush)
+  }, [t])
 
   // Scroll to a hash target (e.g. "/#how") after navigation — SPA-friendly.
   useEffect(() => {
