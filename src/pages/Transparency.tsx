@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Globe2, CheckCircle2, Clock, Gauge } from 'lucide-react'
-import { useIssues } from '../store/issues'
+import type { Issue } from '../data/types'
+import { data } from '../services'
 import { summarize, byCategory, byDistrict, humanizeMs } from '../lib/analytics'
 import { BarChart, Donut, Legend } from '../components/charts'
 import { StatusBadge } from '../components/StatusBadge'
@@ -11,23 +12,30 @@ import { BRAND } from '../config/brand'
 import { timeAgo } from '../lib/format'
 
 /**
- * Public transparency dashboard — no login, no personal data. Shows anonymised,
- * aggregate civic-response performance so citizens can hold the system
- * accountable. In production this reads the coarsened public_issue_feed view;
- * in the demo it uses the in-browser data.
+ * Public transparency dashboard — no login, no personal data. Reads the
+ * coarsened `public_issue_feed` view (PII-free, ~1km location, granted to anon)
+ * via getPublicFeed(), so it works logged-out — NOT the RLS-scoped issues store,
+ * which returns nothing for anonymous visitors.
  */
 export function Transparency() {
-  const { issues, loaded, refresh } = useIssues()
   const { t } = useTranslation()
+  const [active, setActive] = useState<Issue[]>([])
 
   useEffect(() => {
-    if (!loaded) refresh()
-  }, [loaded, refresh])
+    let alive = true
+    data
+      .getPublicFeed()
+      .then((rows) => {
+        if (alive) setActive(rows)
+      })
+      .catch(() => {
+        /* leave empty — the page renders "No data." states */
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
-  // Only non-held/active items, and never show reporter identity.
-  const active = issues.filter(
-    (i) => (i.moderationStatus ?? 'active') === 'active'
-  )
   const s = summarize(active)
   const cats = byCategory(active)
     .filter((c) => c.count > 0)

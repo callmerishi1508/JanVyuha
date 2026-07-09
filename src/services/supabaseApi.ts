@@ -64,6 +64,25 @@ interface IssueRow {
   }[]
 }
 
+/** A row from the coarsened, PII-free `public_issue_feed` view. */
+interface PublicFeedRow {
+  id: string
+  ref_id: string
+  title: string
+  category: string
+  severity: Issue['severity']
+  status: IssueStatus
+  lat: number
+  lng: number
+  city: string | null
+  state: string | null
+  district: string | null
+  routed_departments: string[]
+  upvotes: number
+  created_at: string
+  updated_at: string
+}
+
 const SELECT =
   '*, issue_media(id,type,url,label), issue_updates(id,status,note,by_name,created_at), issue_department_status(department,status,updated_by,updated_at)'
 
@@ -240,6 +259,47 @@ export const supabaseApi: IssuesBackend = {
       .order('created_at', { ascending: false })
     if (error) throw error
     return signMedia((data as IssueRow[]).map(mapRow))
+  },
+
+  async getPublicFeed() {
+    // The coarsened, PII-free view (granted to anon) — so this works logged-out.
+    // It exposes no address/description/reporter/media/timeline; we map to the
+    // Issue shape with safe empties. Used only for aggregate public transparency.
+    const { data, error } = await sb()
+      .from('public_issue_feed')
+      .select(
+        'id,ref_id,title,category,severity,status,lat,lng,city,state,district,routed_departments,upvotes,created_at,updated_at'
+      )
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return (data as PublicFeedRow[]).map((row) => ({
+      id: row.id,
+      refId: row.ref_id,
+      title: row.title,
+      category: row.category as Issue['category'],
+      description: '',
+      severity: row.severity,
+      status: row.status,
+      location: {
+        lat: row.lat,
+        lng: row.lng,
+        address: '',
+        city: row.city ?? undefined,
+        state: row.state ?? undefined,
+        district: row.district ?? undefined,
+      },
+      media: [],
+      reporterName: '',
+      anonymous: true,
+      routedDepartments: row.routed_departments as DepartmentId[],
+      departmentStatus: [],
+      upvotes: row.upvotes,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      updates: [],
+      moderationStatus: 'active' as const,
+      flagged: false,
+    })) satisfies Issue[]
   },
 
   async createIssue(input) {

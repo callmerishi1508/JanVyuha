@@ -11,6 +11,13 @@ export interface IssuesBackend {
   getIssues(): Promise<Issue[]>
   getIssue(id: string): Promise<Issue | undefined>
   getIssuesForDepartment(dept: DepartmentId): Promise<Issue[]>
+  /**
+   * Public, privacy-curated feed for the anonymous Transparency dashboard.
+   * On Supabase this reads the coarsened `public_issue_feed` view (no PII,
+   * ~1km location) which is granted to anon — so it works logged-out. The mock
+   * backend returns its active issues.
+   */
+  getPublicFeed(): Promise<Issue[]>
   createIssue(input: NewIssueInput): Promise<Issue>
   updateStatus(
     id: string,

@@ -16,6 +16,7 @@ export const data: IssuesBackend = {
   getIssues: () => backend().getIssues(),
   getIssue: (id) => backend().getIssue(id),
   getIssuesForDepartment: (dept) => backend().getIssuesForDepartment(dept),
+  getPublicFeed: () => backend().getPublicFeed(),
   createIssue: (input) => backend().createIssue(input),
   updateStatus: (id, status, note, by) =>
     backend().updateStatus(id, status, note, by),

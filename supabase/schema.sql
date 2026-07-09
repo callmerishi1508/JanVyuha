@@ -222,6 +222,12 @@ alter table public.issues enable row level security;
 create or replace function public.issues_guard()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
+  -- Legitimate security-definer RPCs (e.g. cast_vote bumping upvotes) set this
+  -- transaction-local flag to bypass the column-immutability checks. A plain
+  -- stakeholder UPDATE never sets it, so it can't game the guarded columns.
+  if current_setting('app.bypass_issue_guard', true) = 'on' then
+    return new;
+  end if;
   if public.my_role() is distinct from 'admin' then
     if new.ref_id is distinct from old.ref_id
        or new.title is distinct from old.title
@@ -239,7 +245,15 @@ begin
        or new.anonymous is distinct from old.anonymous
        or new.routed_departments is distinct from old.routed_departments
        or new.moderation_status is distinct from old.moderation_status
-       or new.duplicate_of is distinct from old.duplicate_of then
+       or new.duplicate_of is distinct from old.duplicate_of
+       -- These were mutable and let a routed stakeholder game the metrics:
+       -- upvotes (citizen-priority signal), flagged, city (analytics grouping),
+       -- created_at (backdating skews avg-resolution KPI), ai_meta.
+       or new.upvotes is distinct from old.upvotes
+       or new.flagged is distinct from old.flagged
+       or new.city is distinct from old.city
+       or new.created_at is distinct from old.created_at
+       or new.ai_meta is distinct from old.ai_meta then
       raise exception 'Not allowed to change protected issue fields';
     end if;
   end if;
@@ -438,6 +452,8 @@ begin
   values (p_issue, auth.uid())
   on conflict do nothing;
   if found then
+    -- Allow this one legitimate upvote write past issues_guard (transaction-local).
+    perform set_config('app.bypass_issue_guard', 'on', true);
     update public.issues set upvotes = upvotes + 1 where id = p_issue;
   end if;
   select upvotes into n from public.issues where id = p_issue;
@@ -457,15 +473,35 @@ create table if not exists public.issue_ratings (
   primary key (issue_id, user_id)
 );
 alter table public.issue_ratings enable row level security;
+-- Owner: full read/write on their OWN rating only. Previously this policy's
+-- `using` also matched any admin/stakeholder, which (because `using` governs
+-- SELECT/UPDATE/DELETE of existing rows) let any department DELETE ratings —
+-- e.g. erase its own negative feedback — and read every comment cross-dept.
 drop policy if exists "ratings owner write" on public.issue_ratings;
 create policy "ratings owner write" on public.issue_ratings
   for all using (
     user_id = auth.uid()
-    or public.my_role() in ('admin','stakeholder')
   ) with check (
     user_id = auth.uid()
     and exists (select 1 from public.issues i
                 where i.id = issue_id and i.reporter_id = auth.uid())
+  );
+
+-- Officials get READ-ONLY access, scoped to issues they can already see:
+-- admins → all; stakeholders → only ratings for issues routed to their
+-- department. No UPDATE/DELETE for staff, so feedback cannot be tampered with.
+drop policy if exists "ratings staff read" on public.issue_ratings;
+create policy "ratings staff read" on public.issue_ratings
+  for select using (
+    public.my_role() = 'admin'
+    or (
+      public.my_role() = 'stakeholder'
+      and exists (
+        select 1 from public.issues i
+        where i.id = issue_id
+          and public.my_department() = any(i.routed_departments)
+      )
+    )
   );
 
 -- ============================================================================
@@ -507,6 +543,13 @@ create policy "audit admin read" on public.audit_log
 create or replace function public.write_audit(p_action text, p_issue uuid, p_detail jsonb)
 returns void language plpgsql security definer set search_path = public as $$
 begin
+  -- Only officials may write to the tamper-evident trail. Without this, EXECUTE
+  -- is granted to PUBLIC by default, so any authenticated citizen could inject or
+  -- flood audit entries and undermine its evidentiary value. Actor is still pinned
+  -- to auth.uid(), so an official cannot impersonate someone else.
+  if public.my_role() not in ('admin','stakeholder') then
+    raise exception 'Not authorised to write audit log';
+  end if;
   insert into public.audit_log (actor_id, actor_name, action, issue_id, detail)
   values (
     auth.uid(),
@@ -515,6 +558,14 @@ begin
   );
 end;
 $$;
+
+-- Trigger-only functions are executed by their triggers (as table owner), never
+-- called directly by clients, so drop the default PUBLIC EXECUTE grant on them.
+-- (Do NOT revoke the my_role/my_department/... helpers — RLS policies call them
+-- as the querying user and need EXECUTE.)
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+revoke execute on function public.profiles_guard() from public, anon, authenticated;
+revoke execute on function public.issues_guard() from public, anon, authenticated;
 
 -- ============================================================================
 -- push_subscriptions — Web Push endpoints (free). Server function reads these.

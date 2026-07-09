@@ -18,10 +18,38 @@ const PRIVATE = process.env.VAPID_PRIVATE_KEY
 const SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.org'
 const SB_URL = process.env.VITE_SUPABASE_URL
 const SB_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
+// Shared secret that ONLY the trusted caller (Supabase DB webhook / your backend)
+// knows. Without this, /api/notify was an open push relay: anyone with a user's
+// UUID could push arbitrary notifications — with an arbitrary click-through URL —
+// under the government app's identity. Set NOTIFY_SECRET in Vercel env and in the
+// Supabase webhook's custom header.
+const NOTIFY_SECRET = process.env.NOTIFY_SECRET
 
 function json(res: any, status: number, body: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json')
   res.send(JSON.stringify(body))
+}
+
+// Best-effort per-IP rate limit (per warm instance) — mirrors api/analyze.ts.
+const RATE_MAX = 30
+const RATE_WINDOW_MS = 60_000
+const hits = new Map<string, number[]>()
+function rateLimited(ip: string): boolean {
+  const now = Date.now()
+  const arr = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS)
+  arr.push(now)
+  hits.set(ip, arr)
+  if (hits.size > 5000) hits.clear()
+  return arr.length > RATE_MAX
+}
+
+/** Force the click-through URL to a same-origin path so a caller can't point a
+ *  notification at a phishing site while wearing the app's identity. */
+function safePath(url: unknown): string {
+  if (typeof url !== 'string' || !url) return '/'
+  // Allow only root-relative single-slash paths (not "//host" protocol-relative).
+  if (url.startsWith('/') && !url.startsWith('//')) return url
+  return '/'
 }
 
 export default async function handler(req: any, res: any) {
@@ -30,13 +58,26 @@ export default async function handler(req: any, res: any) {
   if (!SB_URL || !SB_SERVICE)
     return json(res, 503, { error: 'Supabase service key not configured' })
 
+  // Reject callers that don't present the shared secret. If NOTIFY_SECRET is
+  // unset we FAIL CLOSED (503) rather than allow-all — an unconfigured secret
+  // must never mean "open to the world".
+  if (!NOTIFY_SECRET) return json(res, 503, { error: 'Notify secret not configured' })
+  if (req.headers?.['x-notify-secret'] !== NOTIFY_SECRET)
+    return json(res, 401, { error: 'Unauthorized' })
+
+  const ip =
+    (req.headers?.['x-forwarded-for'] || '').toString().split(',')[0].trim() ||
+    'unknown'
+  if (rateLimited(ip)) return json(res, 429, { error: 'Too many requests' })
+
   let body: { userId?: string; title?: string; body?: string; url?: string } = {}
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body ?? {}
   } catch {
     return json(res, 400, { error: 'Invalid JSON' })
   }
-  const { userId, title = 'JanVyuha', url = '/' } = body
+  const { userId, title = 'JanVyuha' } = body
+  const url = safePath(body.url)
   if (!userId) return json(res, 400, { error: 'userId required' })
 
   webpush.setVapidDetails(SUBJECT, PUBLIC, PRIVATE)

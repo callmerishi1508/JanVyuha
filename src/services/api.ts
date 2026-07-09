@@ -75,6 +75,17 @@ export const api = {
     return delay(load().find((i) => i.id === id))
   },
 
+  /** Public transparency feed (mock): active, non-held issues, newest first. */
+  async getPublicFeed(): Promise<Issue[]> {
+    const issues = load()
+      .filter((i) => (i.moderationStatus ?? 'active') === 'active')
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    return delay(issues)
+  },
+
   /** Issues visible to a department — filtered by category routing. */
   async getIssuesForDepartment(dept: DepartmentId): Promise<Issue[]> {
     const issues = load()
