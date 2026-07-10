@@ -5,7 +5,7 @@
 // app didn't render. This version RUNTIME-CACHES same-origin static assets with
 // a stale-while-revalidate strategy, so after one online visit the app works
 // offline. API / Supabase / map-tile requests are never cached.
-const CACHE = 'janvyuha-v4'
+const CACHE = 'janvyuha-v5'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/favicon.svg']
 
 self.addEventListener('install', (e) => {
@@ -49,6 +49,10 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Navigations: network-first, fall back to the cached shell offline.
+  // IMPORTANT: respondWith() must ALWAYS resolve to a Response. Returning
+  // undefined (e.g. a cache miss on the offline fallback) throws "Failed to
+  // convert value to 'Response'" and breaks the navigation — which is what was
+  // happening on /login.
   if (request.mode === 'navigate') {
     e.respondWith(
       fetch(request)
@@ -57,7 +61,7 @@ self.addEventListener('fetch', (e) => {
           caches.open(CACHE).then((c) => c.put('/index.html', copy))
           return res
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(async () => (await caches.match('/index.html')) || Response.error())
     )
     return
   }
@@ -74,15 +78,17 @@ self.addEventListener('fetch', (e) => {
             }
             return res
           })
-          .catch(() => cached)
+          .catch(() => cached || Response.error())
         return cached || network
       })
     )
     return
   }
 
-  // Everything else (e.g. fonts CDN): try cache, then network.
-  e.respondWith(caches.match(request).then((cached) => cached || fetch(request)))
+  // Everything else (e.g. fonts CDN): try cache, then network — never undefined.
+  e.respondWith(
+    caches.match(request).then((cached) => cached || fetch(request).catch(() => Response.error()))
+  )
 })
 
 // ── Web Push (free) ─────────────────────────────────────────────────────────
