@@ -236,6 +236,7 @@ export const api = {
     const issues = load()
     const issue = issues.find((i) => i.id === id)
     if (issue) {
+      issue.rating = stars
       issue.updates.push({
         id: uid('u'),
         status: issue.status,

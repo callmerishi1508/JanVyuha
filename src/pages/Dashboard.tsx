@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import {
   Inbox,
   Flame,
@@ -33,16 +34,18 @@ import { AlarmClock } from 'lucide-react'
 import { cn } from '../lib/cn'
 import type { TFunction } from 'i18next'
 
-type StatusFilter = IssueStatus | 'all' | 'open'
+type StatusFilter = IssueStatus | 'all' | 'open' | 'breaching'
 
 export function Dashboard() {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { issues, loaded, loading, refresh } = useIssues()
+  const { issues, loaded, loading, refresh, updateDeptStatus } = useIssues()
   const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('open')
   const [query, setQuery] = useState('')
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
 
   useEffect(() => {
     if (!loaded) refresh()
@@ -70,6 +73,8 @@ export function Dashboard() {
   const filtered = useMemo(() => {
     let list = deptIssues
     if (statusFilter === 'open') list = list.filter((i) => i.status !== 'resolved')
+    else if (statusFilter === 'breaching')
+      list = list.filter((i) => isResolutionBreached(i))
     else if (statusFilter !== 'all')
       list = list.filter((i) => i.status === statusFilter)
     if (query.trim()) {
@@ -88,6 +93,35 @@ export function Dashboard() {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     })
   }, [deptIssues, statusFilter, query])
+
+  const toggleSel = (id: string, on: boolean) =>
+    setSelected((prev) => {
+      const n = new Set(prev)
+      if (on) n.add(id)
+      else n.delete(id)
+      return n
+    })
+  const clearSel = () => setSelected(new Set())
+
+  /** Advance this department's sub-status on every selected issue at once. */
+  const bulkAdvance = async (to: 'acknowledged' | 'done') => {
+    if (!dept || !user || selected.size === 0) return
+    setBulkBusy(true)
+    const by = `${user.name} · ${DEPARTMENTS[dept].short}`
+    const note = t('issueDetail.deptMarked', { status: t(`deptStatuses.${to}`) })
+    const n = selected.size
+    for (const id of selected) {
+      try {
+        await updateDeptStatus(id, dept, to, note, by)
+      } catch {
+        /* skip failures; others still apply */
+      }
+    }
+    setBulkBusy(false)
+    clearSel()
+    refresh()
+    toast.success(t('dashboard.bulkUpdated', { count: n }))
+  }
 
   if (!department) return null
 
@@ -179,6 +213,7 @@ export function Dashboard() {
                 ['acknowledged', t('dashboard.filterAcknowledged')],
                 ['in_progress', t('dashboard.filterInProgress')],
                 ['resolved', t('dashboard.filterResolved')],
+                ['breaching', t('dashboard.filterBreaching')],
               ] as [StatusFilter, string][]
             ).map(([key, label]) => (
               <button
@@ -188,7 +223,9 @@ export function Dashboard() {
                   'whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
                   statusFilter === key
                     ? 'bg-ink-800 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    : key === 'breaching'
+                      ? 'text-red-600 hover:bg-red-50'
+                      : 'text-slate-600 hover:bg-slate-100'
                 )}
               >
                 {label}
@@ -236,13 +273,54 @@ export function Dashboard() {
             <EmptyState catNames={responsibleCats.map((c) => tCategory(c.id))} t={t} />
           ) : (
             <div className="space-y-3">
+              {/* Bulk action bar — appears once one or more issues are selected. */}
+              {selected.size > 0 && (
+                <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 shadow-sm">
+                  <span className="text-sm font-semibold text-ink-900">
+                    {t('dashboard.selectedCount', { count: selected.size })}
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <button
+                      onClick={() => bulkAdvance('acknowledged')}
+                      disabled={bulkBusy}
+                      className="btn-outline py-1.5 text-xs"
+                    >
+                      {bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                      {t('dashboard.bulkAcknowledge')}
+                    </button>
+                    <button
+                      onClick={() => bulkAdvance('done')}
+                      disabled={bulkBusy}
+                      className="btn-primary py-1.5 text-xs"
+                    >
+                      {t('dashboard.bulkResolve')}
+                    </button>
+                    <button
+                      onClick={clearSel}
+                      className="text-xs font-semibold text-slate-500 hover:text-ink-800"
+                    >
+                      {t('dashboard.clearSelection')}
+                    </button>
+                  </div>
+                </div>
+              )}
               {filtered.map((issue) => (
-                <DashboardRow
-                  key={issue.id}
-                  issue={issue}
-                  onOpen={() => navigate(`/issue/${issue.id}`)}
-                  t={t}
-                />
+                <div key={issue.id} className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(issue.id)}
+                    onChange={(e) => toggleSel(issue.id, e.target.checked)}
+                    aria-label={issue.title}
+                    className="mt-4 h-4 w-4 shrink-0 rounded border-slate-300 text-ink-800 focus:ring-ink-500"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <DashboardRow
+                      issue={issue}
+                      onOpen={() => navigate(`/issue/${issue.id}`)}
+                      t={t}
+                    />
+                  </div>
+                </div>
               ))}
             </div>
           )}

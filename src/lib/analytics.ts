@@ -80,6 +80,20 @@ export interface Summary {
   breached: number
   avgResolutionMs: number | null
   resolutionRate: number // 0..1
+  /** Mean citizen satisfaction (1–5) over rated issues, or null if none rated. */
+  avgRating: number | null
+  /** How many resolved issues carry a citizen rating. */
+  ratedCount: number
+}
+
+/** Mean of the citizen ratings present on the given issues (null if none). */
+export function averageRating(issues: Issue[]): number | null {
+  const ratings = issues
+    .map((i) => i.rating)
+    .filter((v): v is number => typeof v === 'number')
+  return ratings.length
+    ? ratings.reduce((a, b) => a + b, 0) / ratings.length
+    : null
 }
 
 export function summarize(issues: Issue[], now = Date.now()): Summary {
@@ -87,6 +101,7 @@ export function summarize(issues: Issue[], now = Date.now()): Summary {
     .map(resolutionMs)
     .filter((v): v is number => v != null)
   const resolved = issues.filter((i) => i.status === 'resolved').length
+  const ratedCount = issues.filter((i) => typeof i.rating === 'number').length
   return {
     total: issues.length,
     open: issues.filter(isOpen).length,
@@ -98,6 +113,8 @@ export function summarize(issues: Issue[], now = Date.now()): Summary {
       ? resolvedTimes.reduce((a, b) => a + b, 0) / resolvedTimes.length
       : null,
     resolutionRate: issues.length ? resolved / issues.length : 0,
+    avgRating: averageRating(issues),
+    ratedCount,
   }
 }
 
@@ -177,6 +194,7 @@ export function departmentPerformance(issues: Issue[], now = Date.now()) {
       breached: s.breached,
       avgResolutionMs: s.avgResolutionMs,
       resolutionRate: s.resolutionRate,
+      avgRating: s.avgRating,
     }
   }).filter((r) => r.total > 0)
 }

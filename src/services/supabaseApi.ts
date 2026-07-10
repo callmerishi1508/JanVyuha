@@ -62,6 +62,7 @@ interface IssueRow {
     updated_by: string | null
     updated_at: string
   }[]
+  issue_ratings?: { stars: number }[]
 }
 
 /** A row from the coarsened, PII-free `public_issue_feed` view. */
@@ -84,7 +85,7 @@ interface PublicFeedRow {
 }
 
 const SELECT =
-  '*, issue_media(id,type,url,label), issue_updates(id,status,note,by_name,created_at), issue_department_status(department,status,updated_by,updated_at)'
+  '*, issue_media(id,type,url,label), issue_updates(id,status,note,by_name,created_at), issue_department_status(department,status,updated_by,updated_at), issue_ratings(stars)'
 
 function mapRow(row: IssueRow): Issue {
   const media: MediaItem[] = (row.issue_media ?? []).map((m) => ({
@@ -142,6 +143,7 @@ function mapRow(row: IssueRow): Issue {
     moderationStatus: row.moderation_status ?? 'active',
     flagged: row.flagged ?? false,
     duplicateOf: row.duplicate_of ?? undefined,
+    rating: row.issue_ratings?.[0]?.stars,
   }
 }
 

@@ -68,6 +68,8 @@ export interface Issue {
   flagged?: boolean
   /** When merged as a duplicate, the id of the canonical issue. */
   duplicateOf?: string
+  /** Citizen satisfaction rating (1–5) once the reporter rates a resolved issue. */
+  rating?: number
 }
 
 export type ModerationStatus =

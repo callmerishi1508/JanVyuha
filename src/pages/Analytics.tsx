@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ShieldCheck,
+  Star,
 } from 'lucide-react'
 import { useIssues } from '../store/issues'
 import { useAuth } from '../store/auth'
@@ -119,7 +120,7 @@ export function Analytics() {
       </div>
 
       {/* KPI row */}
-      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
         <Kpi label={t('analytics.kpiTotal')} value={s.total} icon={Gauge} />
         <Kpi label={t('analytics.kpiOpen')} value={s.open} icon={Clock} tone="blue" />
         <Kpi label={t('analytics.kpiCriticalOpen')} value={s.critical} icon={AlertTriangle} tone="red" />
@@ -130,6 +131,12 @@ export function Analytics() {
           icon={Gauge}
         />
         <Kpi label={t('analytics.kpiSla')} value={`${compliance}%`} icon={ShieldCheck} tone={compliance >= 80 ? 'green' : 'amber'} />
+        <Kpi
+          label={t('analytics.kpiCsat')}
+          value={s.avgRating == null ? '—' : `${s.avgRating.toFixed(1)}★`}
+          icon={Star}
+          tone={s.avgRating == null ? 'slate' : s.avgRating >= 4 ? 'green' : s.avgRating >= 3 ? 'amber' : 'red'}
+        />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
@@ -188,6 +195,7 @@ export function Analytics() {
                 <th className="py-2 pr-4">{t('analytics.thResolutionRate')}</th>
                 <th className="py-2 pr-4">{t('analytics.thAvgResolve')}</th>
                 <th className="py-2 pr-4">{t('analytics.thSlaBreaches')}</th>
+                <th className="py-2 pr-4">{t('analytics.thCsat')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -196,7 +204,7 @@ export function Analytics() {
                   <td className="py-2 pr-4">
                     <span className="inline-flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
-                      {p.label}
+                      {tDeptShort(p.id)}
                     </span>
                   </td>
                   <td className="py-2 pr-4">{p.total}</td>
@@ -213,11 +221,18 @@ export function Analytics() {
                       <span className="text-slate-500">0</span>
                     )}
                   </td>
+                  <td className="py-2 pr-4">
+                    {p.avgRating == null ? (
+                      <span className="text-slate-500">—</span>
+                    ) : (
+                      <span className="font-semibold text-ink-800">{p.avgRating.toFixed(1)}★</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {perf.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-6 text-center text-slate-500">
+                  <td colSpan={8} className="py-6 text-center text-slate-500">
                     {t('analytics.noIssuesYet')}
                   </td>
                 </tr>
