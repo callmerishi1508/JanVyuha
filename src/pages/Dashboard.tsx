@@ -46,6 +46,7 @@ export function Dashboard() {
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkBusy, setBulkBusy] = useState(false)
+  const [hotspots, setHotspots] = useState(false)
 
   useEffect(() => {
     if (!loaded) refresh()
@@ -329,12 +330,26 @@ export function Dashboard() {
         {/* Map */}
         <div
           className={cn(
-            'min-h-0',
+            'relative min-h-0',
             mobileView === 'list' && 'hidden lg:block'
           )}
         >
+          <button
+            onClick={() => setHotspots((h) => !h)}
+            aria-pressed={hotspots}
+            className={cn(
+              'absolute right-2 top-2 z-[500] inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition-colors',
+              hotspots
+                ? 'border-ink-800 bg-ink-800 text-white'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+            )}
+          >
+            <Flame className="h-3.5 w-3.5" />
+            {t('dashboard.hotspots')}
+          </button>
           <MapView
             issues={filtered}
+            cluster={hotspots}
             className="h-full min-h-[300px] w-full"
             zoom={12}
             onSelectIssue={(i) => navigate(`/issue/${i.id}`)}

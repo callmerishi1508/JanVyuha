@@ -3,6 +3,8 @@ import {
   MapContainer,
   TileLayer,
   Marker,
+  CircleMarker,
+  Tooltip,
   Popup,
   useMap,
   useMapEvents,
@@ -12,6 +14,7 @@ import { CATEGORIES } from '../data/categories'
 import type { Issue } from '../data/types'
 import { makeMarkerIcon, INDIA_CENTER } from '../lib/leaflet'
 import { shortId } from '../lib/format'
+import { clusterIssues } from '../lib/cluster'
 
 /** Recenters the map imperatively when the target changes. */
 function Recenter({ center, zoom }: { center: [number, number]; zoom?: number }) {
@@ -46,6 +49,16 @@ export interface MapViewProps {
   /** A single draggable/placed pin (report wizard). */
   picked?: { lat: number; lng: number } | null
   onSelectIssue?: (issue: Issue) => void
+  /** Render density hotspots (grid clusters) instead of individual pins. */
+  cluster?: boolean
+}
+
+/** Colour a hotspot by how many reports it contains. */
+function hotspotColor(count: number): string {
+  if (count >= 10) return '#dc2626'
+  if (count >= 5) return '#ea580c'
+  if (count >= 2) return '#ca8a04'
+  return '#0f8a4f'
 }
 
 export function MapView({
@@ -56,6 +69,7 @@ export function MapView({
   onPlace,
   picked,
   onSelectIssue,
+  cluster = false,
 }: MapViewProps) {
   const { t } = useTranslation()
   const initial: [number, number] =
@@ -91,7 +105,26 @@ export function MapView({
           </Marker>
         )}
 
-        {issues.map((issue) => (
+        {/* Hotspot mode: one sized/coloured circle per grid cell (density). */}
+        {cluster &&
+          clusterIssues(issues).map((c, i) => (
+            <CircleMarker
+              key={`c${i}`}
+              center={[c.lat, c.lng]}
+              radius={8 + Math.min(c.count, 25) * 1.6}
+              pathOptions={{
+                color: hotspotColor(c.count),
+                fillColor: hotspotColor(c.count),
+                fillOpacity: 0.35,
+                weight: 2,
+              }}
+            >
+              <Tooltip direction="top">{c.count}</Tooltip>
+            </CircleMarker>
+          ))}
+
+        {!cluster &&
+          issues.map((issue) => (
           <Marker
             key={issue.id}
             position={[issue.location.lat, issue.location.lng]}

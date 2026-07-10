@@ -474,6 +474,7 @@ const en = {
     emptyTitle: 'No issues to show',
     emptyLead:
       'Your department handles: {{cats}}. New reports in these categories will appear here instantly.',
+    hotspots: 'Hotspots',
   },
   analytics: {
     title: 'Analytics & Performance',
