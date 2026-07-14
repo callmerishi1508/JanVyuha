@@ -388,6 +388,9 @@ const en = {
     descPlaceholder:
       'What is happening? Any details that help responders (landmarks, number of people, severity)…',
     descMin: 'Add a little more detail (at least 8 characters).',
+    voiceStart: 'Speak',
+    voiceStop: 'Stop',
+    voiceListening: 'Listening… speak in your selected language.',
     howSevere: 'How severe is it?',
     evidence: 'Photo / Video evidence',
     aiAssist: 'AI assist',

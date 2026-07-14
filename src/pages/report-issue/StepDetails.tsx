@@ -1,15 +1,24 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Check, Loader2, AlertTriangle, Sparkles, Wand2 } from 'lucide-react'
+import { Check, Loader2, AlertTriangle, Sparkles, Wand2, Mic, Square } from 'lucide-react'
 import { SEVERITIES, type Severity } from '../../data/categories'
 import { CategoryIconTile } from '../../components/CategoryPill'
 import { MediaUpload } from '../../components/MediaUpload'
 import { cn } from '../../lib/cn'
 import { tCategory } from '../../lib/i18n'
+import { useSpeechInput } from '../../lib/speech'
 import type { ReportForm } from './useReportForm'
 
 export function StepDetails({ form }: { form: ReportForm }) {
   const { t } = useTranslation()
+  // P2-11 voice input: append each spoken phrase to the description. The mic
+  // renders only where the browser supports the Web Speech API. Functional
+  // update — consecutive phrases must not clobber each other mid-render.
+  const speech = useSpeechInput((phrase) =>
+    form.setDescription((prev) =>
+      ((prev ? prev.replace(/\s+$/, '') + ' ' : '') + phrase).slice(0, 600)
+    )
+  )
   const cat = form.cat
   if (!cat) return null
   return (
@@ -51,9 +60,36 @@ export function StepDetails({ form }: { form: ReportForm }) {
       </div>
 
       <div>
-        <label htmlFor="issue-desc" className="label">
-          {t('report.descLabel')}
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="issue-desc" className="label">
+            {t('report.descLabel')}
+          </label>
+          {speech.supported && (
+            <button
+              type="button"
+              onClick={speech.listening ? speech.stop : speech.start}
+              aria-pressed={speech.listening}
+              className={cn(
+                'mb-1 inline-flex min-h-[32px] items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+                speech.listening
+                  ? 'border-red-300 bg-red-50 text-red-700'
+                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              )}
+            >
+              {speech.listening ? (
+                <>
+                  <Square className="h-3.5 w-3.5 animate-pulse" aria-hidden />
+                  {t('report.voiceStop')}
+                </>
+              ) : (
+                <>
+                  <Mic className="h-3.5 w-3.5" aria-hidden />
+                  {t('report.voiceStart')}
+                </>
+              )}
+            </button>
+          )}
+        </div>
         <textarea
           id="issue-desc"
           className={cn(
@@ -70,6 +106,9 @@ export function StepDetails({ form }: { form: ReportForm }) {
             form.description.trim().length > 0 && form.description.trim().length < 8
           }
         />
+        <p aria-live="polite" className="mt-1 text-xs font-medium text-slate-500">
+          {speech.listening ? t('report.voiceListening') : ''}
+        </p>
         {form.description.trim().length > 0 && form.description.trim().length < 8 && (
           <p className="mt-1 text-xs font-medium text-red-600">{t('report.descMin')}</p>
         )}
