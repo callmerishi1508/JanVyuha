@@ -23,7 +23,9 @@ export default defineConfig({
         // the first paint on low-end phones (the target audience) is faster and
         // returning visitors re-download less. Grouped by change cadence.
         manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
+          // React 19 ships the actual DOM renderer behind react-dom/client;
+          // listing only 'react-dom' left ~400kB of renderer in the index chunk.
+          react: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'],
           leaflet: ['leaflet', 'react-leaflet'],
           i18n: ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
         },
