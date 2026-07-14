@@ -38,3 +38,41 @@ export function makeRateLimiter(max: number, windowMs: number) {
     return arr.length > max
   }
 }
+
+/**
+ * Send a transactional email via Resend (Brevo/any REST provider works with a
+ * URL swap). No-op returning false if EMAIL_API_KEY/EMAIL_FROM are unset, so
+ * email is an optional channel — the app never depends on it. Shared by
+ * api/notify.ts (citizen status updates) and api/weekly-digest.ts (admin digest).
+ * Pass `html` to override the default paragraph wrapper (e.g. a digest table).
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+  html?: string
+): Promise<boolean> {
+  const key = process.env.EMAIL_API_KEY
+  const from = process.env.EMAIL_FROM // e.g. "JanVyuha <updates@yourdomain>"
+  if (!key || !from) return false
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        html:
+          html ??
+          `<p>${text}</p><p style="color:#64748b;font-size:12px">JanVyuha — civic issue reporting.</p>`,
+      }),
+    })
+    return r.ok
+  } catch {
+    return false
+  }
+}

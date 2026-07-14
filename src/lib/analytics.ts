@@ -242,3 +242,31 @@ export function toCsv(issues: Issue[]): string {
   })
   return [cols.join(','), ...rows].join('\n')
 }
+
+/**
+ * Anonymised open-data JSON projection — an explicit field allow-list so the
+ * export stays PII-free even when the source array carries more (the demo-mode
+ * mock returns full issues; the real public feed is already coarse).
+ */
+export function toPublicJson(issues: Issue[]): string {
+  return JSON.stringify(
+    issues.map((i) => ({
+      refId: i.refId,
+      title: i.title,
+      category: i.category,
+      severity: i.severity,
+      status: i.status,
+      lat: i.location.lat,
+      lng: i.location.lng,
+      district: i.location.district ?? null,
+      city: i.location.city ?? null,
+      state: i.location.state ?? null,
+      departments: i.routedDepartments,
+      upvotes: i.upvotes,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+    })),
+    null,
+    2
+  )
+}

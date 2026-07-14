@@ -43,3 +43,14 @@ export function formatDateTime(iso: string): string {
 export function generateRefId(): string {
   return 'JV-' + Math.floor(1000 + Math.random() * 9000)
 }
+
+/** Triggers a browser download of `content` as a file named `name`. */
+export function downloadFile(name: string, content: string, type = 'text/csv'): void {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}

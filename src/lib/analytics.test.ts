@@ -6,6 +6,7 @@ import {
   summarize,
   resolutionMs,
   toCsv,
+  toPublicJson,
   byDistrict,
   dailyTrend,
   departmentPerformance,
@@ -189,5 +190,38 @@ describe('toCsv', () => {
     const csv = toCsv([makeIssue({ status: 'reported' })])
     const cols = csv.split('\n')[1].split(',')
     expect(cols[cols.length - 1]).toBe('""')
+  })
+})
+
+describe('toPublicJson', () => {
+  it('projects an explicit allow-list — never reporter identity or address', () => {
+    const issue = makeIssue({
+      reporterName: 'Asha Rao',
+      reporterPhone: '+919876543210',
+      reporterId: 'user-uuid-1',
+      description: 'My house is at 12 MG Road',
+      location: {
+        lat: 17.4,
+        lng: 78.5,
+        address: '12 MG Road, flat 3B',
+        district: 'Hyderabad',
+        state: 'Telangana',
+      },
+    } as Partial<Issue>)
+    const parsed = JSON.parse(toPublicJson([issue]))
+    expect(parsed).toHaveLength(1)
+    const row = parsed[0]
+    expect(row.refId).toBe('JV-0001')
+    expect(row.district).toBe('Hyderabad')
+    expect(row.departments).toEqual(['fire'])
+    // The whole serialized row must not leak PII fields or their values.
+    const raw = JSON.stringify(row)
+    expect(raw).not.toContain('Asha')
+    expect(raw).not.toContain('9876543210')
+    expect(raw).not.toContain('user-uuid-1')
+    expect(raw).not.toContain('MG Road')
+    expect(row.reporterName).toBeUndefined()
+    expect(row.address).toBeUndefined()
+    expect(row.description).toBeUndefined()
   })
 })

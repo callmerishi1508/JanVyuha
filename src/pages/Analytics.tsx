@@ -30,16 +30,7 @@ import {
 import { BarChart, TrendChart, Donut, Legend } from '../components/charts'
 import { BRAND } from '../config/brand'
 import { tCategory, tDeptShort } from '../lib/i18n'
-
-function download(name: string, content: string, type = 'text/csv') {
-  const blob = new Blob([content], { type })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name
-  a.click()
-  URL.revokeObjectURL(url)
-}
+import { downloadFile } from '../lib/format'
 
 export function Analytics() {
   const { t } = useTranslation()
@@ -107,7 +98,7 @@ export function Analytics() {
           )}
           <button
             onClick={() =>
-              download(`janvyuha-analytics-${Date.now()}.csv`, toCsv(scoped))
+              downloadFile(`janvyuha-analytics-${Date.now()}.csv`, toCsv(scoped))
             }
             className="btn-outline"
           >

@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Globe2, CheckCircle2, Clock, Gauge } from 'lucide-react'
+import { Globe2, CheckCircle2, Clock, Gauge, Download, Trophy } from 'lucide-react'
 import type { Issue } from '../data/types'
 import { data } from '../services'
-import { summarize, byCategory, byDistrict, humanizeMs } from '../lib/analytics'
+import {
+  summarize,
+  byCategory,
+  byDistrict,
+  departmentPerformance,
+  humanizeMs,
+  toCsv,
+  toPublicJson,
+} from '../lib/analytics'
 import { BarChart, Donut, Legend } from '../components/charts'
 import { StatusBadge } from '../components/StatusBadge'
 import { CategoryPill } from '../components/CategoryPill'
 import { BRAND } from '../config/brand'
-import { timeAgo } from '../lib/format'
+import { publicLeaderboardEnabled } from '../lib/config'
+import { timeAgo, downloadFile } from '../lib/format'
+import { tDeptShort } from '../lib/i18n'
 
 /**
  * Public transparency dashboard — no login, no personal data. Reads the
@@ -43,6 +53,20 @@ export function Transparency() {
   const districts = byDistrict(active)
     .slice(0, 8)
     .map((d) => ({ label: d.district, value: d.count }))
+  // Ranked by resolution rate; avgRating is intentionally absent — ratings are
+  // not in the anon-safe public feed. Gate lets a tenant hide the ranked
+  // comparison during onboarding (VITE_PUBLIC_LEADERBOARD=false).
+  const leaderboard = publicLeaderboardEnabled()
+    ? departmentPerformance(active).sort(
+        (a, b) => b.resolutionRate - a.resolutionRate || b.total - a.total
+      )
+    : []
+  // "Most-supported open issues" — upvote-ranked open reports; social proof
+  // that the platform channels real public demand.
+  const mostSupported = active
+    .filter((i) => i.status !== 'resolved' && i.upvotes > 0)
+    .sort((a, b) => b.upvotes - a.upvotes)
+    .slice(0, 5)
 
   return (
     <div className="container-page py-10">
@@ -168,6 +192,120 @@ export function Transparency() {
               </p>
             )}
           </div>
+        </div>
+      </div>
+
+      {mostSupported.length > 0 && (
+        <div className="card mt-6 p-5">
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('transparency.mostSupported')}
+          </h3>
+          <p className="text-xs text-slate-500">{t('transparency.identityHidden')}</p>
+          <div className="mt-3 divide-y divide-slate-100">
+            {mostSupported.map((i) => (
+              <div key={i.id} className="flex items-center gap-3 py-2.5">
+                <span
+                  className="inline-flex min-w-[3rem] items-center justify-center gap-1 rounded-full bg-ashoka-500/10 px-2 py-0.5 text-xs font-bold text-ashoka-600"
+                  aria-label={`${i.upvotes} ▲`}
+                >
+                  ▲ {i.upvotes}
+                </span>
+                <CategoryPill category={i.category} />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-ink-900">
+                    {i.title}
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    {i.location.district || i.location.city || '—'} ·{' '}
+                    {timeAgo(i.createdAt)}
+                  </div>
+                </div>
+                <StatusBadge status={i.status} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {leaderboard.length > 0 && (
+        <div className="card mt-6 p-5">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-amber-500" aria-hidden />
+            <h3 className="text-sm font-bold text-ink-900">
+              {t('transparency.leaderboard')}
+            </h3>
+          </div>
+          <p className="text-xs text-slate-500">{t('transparency.leaderboardHint')}</p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="py-2 pr-3 font-semibold">
+                    {t('transparency.thDepartment')}
+                  </th>
+                  <th className="py-2 pr-3 font-semibold">
+                    {t('transparency.thResolved')}
+                  </th>
+                  <th className="py-2 pr-3 font-semibold">{t('transparency.thTotal')}</th>
+                  <th className="py-2 pr-3 font-semibold">{t('transparency.thRate')}</th>
+                  <th className="py-2 font-semibold">{t('transparency.thAvgTime')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leaderboard.map((d, idx) => (
+                  <tr key={d.id} className="border-b border-slate-100">
+                    <td className="py-2 pr-3">
+                      <span className="flex items-center gap-2 font-medium text-ink-900">
+                        <span
+                          className="inline-block h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: d.color }}
+                          aria-hidden
+                        />
+                        {idx + 1}. {tDeptShort(d.id)}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 text-slate-600">{d.resolved}</td>
+                    <td className="py-2 pr-3 text-slate-600">{d.total}</td>
+                    <td className="py-2 pr-3 font-semibold text-ink-900">
+                      {Math.round(d.resolutionRate * 100)}%
+                    </td>
+                    <td className="py-2 text-slate-600">
+                      {d.avgResolutionMs == null ? '—' : humanizeMs(d.avgResolutionMs)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="card mt-6 p-5">
+        <h3 className="text-sm font-bold text-ink-900">{t('transparency.openData')}</h3>
+        <p className="text-xs text-slate-500">{t('transparency.openDataHint')}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="btn-outline inline-flex items-center gap-2"
+            onClick={() =>
+              downloadFile('janvyuha-open-data.csv', toCsv(active), 'text/csv')
+            }
+          >
+            <Download className="h-4 w-4" aria-hidden /> {t('transparency.downloadCsv')}
+          </button>
+          <button
+            type="button"
+            className="btn-outline inline-flex items-center gap-2"
+            onClick={() =>
+              downloadFile(
+                'janvyuha-open-data.json',
+                toPublicJson(active),
+                'application/json'
+              )
+            }
+          >
+            <Download className="h-4 w-4" aria-hidden /> {t('transparency.downloadJson')}
+          </button>
         </div>
       </div>
 

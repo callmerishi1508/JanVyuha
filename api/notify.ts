@@ -18,7 +18,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import webpush from 'web-push'
-import { clientIp, makeRateLimiter } from './_lib'
+import { clientIp, makeRateLimiter, sendEmail } from './_lib'
 
 const PUBLIC = process.env.VITE_VAPID_PUBLIC_KEY
 const PRIVATE = process.env.VAPID_PRIVATE_KEY
@@ -26,9 +26,9 @@ const SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@example.org'
 const SB_URL = process.env.VITE_SUPABASE_URL
 const SB_SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY
 const NOTIFY_SECRET = process.env.NOTIFY_SECRET
-// Optional email (Resend by default; any provider with a simple REST API works).
+// Optional email — EMAIL_API_KEY/EMAIL_FROM are read inside _lib's sendEmail;
+// we keep this flag only to skip the user-email lookup when email is disabled.
 const EMAIL_API_KEY = process.env.EMAIL_API_KEY
-const EMAIL_FROM = process.env.EMAIL_FROM // e.g. "JanVyuha <updates@yourdomain>"
 
 function json(res: VercelResponse, status: number, body: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json')
@@ -99,27 +99,14 @@ async function getUserEmail(userId: string): Promise<string | null> {
   }
 }
 
-/** Send a transactional email via Resend (no-op if EMAIL_API_KEY unset). */
-async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
-  if (!EMAIL_API_KEY || !EMAIL_FROM) return false
-  try {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${EMAIL_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: EMAIL_FROM,
-        to,
-        subject,
-        html: `<p>${text}</p><p style="color:#64748b;font-size:12px">JanVyuha — civic issue reporting. You are receiving this because you filed a report.</p>`,
-      }),
-    })
-    return r.ok
-  } catch {
-    return false
-  }
+/** Citizen status-update email: shared sender with a report-specific footer. */
+function sendUpdateEmail(to: string, subject: string, text: string): Promise<boolean> {
+  return sendEmail(
+    to,
+    subject,
+    text,
+    `<p>${text}</p><p style="color:#64748b;font-size:12px">JanVyuha — civic issue reporting. You are receiving this because you filed a report.</p>`
+  )
 }
 
 /** Supabase Database Webhook payload (`issue_updates` INSERT) or a direct-call body. */
@@ -182,7 +169,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (EMAIL_API_KEY) {
       const email = await getUserEmail(issue.reporter_id)
       if (email)
-        emailed = await sendEmail(email, `${title} — ${issue.ref_id} ${label}`, text)
+        emailed = await sendUpdateEmail(email, `${title} — ${issue.ref_id} ${label}`, text)
     }
     return json(res, 200, { mode: 'webhook', pushed: push.sent, of: push.total, emailed })
   }

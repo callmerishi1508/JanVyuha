@@ -84,3 +84,12 @@ export function isDemoMode(): boolean {
 /** Preferred UI locale for this build (brand default; user choice overrides). */
 export const DEFAULT_LOCALE =
   (import.meta.env.VITE_DEFAULT_LOCALE as string | undefined)?.trim() || undefined
+
+/**
+ * Whether the public Transparency page shows the department resolution
+ * leaderboard. On by default (transparency pressure is the point); a tenant can
+ * hide the ranked comparison during onboarding via `VITE_PUBLIC_LEADERBOARD=false`.
+ */
+export function publicLeaderboardEnabled(): boolean {
+  return (import.meta.env.VITE_PUBLIC_LEADERBOARD as string | undefined) !== 'false'
+}
