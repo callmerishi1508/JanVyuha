@@ -17,6 +17,7 @@ import {
   Ban,
   RotateCcw,
   UserPlus,
+  QrCode,
 } from 'lucide-react'
 import { useIssues } from '../store/issues'
 import { useAuth } from '../store/auth'
@@ -32,10 +33,11 @@ import {
 } from '../lib/analytics'
 import { adminApi, adminBackendReady, type ProfileRow } from '../services/admin'
 import { BRAND } from '../config/brand'
+import { QrPosters } from '../components/QrPosters'
 import { tStatus, tDeptShort } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
-type Tab = 'overview' | 'moderation' | 'accounts' | 'audit'
+type Tab = 'overview' | 'moderation' | 'accounts' | 'audit' | 'outreach'
 
 function download(name: string, content: string, type = 'text/csv') {
   const blob = new Blob([content], { type })
@@ -83,6 +85,7 @@ export function AdminDashboard() {
             ['moderation', t('admin.tabModeration'), Flag],
             ['accounts', t('admin.tabAccounts'), Users],
             ['audit', t('admin.tabAudit'), ScrollText],
+            ['outreach', t('admin.tabOutreach'), QrCode],
           ] as [Tab, string, typeof Gauge][]
         ).map(([id, label, Icon]) => (
           <button
@@ -107,6 +110,7 @@ export function AdminDashboard() {
         {tab === 'moderation' && <Moderation issues={issues} onChange={refresh} />}
         {tab === 'accounts' && <Accounts />}
         {tab === 'audit' && <Audit />}
+        {tab === 'outreach' && <QrPosters />}
       </div>
     </div>
   )
