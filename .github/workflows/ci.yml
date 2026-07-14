@@ -10,11 +10,14 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      # Node 24 = the toolchain that generates package-lock.json locally.
+      # npm 10 (Node 20) resolves vitest's nested vite@8 optional-esbuild peer
+      # differently and rejects the npm-11 lock ("Missing: esbuild@0.28.1").
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - run: npm ci
