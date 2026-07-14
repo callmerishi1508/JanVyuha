@@ -43,7 +43,10 @@ function json(res: VercelResponse, status: number, body: unknown, cache = false)
   res.status(status).setHeader('Content-Type', 'application/json')
   if (cache)
     // Cached on Vercel's CDN for a day — geocoding of a fixed point is stable.
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+    res.setHeader(
+      'Cache-Control',
+      'public, s-maxage=86400, stale-while-revalidate=604800'
+    )
   res.send(JSON.stringify(body))
 }
 
@@ -116,7 +119,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (mode === 'reverse') {
     const lat = Number(q.lat)
     const lng = Number(q.lng)
-    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180)
+    if (
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      Math.abs(lat) > 90 ||
+      Math.abs(lng) > 180
+    )
       return json(res, 400, { error: 'Invalid coordinates' })
     try {
       const data = (await throttled(() =>

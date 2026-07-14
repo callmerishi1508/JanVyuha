@@ -655,7 +655,8 @@ const hi: Dict = {
     backToConsole: '← प्रशासन कंसोल पर वापस',
   },
   embed: {
-    tagline: '{{jurisdiction}} में नागरिक या आपातकालीन समस्या दर्ज करें — तुरंत भेजा जाता है।',
+    tagline:
+      '{{jurisdiction}} में नागरिक या आपातकालीन समस्या दर्ज करें — तुरंत भेजा जाता है।',
     totalReports: 'रिपोर्टें',
     resolved: 'हल हुईं',
     reportButton: 'समस्या दर्ज करें',
@@ -686,8 +687,7 @@ const hi: Dict = {
     thRate: 'दर',
     thAvgTime: 'औसत समय',
     openData: 'ओपन डेटा',
-    openDataHint:
-      'गुमनाम सार्वजनिक डेटासेट डाउनलोड करें — कोई व्यक्तिगत जानकारी नहीं।',
+    openDataHint: 'गुमनाम सार्वजनिक डेटासेट डाउनलोड करें — कोई व्यक्तिगत जानकारी नहीं।',
     downloadCsv: 'CSV डाउनलोड करें',
     downloadJson: 'JSON डाउनलोड करें',
   },

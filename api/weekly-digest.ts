@@ -93,7 +93,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }))
     .sort((a, b) => b.rate - a.rate || b.total - a.total)
 
-  const th = 'padding:6px 10px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:13px'
+  const th =
+    'padding:6px 10px;text-align:left;border-bottom:1px solid #e2e8f0;font-size:13px'
   const td = 'padding:6px 10px;border-bottom:1px solid #f1f5f9;font-size:13px'
   const html = `
     <h2 style="font-family:system-ui,sans-serif;color:#0f172a">JanVyuha — weekly digest</h2>

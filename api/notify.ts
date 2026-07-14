@@ -169,7 +169,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (EMAIL_API_KEY) {
       const email = await getUserEmail(issue.reporter_id)
       if (email)
-        emailed = await sendUpdateEmail(email, `${title} — ${issue.ref_id} ${label}`, text)
+        emailed = await sendUpdateEmail(
+          email,
+          `${title} — ${issue.ref_id} ${label}`,
+          text
+        )
     }
     return json(res, 200, { mode: 'webhook', pushed: push.sent, of: push.total, emailed })
   }

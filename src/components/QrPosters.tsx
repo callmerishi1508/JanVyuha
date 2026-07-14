@@ -21,7 +21,11 @@ import { CategoryIconTile } from './CategoryPill'
 const W = 1240
 const H = 1754
 
-async function composePoster(link: string, heading: string, sub: string): Promise<string> {
+async function composePoster(
+  link: string,
+  heading: string,
+  sub: string
+): Promise<string> {
   const qr = await QRCode.toDataURL(link, {
     width: 760,
     margin: 1,

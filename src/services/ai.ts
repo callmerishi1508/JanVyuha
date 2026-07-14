@@ -249,8 +249,7 @@ export async function analyzeIssue(input: {
 }
 
 export type TranslateResult =
-  | { ok: true; text: string }
-  | { ok: false; reason: 'unavailable' | 'error' }
+  { ok: true; text: string } | { ok: false; reason: 'unavailable' | 'error' }
 
 /**
  * Translate a citizen's report text into the official's UI language via the

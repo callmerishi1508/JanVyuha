@@ -211,7 +211,9 @@ export function IssueDetail() {
                       : t('issueDetail.translate')}
                   </button>
                   {showTranslated && (
-                    <span className="text-slate-400">{t('issueDetail.aiTranslated')}</span>
+                    <span className="text-slate-400">
+                      {t('issueDetail.aiTranslated')}
+                    </span>
                   )}
                 </div>
               )}
