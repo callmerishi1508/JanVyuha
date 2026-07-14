@@ -16,6 +16,7 @@ import {
   Flag,
   MapPinned,
   Star,
+  Languages,
 } from 'lucide-react'
 import { useIssues } from '../store/issues'
 import { useAuth } from '../store/auth'
@@ -34,7 +35,8 @@ import { CategoryPill } from '../components/CategoryPill'
 import { MediaThumb } from '../components/MediaUpload'
 import { MapView } from '../components/MapView'
 import { formatDateTime, timeAgo } from '../lib/format'
-import { tStatus, tDeptShort } from '../lib/i18n'
+import { tStatus, tDeptShort, currentLocale } from '../lib/i18n'
+import { translateText } from '../services/ai'
 import { cn } from '../lib/cn'
 
 export function IssueDetail() {
@@ -48,6 +50,11 @@ export function IssueDetail() {
   const [stars, setStars] = useState(0)
   const [ratingComment, setRatingComment] = useState('')
   const [rated, setRated] = useState(false)
+  // P2-10a translation (officials/admin only, lazy, cached for the visit).
+  const [translated, setTranslated] = useState<string | null>(null)
+  const [showTranslated, setShowTranslated] = useState(false)
+  const [translating, setTranslating] = useState(false)
+  const [translateFailed, setTranslateFailed] = useState(false)
 
   const nearby = useMemo(() => {
     if (!id) return []
@@ -88,6 +95,34 @@ export function IssueDetail() {
   const cat = CATEGORIES[issue.category]
   const myDept = user?.role === 'stakeholder' ? user.department : undefined
   const isOwningDept = !!myDept && issue.routedDepartments.includes(myDept)
+
+  // Translation is an officials'/admin tool (citizens wrote the text); hidden
+  // after a failed attempt so a broken proxy doesn't leave a dead button.
+  const canTranslate =
+    (user?.role === 'stakeholder' || user?.role === 'admin') &&
+    !!issue.description.trim() &&
+    !translateFailed
+
+  const handleTranslate = async () => {
+    if (showTranslated) {
+      setShowTranslated(false)
+      return
+    }
+    if (translated) {
+      setShowTranslated(true)
+      return
+    }
+    setTranslating(true)
+    const r = await translateText(issue.description, currentLocale())
+    setTranslating(false)
+    if (r.ok) {
+      setTranslated(r.text)
+      setShowTranslated(true)
+    } else {
+      setTranslateFailed(true)
+      if (r.reason === 'error') toast.error(t('issueDetail.translateFailed'))
+    }
+  }
 
   // This department's own progress on the issue.
   const myDeptStatus =
@@ -152,7 +187,34 @@ export function IssueDetail() {
                 <SeverityBadge severity={issue.severity} />
                 <StatusBadge status={issue.status} />
               </div>
-              <p className="mt-4 text-slate-700">{issue.description}</p>
+              <p className="mt-4 text-slate-700">
+                {showTranslated && translated ? translated : issue.description}
+              </p>
+              {/* P2-10a: lazy Gemini translation for officials reading a report
+                  written in another app language. Hidden for citizens, in mock
+                  mode, and when the proxy reports AI unavailable. */}
+              {canTranslate && (
+                <div className="mt-2 flex items-center gap-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={handleTranslate}
+                    disabled={translating}
+                    className="inline-flex items-center gap-1.5 font-semibold text-ashoka-600 hover:text-ashoka-700 disabled:opacity-50"
+                  >
+                    {translating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                    ) : (
+                      <Languages className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                    {showTranslated
+                      ? t('issueDetail.showOriginal')
+                      : t('issueDetail.translate')}
+                  </button>
+                  {showTranslated && (
+                    <span className="text-slate-400">{t('issueDetail.aiTranslated')}</span>
+                  )}
+                </div>
+              )}
 
               <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
                 <span className="inline-flex items-center gap-1.5">

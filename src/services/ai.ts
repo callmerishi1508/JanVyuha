@@ -247,3 +247,35 @@ export async function analyzeIssue(input: {
     return { ok: false, reason: 'error', message: (e as Error).message }
   }
 }
+
+export type TranslateResult =
+  | { ok: true; text: string }
+  | { ok: false; reason: 'unavailable' | 'error' }
+
+/**
+ * Translate a citizen's report text into the official's UI language via the
+ * same server-side Gemini proxy (mode:'translate'). Called lazily from the
+ * detail view — never on the submit path (free-tier RPM/RPD caps). In Tester
+ * Mode's mock-AI the feature reports 'unavailable' so the UI hides it: a fake
+ * translation would be a lie the demo can't cash.
+ */
+export async function translateText(
+  text: string,
+  targetLang: string
+): Promise<TranslateResult> {
+  if (useTestMode.getState().mockAi) return { ok: false, reason: 'unavailable' }
+  try {
+    const res = await fetch(AI_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'translate', text, targetLang }),
+    })
+    if (res.status === 503) return { ok: false, reason: 'unavailable' }
+    if (!res.ok) return { ok: false, reason: 'error' }
+    const raw = (await res.json()) as { text?: string }
+    if (typeof raw.text !== 'string' || !raw.text) return { ok: false, reason: 'error' }
+    return { ok: true, text: raw.text }
+  } catch {
+    return { ok: false, reason: 'error' }
+  }
+}

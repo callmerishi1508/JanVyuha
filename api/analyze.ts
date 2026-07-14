@@ -44,11 +44,25 @@ const DEPARTMENTS = [
 // availability with: GET generativelanguage.googleapis.com/v1beta/models?key=…
 const MODEL = 'gemini-2.5-flash'
 
+/** App languages a report can be translated into (P2-10 translate mode). */
+const LANG_NAMES: Record<string, string> = {
+  en: 'English',
+  hi: 'Hindi',
+  te: 'Telugu',
+  ta: 'Tamil',
+}
+
 interface AnalyzeBody {
   description?: string
   /** data URL or bare base64 of an image. */
   image?: string
   mimeType?: string
+  /** 'translate' switches this endpoint to text translation (same guards). */
+  mode?: string
+  /** translate mode: the text to translate. */
+  text?: string
+  /** translate mode: BCP-47-ish target ('en' | 'hi' | 'te' | 'ta'). */
+  targetLang?: string
 }
 
 /** Shape returned to the client; also what we coerce Gemini's output into. */
@@ -72,6 +86,48 @@ function json(res: VercelResponse, status: number, body: unknown) {
 /** Narrow an unknown value to a member of a readonly string-literal tuple. */
 function isOneOf<T extends string>(arr: readonly T[], v: unknown): v is T {
   return typeof v === 'string' && (arr as readonly string[]).includes(v)
+}
+
+/**
+ * One JSON-mode Gemini round-trip: send parts, parse the JSON object out of the
+ * reply (or null if unparseable). Throws on network/timeout; the caller maps
+ * upstream !ok to a logged 502 the same way for both triage and translate.
+ */
+async function callGemini(
+  key: string,
+  parts: GeminiPart[],
+  timeoutMs: number
+): Promise<unknown> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const gRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
+      }),
+    })
+    if (!gRes.ok) {
+      // Log server-side only — the upstream body can echo back request details
+      // (e.g. the API key query param on some error paths) that must not reach the client.
+      console.error('[analyze] Gemini upstream error', gRes.status, await gRes.text())
+      return null
+    }
+    const data = await gRes.json()
+    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    try {
+      return JSON.parse(text)
+    } catch {
+      const m = text.match(/\{[\s\S]*\}/)
+      return m ? JSON.parse(m[0]) : null
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 // ── Abuse / cost protection (this endpoint spends money per call) ────────────
@@ -127,6 +183,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return json(res, 400, { error: 'Invalid JSON' })
   }
 
+  // ── Translate mode (P2-10a): reuses this endpoint's key + guards ───────────
+  // Officials read citizen reports written in another of the app's languages.
+  // Text-only, so it shares the description length cap; called lazily from the
+  // detail view (never on the citizen submit path — Gemini free tier has RPM/RPD
+  // caps we must keep away from report submission).
+  if (body.mode === 'translate') {
+    const text = typeof body.text === 'string' ? body.text.trim() : ''
+    const target = LANG_NAMES[body.targetLang ?? '']
+    if (!text) return json(res, 400, { error: 'Provide text' })
+    if (!target) return json(res, 400, { error: 'Unsupported target language' })
+    if (text.length > MAX_DESC_CHARS) return json(res, 413, { error: 'Text too long' })
+    try {
+      const out = await callGemini(
+        key,
+        [
+          {
+            text: `Translate the citizen-report text between the markers into ${target}.
+Keep it faithful and plain; do not add commentary. If it is already in ${target},
+return it unchanged. Return ONLY JSON: {"text": "<translation>"}
+<<<${text.slice(0, MAX_DESC_CHARS)}>>>`,
+          },
+        ],
+        10_000
+      )
+      const p = (out ?? {}) as Record<string, unknown>
+      const translated = typeof p.text === 'string' ? p.text.slice(0, MAX_DESC_CHARS) : ''
+      if (!translated) return json(res, 502, { error: 'Could not parse AI response' })
+      return json(res, 200, { text: translated })
+    } catch (e: unknown) {
+      const aborted = e instanceof Error && e.name === 'AbortError'
+      return json(res, aborted ? 504 : 502, {
+        error: aborted ? 'AI timed out' : 'AI upstream error',
+      })
+    }
+  }
+
   const { description = '', image, mimeType } = body
   if (!description && !image)
     return json(res, 400, { error: 'Provide a description or an image' })
@@ -176,36 +268,7 @@ Citizen description: """${description.slice(0, 1200)}"""`
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 20000)
-    const gRes = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [{ parts }],
-        generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
-      }),
-    })
-    clearTimeout(timeout)
-
-    if (!gRes.ok) {
-      // Log server-side only — the upstream body can echo back request details
-      // (e.g. the API key query param on some error paths) that must not reach the client.
-      console.error('[analyze] Gemini upstream error', gRes.status, await gRes.text())
-      return json(res, 502, { error: 'AI upstream error' })
-    }
-
-    const data = await gRes.json()
-    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-    let parsed: unknown
-    try {
-      parsed = JSON.parse(text)
-    } catch {
-      const m = text.match(/\{[\s\S]*\}/)
-      parsed = m ? JSON.parse(m[0]) : null
-    }
+    const parsed = await callGemini(key, parts, 20_000)
     if (!parsed || typeof parsed !== 'object')
       return json(res, 502, { error: 'Could not parse AI response' })
     const p = parsed as Record<string, unknown>
