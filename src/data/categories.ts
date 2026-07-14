@@ -15,13 +15,7 @@ import {
 
 /** The government departments that act on issues (a.k.a. stakeholders). */
 export type DepartmentId =
-  | 'fire'
-  | 'ambulance'
-  | 'police'
-  | 'municipal'
-  | 'electricity'
-  | 'water'
-  | 'animal'
+  'fire' | 'ambulance' | 'police' | 'municipal' | 'electricity' | 'water' | 'animal'
 
 export interface Department {
   id: DepartmentId
@@ -103,6 +97,11 @@ export const DEPARTMENTS: Record<DepartmentId, Department> = {
 
 export const DEPARTMENT_LIST: Department[] = Object.values(DEPARTMENTS)
 
+/** Runtime guard for values read from untyped sources (DB rows, API responses). */
+export function isDepartmentId(v: unknown): v is DepartmentId {
+  return typeof v === 'string' && Object.prototype.hasOwnProperty.call(DEPARTMENTS, v)
+}
+
 /** Issue categories the public can report. */
 export type CategoryId =
   | 'fire'
@@ -166,14 +165,39 @@ export const CATEGORIES: Record<CategoryId, Category> = {
         department: 'ambulance',
         reason: 'People may be injured, burnt or trapped',
         question: 'Are people injured, trapped or at risk?',
-        keywords: ['people', 'person', 'injur', 'trapped', 'burn', 'casualt', 'resident', 'child', 'elderly', 'hospital', 'unconscious', 'smoke inhalation', 'building', 'house', 'flat', 'apartment'],
+        keywords: [
+          'people',
+          'person',
+          'injur',
+          'trapped',
+          'burn',
+          'casualt',
+          'resident',
+          'child',
+          'elderly',
+          'hospital',
+          'unconscious',
+          'smoke inhalation',
+          'building',
+          'house',
+          'flat',
+          'apartment',
+        ],
         defaultOn: true,
       },
       {
         department: 'electricity',
         reason: 'Fire may involve electrical wiring or a transformer',
         question: 'Is the fire near electric wires or a transformer?',
-        keywords: ['wire', 'transformer', 'electric', 'short circuit', 'pole', 'current', 'cable'],
+        keywords: [
+          'wire',
+          'transformer',
+          'electric',
+          'short circuit',
+          'pole',
+          'current',
+          'cable',
+        ],
       },
       {
         department: 'police',
@@ -243,7 +267,18 @@ export const CATEGORIES: Record<CategoryId, Category> = {
         department: 'ambulance',
         reason: 'A vulnerable person may need medical help when found',
         question: 'Is the person medically vulnerable (child/elderly/ill)?',
-        keywords: ['elderly', 'child', 'senior', 'patient', 'medical', 'disabled', 'ill', 'alzheimer', 'dementia', 'wheelchair'],
+        keywords: [
+          'elderly',
+          'child',
+          'senior',
+          'patient',
+          'medical',
+          'disabled',
+          'ill',
+          'alzheimer',
+          'dementia',
+          'wheelchair',
+        ],
       },
     ],
   },
@@ -260,7 +295,17 @@ export const CATEGORIES: Record<CategoryId, Category> = {
         department: 'police',
         reason: 'Possible assault, crime or law-and-order need',
         question: 'Is this due to violence or a crime?',
-        keywords: ['assault', 'attack', 'stab', 'beaten', 'crime', 'violence', 'poison', 'suicide', 'fight'],
+        keywords: [
+          'assault',
+          'attack',
+          'stab',
+          'beaten',
+          'crime',
+          'violence',
+          'poison',
+          'suicide',
+          'fight',
+        ],
       },
       {
         department: 'fire',
@@ -347,7 +392,16 @@ export const CATEGORIES: Record<CategoryId, Category> = {
         department: 'municipal',
         reason: 'Encroachment, illegal structure or cleanup',
         question: 'Does it involve encroachment or cleanup?',
-        keywords: ['encroach', 'illegal', 'structure', 'garbage', 'stall', 'vendor', 'dump', 'construction'],
+        keywords: [
+          'encroach',
+          'illegal',
+          'structure',
+          'garbage',
+          'stall',
+          'vendor',
+          'dump',
+          'construction',
+        ],
       },
     ],
   },
@@ -430,6 +484,11 @@ export const CATEGORIES: Record<CategoryId, Category> = {
 
 export const CATEGORY_LIST: Category[] = Object.values(CATEGORIES)
 
+/** Runtime guard for values read from untyped sources (DB rows, API responses). */
+export function isCategoryId(v: unknown): v is CategoryId {
+  return typeof v === 'string' && Object.prototype.hasOwnProperty.call(CATEGORIES, v)
+}
+
 /** Every department that could ever be involved in a category (core + conditional). */
 export function possibleDepartments(catId: CategoryId): DepartmentId[] {
   const c = CATEGORIES[catId]
@@ -481,8 +540,7 @@ export function resolveRouting(
   const text = (opts.text ?? '').toLowerCase()
   const ai = new Set(opts.aiDepartments ?? [])
   const conditional: ResolvedConditional[] = cat.conditional.map((c) => {
-    const matched =
-      ai.has(c.department) || c.keywords.some((k) => text.includes(k))
+    const matched = ai.has(c.department) || c.keywords.some((k) => text.includes(k))
     return {
       department: c.department,
       reason: c.reason,
@@ -506,11 +564,7 @@ export const SEVERITIES: Record<
   low: { label: 'Low', color: '#0f8a4f', rank: 1 },
 }
 
-export type IssueStatus =
-  | 'reported'
-  | 'acknowledged'
-  | 'in_progress'
-  | 'resolved'
+export type IssueStatus = 'reported' | 'acknowledged' | 'in_progress' | 'resolved'
 
 export const STATUS_FLOW: IssueStatus[] = [
   'reported',
@@ -566,9 +620,7 @@ const DEPT_TO_ISSUE: Record<DeptStatus, IssueStatus> = {
  * resolved only when ALL departments are done; otherwise the least-advanced
  * department's stage governs (so an issue stays "open" until everyone finishes).
  */
-export function deriveIssueStatus(
-  deptStatuses: { status: DeptStatus }[]
-): IssueStatus {
+export function deriveIssueStatus(deptStatuses: { status: DeptStatus }[]): IssueStatus {
   if (deptStatuses.length === 0) return 'reported'
   if (deptStatuses.every((d) => d.status === 'done')) return 'resolved'
   // Rank by flow position; the minimum (least advanced) drives the headline,

@@ -16,7 +16,9 @@
  * Also supports a DIRECT body { userId, title, body, url } for your own backend.
  * Both paths require the x-notify-secret header (fails closed if unset).
  */
+import type { VercelRequest, VercelResponse } from '@vercel/node'
 import webpush from 'web-push'
+import { clientIp, makeRateLimiter } from './_lib'
 
 const PUBLIC = process.env.VITE_VAPID_PUBLIC_KEY
 const PRIVATE = process.env.VAPID_PRIVATE_KEY
@@ -28,25 +30,14 @@ const NOTIFY_SECRET = process.env.NOTIFY_SECRET
 const EMAIL_API_KEY = process.env.EMAIL_API_KEY
 const EMAIL_FROM = process.env.EMAIL_FROM // e.g. "JanVyuha <updates@yourdomain>"
 
-function json(res: any, status: number, body: unknown) {
+function json(res: VercelResponse, status: number, body: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json')
   res.send(JSON.stringify(body))
 }
 
 const sbHeaders = { apikey: SB_SERVICE as string, Authorization: `Bearer ${SB_SERVICE}` }
 
-// Best-effort per-IP rate limit (per warm instance) — mirrors api/analyze.ts.
-const RATE_MAX = 60
-const RATE_WINDOW_MS = 60_000
-const hits = new Map<string, number[]>()
-function rateLimited(ip: string): boolean {
-  const now = Date.now()
-  const arr = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS)
-  arr.push(now)
-  hits.set(ip, arr)
-  if (hits.size > 5000) hits.clear()
-  return arr.length > RATE_MAX
-}
+const rateLimited = makeRateLimiter(60, 60_000) // 60 req/min, per IP (per warm instance)
 
 /** Force the click-through URL to a same-origin path (anti-phishing). */
 function safePath(url: unknown): string {
@@ -74,7 +65,11 @@ async function pushToUser(
     { headers: sbHeaders }
   )
   if (!r.ok) return { sent: 0, total: 0 }
-  const subs = (await r.json()) as { endpoint: string; p256dh: string; auth_key: string }[]
+  const subs = (await r.json()) as {
+    endpoint: string
+    p256dh: string
+    auth_key: string
+  }[]
   const payload = JSON.stringify({ title, body: bodyText, url })
   const results = await Promise.allSettled(
     subs.map((s) =>
@@ -84,13 +79,18 @@ async function pushToUser(
       )
     )
   )
-  return { sent: results.filter((x) => x.status === 'fulfilled').length, total: subs.length }
+  return {
+    sent: results.filter((x) => x.status === 'fulfilled').length,
+    total: subs.length,
+  }
 }
 
 /** Look up a user's email via the Supabase admin API (service role). */
 async function getUserEmail(userId: string): Promise<string | null> {
   try {
-    const r = await fetch(`${SB_URL}/auth/v1/admin/users/${userId}`, { headers: sbHeaders })
+    const r = await fetch(`${SB_URL}/auth/v1/admin/users/${userId}`, {
+      headers: sbHeaders,
+    })
     if (!r.ok) return null
     const u = (await r.json()) as { email?: string }
     return u.email || null
@@ -122,7 +122,24 @@ async function sendEmail(to: string, subject: string, text: string): Promise<boo
   }
 }
 
-export default async function handler(req: any, res: any) {
+/** Supabase Database Webhook payload (`issue_updates` INSERT) or a direct-call body. */
+interface NotifyBody {
+  table?: string
+  type?: string
+  record?: { issue_id?: string; status?: string; note?: string }
+  userId?: string
+  title?: string
+  body?: string
+  url?: string
+}
+
+interface IssueLookupRow {
+  reporter_id?: string
+  ref_id: string
+  title: string
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
   if (!PUBLIC || !PRIVATE) return json(res, 503, { error: 'Push not configured' })
   if (!SB_URL || !SB_SERVICE)
@@ -131,13 +148,11 @@ export default async function handler(req: any, res: any) {
   if (req.headers?.['x-notify-secret'] !== NOTIFY_SECRET)
     return json(res, 401, { error: 'Unauthorized' })
 
-  const ip =
-    (req.headers?.['x-forwarded-for'] || '').toString().split(',')[0].trim() || 'unknown'
-  if (rateLimited(ip)) return json(res, 429, { error: 'Too many requests' })
+  if (rateLimited(clientIp(req))) return json(res, 429, { error: 'Too many requests' })
 
-  let body: any = {}
+  let body: NotifyBody = {}
   try {
-    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body ?? {}
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
   } catch {
     return json(res, 400, { error: 'Invalid JSON' })
   }
@@ -145,8 +160,8 @@ export default async function handler(req: any, res: any) {
   webpush.setVapidDetails(SUBJECT, PUBLIC, PRIVATE)
 
   // ── Webhook mode: an issue_updates row was inserted → notify the reporter ──
-  if (body?.record && (body.table === 'issue_updates' || body.type)) {
-    const rec = body.record as { issue_id?: string; status?: string; note?: string }
+  if (body.record && (body.table === 'issue_updates' || body.type)) {
+    const rec = body.record
     if (!rec.issue_id) return json(res, 200, { skipped: 'no issue_id' })
 
     const ir = await fetch(
@@ -154,7 +169,7 @@ export default async function handler(req: any, res: any) {
       { headers: sbHeaders }
     )
     if (!ir.ok) return json(res, 502, { error: 'Could not load issue' })
-    const issue = ((await ir.json()) as any[])[0]
+    const issue = ((await ir.json()) as IssueLookupRow[])[0]
     if (!issue?.reporter_id) return json(res, 200, { skipped: 'no reporter' })
 
     const label = STATUS_LABEL[rec.status || ''] || rec.status || 'Updated'
@@ -166,16 +181,17 @@ export default async function handler(req: any, res: any) {
     let emailed = false
     if (EMAIL_API_KEY) {
       const email = await getUserEmail(issue.reporter_id)
-      if (email) emailed = await sendEmail(email, `${title} — ${issue.ref_id} ${label}`, text)
+      if (email)
+        emailed = await sendEmail(email, `${title} — ${issue.ref_id} ${label}`, text)
     }
     return json(res, 200, { mode: 'webhook', pushed: push.sent, of: push.total, emailed })
   }
 
   // ── Direct mode: { userId, title, body, url } from your own backend ──
-  const userId = body.userId as string | undefined
+  const userId = body.userId
   if (!userId) return json(res, 400, { error: 'userId required' })
-  const title = (body.title as string) || 'JanVyuha'
-  const text = (body.body as string) || ''
+  const title = body.title || 'JanVyuha'
+  const text = body.body || ''
   const url = safePath(body.url)
   const push = await pushToUser(userId, title, text, url)
   return json(res, 200, { mode: 'direct', pushed: push.sent, of: push.total })

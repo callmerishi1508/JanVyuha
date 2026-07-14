@@ -15,7 +15,9 @@
 | Admin actions | `admin_invite` / `admin_set_suspended` RPCs are `SECURITY DEFINER` + admin-checked; every action written to `audit_log`. |
 | Public data | `public_issue_feed` view exposes **no PII** and coarsens location to ~1 km; the `issues` table has **no** anon-readable policy. |
 | AI endpoint abuse/cost | `/api/analyze`: origin allow-list, per-IP rate limit, description/image size caps, image mime check. |
-| Secrets | `GEMINI_API_KEY`, `VAPID_PRIVATE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` are server-only (never `VITE_`). Anon key is safe to expose (RLS-gated). |
+| Secrets | `GEMINI_API_KEY`, `VAPID_PRIVATE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NOTIFY_SECRET`, `CRON_SECRET` are server-only (never `VITE_`). Anon key is safe to expose (RLS-gated). |
+| Retention sweep | `api/retention-sweep.ts`, on a daily Vercel Cron (`CRON_SECRET`-gated), anonymizes `reporter_name`/`reporter_phone`/`reporter_id` on issues `resolved` for 90+ days. |
+| Account deletion | `api/delete-account.ts` verifies the caller's own access token, scrubs PII on their past reports, then deletes their `auth.users` row (service-role only — the client can't do this itself). |
 | Data residency | Create the Supabase project in the India region (ap-south-1 / Mumbai). |
 
 ## DPDP Act 2023 mapping
@@ -25,10 +27,10 @@
 | **Consent** | Explicit consent at report submission, linked to a real Privacy Policy (`/privacy`). |
 | **Purpose limitation** | Data used only to route, respond, inform, and produce anonymised statistics. |
 | **Data minimisation** | Phone shown only to the responding department; anonymous reporting supported; public feed carries no identity. |
-| **Storage limitation / retention** | Retained while open + a limited post-resolution window; identifiers then removed/deleted per authority policy. |
+| **Storage limitation / retention** | Retained while open + a 90-day post-resolution window; a daily Cron (`api/retention-sweep.ts`) then anonymizes the reporter identity automatically. |
 | **Right to access** | "My Reports" lists the citizen's reports and status. |
 | **Right to correction** | Reporter can edit; departments cannot alter reporter data (guarded). |
-| **Right to erasure** | "Delete report" removes the report; child records cascade. |
+| **Right to erasure** | "Delete report" removes a single report; "Delete my account" (`api/delete-account.ts`) anonymizes all past reports and deletes the account entirely. |
 | **Grievance redressal** | `/contact`; a Grievance Officer to be designated with the authority on launch. |
 | **Security safeguards** | RLS, guard triggers, private storage, audit log, least-privilege keys. |
 

@@ -4,6 +4,12 @@
  * which janks low-end devices, fails on 2G/3G, and burns free-tier storage.
  * We cap the longest edge and re-encode as JPEG, cutting payloads ~10–30×.
  *
+ * The canvas round-trip also strips EXIF (GPS, device/camera info) — canvas
+ * only ever holds decoded pixels, so re-exporting via toDataURL() can't carry
+ * the original metadata block forward. That's why we always re-encode below,
+ * even for already-small images, rather than passing the original bytes
+ * through untouched.
+ *
  * Zero-dependency (canvas only). Falls back to the raw data URL if anything
  * goes wrong, so a report is never blocked by resizing.
  */
@@ -40,8 +46,6 @@ export async function toCompressedDataURL(file: File): Promise<string> {
     const img = await loadImage(raw)
     const { width, height } = img
     const scale = Math.min(1, MAX_EDGE / Math.max(width, height))
-    // Already small enough → keep the original bytes (avoids needless re-encode).
-    if (scale === 1 && file.size < 600_000) return raw
 
     const canvas = document.createElement('canvas')
     canvas.width = Math.round(width * scale)
@@ -50,9 +54,10 @@ export async function toCompressedDataURL(file: File): Promise<string> {
     if (!ctx) return raw
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
-    const out = canvas.toDataURL('image/jpeg', JPEG_QUALITY)
-    // Guard against pathological cases where re-encoding grew the payload.
-    return out.length < raw.length ? out : raw
+    // Always return the re-encoded copy, even if a rare pathological case
+    // grows the payload slightly — the point of the round-trip is stripping
+    // EXIF, and falling back to `raw` here would silently keep it.
+    return canvas.toDataURL('image/jpeg', JPEG_QUALITY)
   } catch {
     return raw // never block a report on a resize failure
   }

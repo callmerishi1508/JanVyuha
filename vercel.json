@@ -8,6 +8,7 @@
       "maxDuration": 30
     }
   },
+  "crons": [{ "path": "/api/retention-sweep", "schedule": "17 3 * * *" }],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

@@ -13,7 +13,6 @@ import { useTranslation } from 'react-i18next'
 import { CATEGORIES } from '../data/categories'
 import type { Issue } from '../data/types'
 import { makeMarkerIcon, INDIA_CENTER } from '../lib/leaflet'
-import { shortId } from '../lib/format'
 import { clusterIssues } from '../lib/cluster'
 
 /** Recenters the map imperatively when the target changes. */
@@ -26,11 +25,7 @@ function Recenter({ center, zoom }: { center: [number, number]; zoom?: number })
 }
 
 /** Captures clicks to drop/move a pin (used in the report wizard). */
-function ClickToPlace({
-  onPlace,
-}: {
-  onPlace: (lat: number, lng: number) => void
-}) {
+function ClickToPlace({ onPlace }: { onPlace: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
       onPlace(e.latlng.lat, e.latlng.lng)
@@ -125,29 +120,29 @@ export function MapView({
 
         {!cluster &&
           issues.map((issue) => (
-          <Marker
-            key={issue.id}
-            position={[issue.location.lat, issue.location.lng]}
-            icon={makeMarkerIcon(CATEGORIES[issue.category].color)}
-            eventHandlers={{
-              click: () => onSelectIssue?.(issue),
-            }}
-          >
-            <Popup>
-              <div className="min-w-[180px]">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  {shortId(issue.id)} · {CATEGORIES[issue.category].name}
+            <Marker
+              key={issue.id}
+              position={[issue.location.lat, issue.location.lng]}
+              icon={makeMarkerIcon(CATEGORIES[issue.category].color)}
+              eventHandlers={{
+                click: () => onSelectIssue?.(issue),
+              }}
+            >
+              <Popup>
+                <div className="min-w-[180px]">
+                  <div className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                    {issue.refId} · {CATEGORIES[issue.category].name}
+                  </div>
+                  <div className="mt-0.5 text-sm font-semibold text-ink-900">
+                    {issue.title}
+                  </div>
+                  <div className="mt-1 text-xs text-slate-500">
+                    {issue.location.address}
+                  </div>
                 </div>
-                <div className="mt-0.5 text-sm font-semibold text-ink-900">
-                  {issue.title}
-                </div>
-                <div className="mt-1 text-xs text-slate-500">
-                  {issue.location.address}
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
     </div>
   )

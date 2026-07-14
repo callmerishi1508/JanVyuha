@@ -34,7 +34,12 @@ export function formatDateTime(iso: string): string {
   })
 }
 
-/** Short human id for display, e.g. JV-4F9A. */
-export function shortId(id: string): string {
-  return 'JV-' + id.slice(-4).toUpperCase()
+/**
+ * Generates a new report reference id, e.g. JV-4821. This is the single source
+ * of truth an issue's `refId` — display code should read `issue.refId` rather
+ * than deriving its own id from `issue.id` (the internal row id), which used to
+ * produce a different-looking string a citizen couldn't search by.
+ */
+export function generateRefId(): string {
+  return 'JV-' + Math.floor(1000 + Math.random() * 9000)
 }

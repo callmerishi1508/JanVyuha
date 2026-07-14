@@ -24,9 +24,9 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     }
   }, [open])
 
-  const current = (SUPPORTED.includes(i18n.language as Locale)
-    ? i18n.language
-    : 'en') as Locale
+  const current = (
+    SUPPORTED.includes(i18n.language as Locale) ? i18n.language : 'en'
+  ) as Locale
 
   return (
     <div className="relative" ref={ref}>

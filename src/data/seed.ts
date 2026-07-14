@@ -237,8 +237,7 @@ export function buildSeedIssues(): Issue[] {
     const departmentStatus: DepartmentStatus[] = routed.map((department) => ({
       department,
       status: ISSUE_TO_DEPT[s.status],
-      updatedBy:
-        s.status === 'reported' ? undefined : 'Department Control Room',
+      updatedBy: s.status === 'reported' ? undefined : 'Department Control Room',
       at: minsAgo(Math.max(1, s.minsAgo - 8)),
     }))
     const updates: Issue['updates'] = [

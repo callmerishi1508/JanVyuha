@@ -72,12 +72,7 @@ export interface Issue {
   rating?: number
 }
 
-export type ModerationStatus =
-  | 'active'
-  | 'flagged'
-  | 'held'
-  | 'merged'
-  | 'rejected'
+export type ModerationStatus = 'active' | 'flagged' | 'held' | 'merged' | 'rejected'
 
 export type Role = 'public' | 'stakeholder' | 'admin'
 

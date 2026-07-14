@@ -25,11 +25,7 @@ interface AuthState {
 
   // --- local / tester sessions (instant) ---
   loginPublic: (name: string, phone?: string) => void
-  loginStakeholder: (
-    department: DepartmentId,
-    name: string,
-    designation: string
-  ) => void
+  loginStakeholder: (department: DepartmentId, name: string, designation: string) => void
   loginAdmin: (name: string) => void
   setLocalUser: (user: AuthUser | null) => void
 
@@ -51,6 +47,8 @@ interface AuthState {
   sendPhoneOtp: (phone: string, name?: string) => Promise<AuthResult>
   /** Verify the SMS OTP and establish the session. */
   verifyPhoneOtp: (phone: string, token: string) => Promise<AuthResult>
+  /** DPDP right to erasure: delete the account (server-side) and sign out. */
+  deleteAccount: () => Promise<AuthResult>
 
   logout: () => void
 }
@@ -61,6 +59,11 @@ export function toE164(phone: string): string {
   if (p.startsWith('+')) return p.replace(/[^\d+]/g, '')
   const digits = p.replace(/\D/g, '')
   return digits.length === 10 ? `+91${digits}` : `+${digits}`
+}
+
+/** Map a raw `profiles.role` DB value to the app's role union, defaulting unknown values to 'public'. */
+export function mapProfileRole(raw: string | null | undefined): AuthUser['role'] {
+  return raw === 'admin' ? 'admin' : raw === 'stakeholder' ? 'stakeholder' : 'public'
 }
 
 async function hydrateFromSupabase(): Promise<AuthUser | null> {
@@ -75,9 +78,7 @@ async function hydrateFromSupabase(): Promise<AuthUser | null> {
     .select('role, name, department, jurisdiction, phone')
     .eq('id', user.id)
     .maybeSingle()
-  const raw = (profile?.role ?? 'public') as string
-  const role: AuthUser['role'] =
-    raw === 'admin' ? 'admin' : raw === 'stakeholder' ? 'stakeholder' : 'public'
+  const role = mapProfileRole(profile?.role)
   return {
     role,
     id: user.id,
@@ -215,6 +216,26 @@ export const useAuth = create<AuthState>()(
         if (error) return { error: error.message }
         const user = await hydrateFromSupabase()
         set({ user })
+        return {}
+      },
+
+      deleteAccount: async () => {
+        const client = getSupabase()
+        if (!client) return { error: 'Backend not configured' }
+        const {
+          data: { session },
+        } = await client.auth.getSession()
+        if (!session) return { error: 'Not signed in' }
+        const res = await fetch('/api/delete-account', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        })
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}))
+          return { error: body.error || 'Could not delete account' }
+        }
+        await client.auth.signOut()
+        set({ user: null })
         return {}
       },
 

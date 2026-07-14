@@ -5,8 +5,16 @@
 // app didn't render. This version RUNTIME-CACHES same-origin static assets with
 // a stale-while-revalidate strategy, so after one online visit the app works
 // offline. API / Supabase / map-tile requests are never cached.
-const CACHE = 'janvyuha-v5'
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/favicon.svg']
+const CACHE = 'janvyuha-v6'
+const SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/favicon.svg',
+]
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)))
@@ -87,7 +95,9 @@ self.addEventListener('fetch', (e) => {
 
   // Everything else (e.g. fonts CDN): try cache, then network — never undefined.
   e.respondWith(
-    caches.match(request).then((cached) => cached || fetch(request).catch(() => Response.error()))
+    caches
+      .match(request)
+      .then((cached) => cached || fetch(request).catch(() => Response.error()))
   )
 })
 
@@ -103,8 +113,10 @@ self.addEventListener('push', (e) => {
   e.waitUntil(
     self.registration.showNotification(title, {
       body: data.body || '',
-      icon: '/icon.svg',
-      badge: '/icon.svg',
+      // PNG, not SVG — most platforms (notably Android Chrome) won't render an
+      // SVG notification icon/badge at all.
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
       data: { url: data.url || '/' },
     })
   )

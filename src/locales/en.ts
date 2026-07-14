@@ -11,6 +11,13 @@ const en = {
     routedTo: 'Routed to:',
     selectedLocation: 'Selected location',
     rating: 'Rating',
+    reloadPage: 'Reload page',
+    goHome: 'Go home',
+    routeErrorTitle: 'Something went wrong',
+    routeErrorBody: 'This page hit an unexpected error. Try reloading, or go back home.',
+    updateAvailable: 'A new version is available',
+    updateAvailableBody:
+      'JanVyuha was updated while you were browsing. Reload to get the latest version.',
   },
   media: {
     addMedia: 'Add media',
@@ -57,7 +64,8 @@ const en = {
   },
   value: {
     captureT: 'Capture evidence',
-    captureB: 'Attach a recorded video or photo so authorities see the situation clearly.',
+    captureB:
+      'Attach a recorded video or photo so authorities see the situation clearly.',
     locationT: 'Pinpoint location',
     locationB: 'Auto-detect your GPS location or drop a pin on the map manually.',
     routingT: 'Smart routing',
@@ -92,7 +100,8 @@ const en = {
     login: 'Login',
   },
   footer: {
-    blurb: 'A unified civic grievance and emergency response platform connecting citizens with the right authorities — in real time.',
+    blurb:
+      'A unified civic grievance and emergency response platform connecting citizens with the right authorities — in real time.',
     citizens: 'Citizens',
     report: 'Report an issue',
     track: 'Track my reports',
@@ -106,6 +115,7 @@ const en = {
     terms: 'Terms',
     about: 'About',
     pilotNote: 'Pilot demonstration — not yet an official government service.',
+    installApp: 'Install app',
   },
   loginChoose: {
     title: 'How would you like to continue?',
@@ -151,33 +161,114 @@ const en = {
     animal: 'Animal Welfare',
   },
   routing: {
-    fire_ambulance: { reason: 'People may be injured, burnt or trapped', question: 'Are people injured, trapped or at risk?' },
-    fire_electricity: { reason: 'Fire may involve electrical wiring or a transformer', question: 'Is the fire near electric wires or a transformer?' },
-    fire_police: { reason: 'Crowd control, evacuation or cordon', question: 'Is crowd control or evacuation needed?' },
-    fire_municipal: { reason: 'Debris clearance or water for firefighting', question: 'Is debris clearance or extra water needed?' },
-    fire_animal: { reason: 'Animals may be affected or trapped', question: 'Are animals affected or trapped?' },
-    road_accident_fire: { reason: 'Vehicle fire or people trapped needing rescue', question: 'Is there a vehicle fire or someone trapped?' },
-    road_accident_municipal: { reason: 'Debris or road damage to clear', question: 'Is there debris or road damage?' },
-    road_accident_electricity: { reason: 'A vehicle hit a pole or live wires', question: 'Did the vehicle hit a pole or wires?' },
-    road_accident_animal: { reason: 'An animal was involved or injured', question: 'Was an animal involved or injured?' },
-    missing_person_ambulance: { reason: 'A vulnerable person may need medical help when found', question: 'Is the person medically vulnerable (child/elderly/ill)?' },
-    medical_police: { reason: 'Possible assault, crime or law-and-order need', question: 'Is this due to violence or a crime?' },
-    medical_fire: { reason: 'Rescue or extrication may be needed', question: 'Is rescue or extrication needed?' },
-    tree_fall_fire: { reason: 'Tree on fire, or a rescue from the fallen tree', question: 'Is the tree on fire or is someone trapped?' },
-    tree_fall_electricity: { reason: 'The tree fell on electric lines', question: 'Did the tree fall on electric wires or poles?' },
-    tree_fall_police: { reason: 'Traffic diversion for a blocked road', question: 'Is traffic blocked and needing diversion?' },
-    tree_fall_ambulance: { reason: 'Someone was injured by the tree', question: 'Is anyone injured?' },
-    tree_fall_animal: { reason: 'Animals hurt or trapped by the tree', question: 'Are animals hurt or trapped?' },
-    road_damage_police: { reason: 'Traffic hazard / accident risk', question: 'Is it causing a traffic hazard or accidents?' },
-    road_damage_water: { reason: 'A water leak or drain is causing the damage', question: 'Is a water leak or drain causing the damage?' },
-    public_nuisance_municipal: { reason: 'Encroachment, illegal structure or cleanup', question: 'Does it involve encroachment or cleanup?' },
-    electricity_fire: { reason: 'Sparking or fire risk from the fault', question: 'Is there sparking or a fire risk?' },
-    electricity_ambulance: { reason: 'Someone was electrocuted or injured', question: 'Has someone been electrocuted or injured?' },
-    electricity_municipal: { reason: 'A fallen pole is blocking the road', question: 'Is a fallen pole blocking the road?' },
-    water_municipal: { reason: 'Road flooding or drainage cleanup', question: 'Is it flooding the road or a drainage issue?' },
-    water_electricity: { reason: 'Water near electric lines (shock risk)', question: 'Is water near electric lines or poles?' },
-    garbage_water: { reason: 'A blocked drain or sewage overflow', question: 'Is a drain blocked or sewage overflowing?' },
-    garbage_animal: { reason: 'Stray animals or a dead animal / carcass', question: 'Are stray or dead animals involved?' },
+    fire_ambulance: {
+      reason: 'People may be injured, burnt or trapped',
+      question: 'Are people injured, trapped or at risk?',
+    },
+    fire_electricity: {
+      reason: 'Fire may involve electrical wiring or a transformer',
+      question: 'Is the fire near electric wires or a transformer?',
+    },
+    fire_police: {
+      reason: 'Crowd control, evacuation or cordon',
+      question: 'Is crowd control or evacuation needed?',
+    },
+    fire_municipal: {
+      reason: 'Debris clearance or water for firefighting',
+      question: 'Is debris clearance or extra water needed?',
+    },
+    fire_animal: {
+      reason: 'Animals may be affected or trapped',
+      question: 'Are animals affected or trapped?',
+    },
+    road_accident_fire: {
+      reason: 'Vehicle fire or people trapped needing rescue',
+      question: 'Is there a vehicle fire or someone trapped?',
+    },
+    road_accident_municipal: {
+      reason: 'Debris or road damage to clear',
+      question: 'Is there debris or road damage?',
+    },
+    road_accident_electricity: {
+      reason: 'A vehicle hit a pole or live wires',
+      question: 'Did the vehicle hit a pole or wires?',
+    },
+    road_accident_animal: {
+      reason: 'An animal was involved or injured',
+      question: 'Was an animal involved or injured?',
+    },
+    missing_person_ambulance: {
+      reason: 'A vulnerable person may need medical help when found',
+      question: 'Is the person medically vulnerable (child/elderly/ill)?',
+    },
+    medical_police: {
+      reason: 'Possible assault, crime or law-and-order need',
+      question: 'Is this due to violence or a crime?',
+    },
+    medical_fire: {
+      reason: 'Rescue or extrication may be needed',
+      question: 'Is rescue or extrication needed?',
+    },
+    tree_fall_fire: {
+      reason: 'Tree on fire, or a rescue from the fallen tree',
+      question: 'Is the tree on fire or is someone trapped?',
+    },
+    tree_fall_electricity: {
+      reason: 'The tree fell on electric lines',
+      question: 'Did the tree fall on electric wires or poles?',
+    },
+    tree_fall_police: {
+      reason: 'Traffic diversion for a blocked road',
+      question: 'Is traffic blocked and needing diversion?',
+    },
+    tree_fall_ambulance: {
+      reason: 'Someone was injured by the tree',
+      question: 'Is anyone injured?',
+    },
+    tree_fall_animal: {
+      reason: 'Animals hurt or trapped by the tree',
+      question: 'Are animals hurt or trapped?',
+    },
+    road_damage_police: {
+      reason: 'Traffic hazard / accident risk',
+      question: 'Is it causing a traffic hazard or accidents?',
+    },
+    road_damage_water: {
+      reason: 'A water leak or drain is causing the damage',
+      question: 'Is a water leak or drain causing the damage?',
+    },
+    public_nuisance_municipal: {
+      reason: 'Encroachment, illegal structure or cleanup',
+      question: 'Does it involve encroachment or cleanup?',
+    },
+    electricity_fire: {
+      reason: 'Sparking or fire risk from the fault',
+      question: 'Is there sparking or a fire risk?',
+    },
+    electricity_ambulance: {
+      reason: 'Someone was electrocuted or injured',
+      question: 'Has someone been electrocuted or injured?',
+    },
+    electricity_municipal: {
+      reason: 'A fallen pole is blocking the road',
+      question: 'Is a fallen pole blocking the road?',
+    },
+    water_municipal: {
+      reason: 'Road flooding or drainage cleanup',
+      question: 'Is it flooding the road or a drainage issue?',
+    },
+    water_electricity: {
+      reason: 'Water near electric lines (shock risk)',
+      question: 'Is water near electric lines or poles?',
+    },
+    garbage_water: {
+      reason: 'A blocked drain or sewage overflow',
+      question: 'Is a drain blocked or sewage overflowing?',
+    },
+    garbage_animal: {
+      reason: 'Stray animals or a dead animal / carcass',
+      question: 'Are stray or dead animals involved?',
+    },
   },
   auth: {
     title: 'Citizen sign-in',
@@ -212,7 +303,8 @@ const en = {
     deptOfficialLong: 'Are you a department official?',
     stakeholderLogin: 'Stakeholder login',
     panelTitle: 'Citizen Sign-in',
-    panelLead: "Your voice keeps the city safe and running. Report an issue and we'll make sure it reaches the right people.",
+    panelLead:
+      "Your voice keeps the city safe and running. Report an issue and we'll make sure it reaches the right people.",
     panelPoint1: 'Reports routed to the right department',
     panelPoint2: 'Track status from report to resolution',
     panelPoint3: 'Option to report anonymously',
@@ -283,7 +375,8 @@ const en = {
     stepDepartments: 'Departments',
     stepReview: 'Review',
     title: 'Report an issue',
-    subtitle: 'Help authorities respond faster with clear details and an accurate location.',
+    subtitle:
+      'Help authorities respond faster with clear details and an accurate location.',
     emergency: 'Emergency',
     whatReporting: 'What are you reporting?',
     decidesDept: 'This decides which department gets notified.',
@@ -302,7 +395,10 @@ const en = {
     aiDescMock:
       'Offline demo AI — classifies from your typed description (it does not read the photo). Turn off “Mock AI” in the Tester panel to use the real Gemini vision AI.',
     aiDescReal:
-      'Let AI read your photo and description and suggest the category, severity and a clear title.',
+      'Optional — sends your typed description to Google Gemini (outside India) to suggest a category, severity and title. Skip it to keep everything in-app with keyword-based routing.',
+    aiIncludePhoto:
+      'Also send my photo (may contain faces, plates or other sensitive detail)',
+    aiPrivacyLink: 'How your data is used',
     analyse: 'Analyse',
     unclearCategory: 'Unclear category',
     percentConfident: '{{pct}}% confident',
@@ -373,7 +469,8 @@ const en = {
     alertSentTo: 'Alert sent to',
     reportSubmitted: 'Report {{id}} submitted',
     submitFailed: 'Something went wrong. Please try again.',
-    queuedOffline: "You're offline — your report is saved and will be sent automatically when you're back online.",
+    queuedOffline:
+      "You're offline — your report is saved and will be sent automatically when you're back online.",
     queuedSynced_one: '{{count}} saved report has now been sent.',
     queuedSynced_other: '{{count}} saved reports have now been sent.',
     draftRestored: 'Draft restored.',
@@ -394,6 +491,13 @@ const en = {
     confirmDelete:
       'Delete this report permanently? This exercises your right to erasure and cannot be undone.',
     deleted: 'Report deleted',
+    dangerZone: 'Danger zone',
+    deleteAccountLead:
+      'Permanently delete your account. Your past reports stay (for civic accountability) but are anonymised — your name, phone and account link are removed.',
+    deleteAccount: 'Delete my account',
+    confirmDeleteAccount:
+      'Delete your account permanently? Your reports will be anonymised and this cannot be undone.',
+    accountDeleted: 'Account deleted',
   },
   deptStatuses: {
     notified: 'Notified',
@@ -401,12 +505,33 @@ const en = {
     responding: 'Responding',
     done: 'Completed',
   },
+  cannedNotes: {
+    acknowledged: [
+      'Acknowledged — team has been assigned.',
+      'Received, will inspect within 24 hours.',
+      'Noted, prioritising given the severity.',
+      'Acknowledged — coordinating with other departments.',
+    ],
+    responding: [
+      'Team dispatched to the location.',
+      'On-site and assessing the situation.',
+      'Response work has begun.',
+      'Additional resources requested.',
+    ],
+    done: [
+      'Issue resolved on site.',
+      'Repair completed and verified.',
+      'Resolved — no further action needed.',
+      'Completed; monitoring for recurrence.',
+    ],
+  },
   issueDetail: {
     notFound: 'Issue not found',
     goHome: 'Go home',
     emergencyBanner: 'Emergency report — priority response',
     alsoAffected: '{{count}} also affected',
     markedThanks: 'Marked — thanks for confirming',
+    actionFailed: 'Something went wrong. Please try again.',
     location: 'Location',
     relatedNearby_one: '{{count}} related report nearby',
     relatedNearby_other: '{{count}} related reports nearby',
@@ -514,6 +639,13 @@ const en = {
     noIssuesYet: 'No issues yet.',
     backToConsole: '← Back to Administration Console',
   },
+  embed: {
+    tagline: 'Report a civic or emergency issue in {{jurisdiction}} — routed instantly.',
+    totalReports: 'Reports',
+    resolved: 'Resolved',
+    reportButton: 'Report an issue',
+    poweredBy: 'Powered by {{product}}',
+  },
   transparency: {
     title: 'Public Transparency Dashboard',
     subtitle:
@@ -620,23 +752,27 @@ const en = {
     privacyS3Title: '3. Who can see it (data minimisation)',
     privacyS3Body:
       'Access is enforced in the database, not just the interface. Only the department(s) your report is routed to — within the relevant jurisdiction — and authorised administrators can see it. Your phone number is shown only to the responding department. The public transparency view shows no personal identity and only a coarsened (~1 km) location.',
-    privacyS4Title: '4. Storage & security',
+    privacyS4Title: '4. AI-assisted triage & cross-border transfer',
     privacyS4Body:
-      'Data is stored on managed infrastructure in an India region. Evidence photos/videos are kept in private storage and served only via short-lived signed links. Access is protected by row-level security, guard rules and an audit trail.',
-    privacyS5Title: '5. Retention',
+      'AI photo/description analysis is optional — it only runs if you tap “Analyse”. If you use it, that photo and description are sent to Google Gemini (Google LLC, USA) for classification, so your data is processed outside India for that one request. We use Google’s free API tier, under which Google’s terms permit it to use submitted content — including via human review — to improve its services; it is not covered by the stronger no-training terms of Google’s paid tiers. Skip “Analyse” if you prefer we don’t send anything to Google — the rest of the report still works normally with keyword-based routing.',
+    privacyS5Title: '5. Storage & security',
     privacyS5Body:
+      'Data is stored on managed infrastructure in an India region. Evidence photos/videos are kept in private storage and served only via short-lived signed links. Access is protected by row-level security, guard rules and an audit trail.',
+    privacyS6Title: '6. Retention',
+    privacyS6Body:
       "Reports and evidence are retained while a case is open and for a limited period after resolution for accountability, after which personal identifiers are removed or the record is deleted, in line with the sponsoring authority's records policy.",
-    privacyS6Title: '6. Your rights (DPDP)',
-    privacyS6Intro: 'As a Data Principal you may:',
-    privacyS6Li1: 'Access the reports linked to your account (see “My Reports”).',
-    privacyS6Li2: 'Correct inaccurate information.',
-    privacyS6Li3: 'Erase a report you filed — use “Delete report” on any of your reports.',
-    privacyS6Li4: 'Withdraw consent and raise a grievance (below).',
-    privacyS7Title: '7. Consent',
-    privacyS7Body:
-      'You provide consent when you submit a report. You may withdraw it by deleting the report or contacting the Grievance Officer. Withdrawing consent does not affect action already lawfully taken on an emergency.',
-    privacyS8Title: '8. Grievance Officer',
+    privacyS7Title: '7. Your rights (DPDP)',
+    privacyS7Intro: 'As a Data Principal you may:',
+    privacyS7Li1: 'Access the reports linked to your account (see “My Reports”).',
+    privacyS7Li2: 'Correct inaccurate information.',
+    privacyS7Li3:
+      'Erase a report you filed — use “Delete report” on any of your reports.',
+    privacyS7Li4: 'Withdraw consent and raise a grievance (below).',
+    privacyS8Title: '8. Consent',
     privacyS8Body:
+      'You provide consent when you submit a report. You may withdraw it by deleting the report or contacting the Grievance Officer. Withdrawing consent does not affect action already lawfully taken on an emergency.',
+    privacyS9Title: '9. Grievance Officer',
+    privacyS9Body:
       'Questions or complaints about your data can be raised via our <1>contact page</1>. A Grievance Officer will be designated with the sponsoring authority on official launch, per the DPDP Act.',
     termsTitle: 'Terms of Use',
     termsSubtitle: 'The terms for using {{product}}. Last updated {{updated}}.',
@@ -647,7 +783,8 @@ const en = {
     termsAcceptableLi1: 'Report genuine issues with accurate information.',
     termsAcceptableLi2: 'Do not submit false, malicious, defamatory or unlawful content.',
     termsAcceptableLi3: "Do not upload media that violates others' privacy or the law.",
-    termsAcceptableLi4: 'Misuse may lead to moderation, suspension, or referral to authorities.',
+    termsAcceptableLi4:
+      'Misuse may lead to moderation, suspension, or referral to authorities.',
     termsWarrantyTitle: 'No warranty',
     termsWarrantyBody:
       'The service is provided on a best-effort basis. Response times depend on the concerned departments. During the pilot phase, availability and data are provided without warranty.',

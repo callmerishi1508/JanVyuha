@@ -6,7 +6,7 @@ import { CATEGORIES } from '../data/categories'
 import { StatusBadge, SeverityBadge } from './StatusBadge'
 import { CategoryIconTile } from './CategoryPill'
 import { MediaThumb } from './MediaUpload'
-import { timeAgo, shortId } from '../lib/format'
+import { timeAgo } from '../lib/format'
 import { tCategory, tDeptShort } from '../lib/i18n'
 
 export function IssueCard({
@@ -40,7 +40,7 @@ export function IssueCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              <span>{shortId(issue.id)}</span>
+              <span>{issue.refId}</span>
               <span style={{ color: cat.color }}>{tCategory(issue.category)}</span>
             </div>
             <h3 className="mt-0.5 truncate text-sm font-bold text-ink-900 group-hover:text-ink-700 sm:text-base">
@@ -76,10 +76,7 @@ export function IssueCard({
               {t('common.routedTo')}
             </span>
             {issue.routedDepartments.map((d) => (
-              <span
-                key={d}
-                className="chip bg-slate-100 text-[11px] text-slate-600"
-              >
+              <span key={d} className="chip bg-slate-100 text-[11px] text-slate-600">
                 {tDeptShort(d)}
               </span>
             ))}

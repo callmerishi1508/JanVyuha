@@ -32,9 +32,7 @@ export function LoginChoose() {
           <h2 className="mt-5 text-xl font-bold text-ink-900">
             {t('loginChoose.citizen')}
           </h2>
-          <p className="mt-1.5 text-sm text-slate-600">
-            {t('loginChoose.citizenDesc')}
-          </p>
+          <p className="mt-1.5 text-sm text-slate-600">{t('loginChoose.citizenDesc')}</p>
           <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-saffron-600">
             {t('loginChoose.citizen')}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -68,8 +66,8 @@ export function LoginChoose() {
 
       {isDemoMode() && (
         <p className="mx-auto mt-8 max-w-md text-center text-xs text-slate-500">
-          This is a demonstration environment. Authentication is simulated — no
-          real credentials or OTP are required.
+          This is a demonstration environment. Authentication is simulated — no real
+          credentials or OTP are required.
         </p>
       )}
     </div>

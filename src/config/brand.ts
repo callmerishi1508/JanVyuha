@@ -98,8 +98,7 @@ const BRANDS: Record<BrandId, Brand> = {
 
 function resolveBrand(): Brand {
   const id = (import.meta.env.VITE_BRAND as string | undefined)?.trim() as
-    | BrandId
-    | undefined
+    BrandId | undefined
   if (id && id in BRANDS) return BRANDS[id]
   return BRANDS.neutral
 }

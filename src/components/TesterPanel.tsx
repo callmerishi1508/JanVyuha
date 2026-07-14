@@ -154,10 +154,7 @@ export function TesterPanel() {
                       onClick={() => asDept(d.id, d.short)}
                       className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1.5 text-xs font-semibold text-ink-800 hover:bg-slate-50"
                     >
-                      <Icon
-                        className="h-3.5 w-3.5 shrink-0"
-                        style={{ color: d.color }}
-                      />
+                      <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: d.color }} />
                       <span className="truncate">{d.short}</span>
                     </button>
                   )
@@ -187,9 +184,7 @@ export function TesterPanel() {
                     onClick={() => switchBackend(b)}
                     className={cn(
                       'flex-1 rounded-md py-1.5 capitalize transition-colors',
-                      backend === b
-                        ? 'bg-white text-ink-900 shadow-sm'
-                        : 'text-slate-500'
+                      backend === b ? 'bg-white text-ink-900 shadow-sm' : 'text-slate-500'
                     )}
                   >
                     {b}
@@ -218,8 +213,8 @@ export function TesterPanel() {
                 />
               </label>
               <p className="mt-1.5 text-[11px] text-slate-500">
-                On = instant canned suggestions. Off = calls the /api/analyze
-                Gemini proxy (needs a deployed function + key).
+                On = instant canned suggestions. Off = calls the /api/analyze Gemini proxy
+                (needs a deployed function + key).
               </p>
             </Section>
 
@@ -277,13 +272,7 @@ export function TesterPanel() {
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string
-  children: React.ReactNode
-}) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-4">
       <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-500">

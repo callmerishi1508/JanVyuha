@@ -13,10 +13,7 @@ export interface ReverseResult {
   district?: string
 }
 
-export async function reverseGeocode(
-  lat: number,
-  lng: number
-): Promise<ReverseResult> {
+export async function reverseGeocode(lat: number, lng: number): Promise<ReverseResult> {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=16&addressdetails=1`
     const res = await fetch(url, {
@@ -25,17 +22,11 @@ export async function reverseGeocode(
     if (!res.ok) throw new Error('geocode failed')
     const data = await res.json()
     const a = data.address ?? {}
-    const city =
-      a.city || a.town || a.village || a.suburb || a.county || undefined
+    const city = a.city || a.town || a.village || a.suburb || a.county || undefined
     const state = a.state || undefined
     // Nominatim exposes district variously depending on region.
-    const district =
-      a.state_district || a.district || a.county || city || undefined
-    const parts = [
-      a.road || a.neighbourhood || a.suburb,
-      city,
-      state,
-    ].filter(Boolean)
+    const district = a.state_district || a.district || a.county || city || undefined
+    const parts = [a.road || a.neighbourhood || a.suburb, city, state].filter(Boolean)
     return {
       address: parts.join(', ') || data.display_name || fallback(lat, lng),
       city,

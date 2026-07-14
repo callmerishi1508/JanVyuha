@@ -1,16 +1,8 @@
-import { defaultDepartments, deriveIssueStatus } from '../data/categories'
-import type {
-  DepartmentId,
-  DeptStatus,
-  IssueStatus,
-} from '../data/categories'
-import type {
-  DepartmentStatus,
-  Issue,
-  IssueUpdate,
-  MediaItem,
-} from '../data/types'
+import { defaultDepartments, deriveIssueStatus, isDepartmentId } from '../data/categories'
+import type { DepartmentId, DeptStatus, IssueStatus } from '../data/categories'
+import type { DepartmentStatus, Issue, IssueUpdate, MediaItem } from '../data/types'
 import { getSupabase, EVIDENCE_BUCKET } from '../lib/supabase'
+import { generateRefId } from '../lib/format'
 import type { IssuesBackend } from './types'
 
 /**
@@ -22,7 +14,8 @@ import type { IssuesBackend } from './types'
  * simply return whatever the authenticated user is allowed to see.
  */
 
-interface IssueRow {
+/** Exported for unit testing the row→domain mapping in isolation. */
+export interface IssueRow {
   id: string
   ref_id: string
   title: string
@@ -87,7 +80,8 @@ interface PublicFeedRow {
 const SELECT =
   '*, issue_media(id,type,url,label), issue_updates(id,status,note,by_name,created_at), issue_department_status(department,status,updated_by,updated_at), issue_ratings(stars)'
 
-function mapRow(row: IssueRow): Issue {
+/** Exported for unit testing the row→domain mapping in isolation. */
+export function mapRow(row: IssueRow): Issue {
   const media: MediaItem[] = (row.issue_media ?? []).map((m) => ({
     id: m.id,
     type: m.type === 'video' ? 'video' : 'image',
@@ -104,19 +98,25 @@ function mapRow(row: IssueRow): Issue {
     }))
     .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime())
 
-  const departmentStatus: DepartmentStatus[] = (
-    row.issue_department_status ?? []
-  ).map((d) => ({
-    department: d.department as DepartmentId,
-    status: d.status,
-    updatedBy: d.updated_by ?? undefined,
-    at: d.updated_at,
-  }))
+  // `department` columns are DB-check-constrained, but filter defensively in case
+  // legacy/migrated data ever drifts — an unrecognised id would otherwise 404 on
+  // every DEPARTMENTS[id] lookup downstream.
+  const departmentStatus: DepartmentStatus[] = (row.issue_department_status ?? [])
+    .filter((d): d is typeof d & { department: DepartmentId } =>
+      isDepartmentId(d.department)
+    )
+    .map((d) => ({
+      department: d.department,
+      status: d.status,
+      updatedBy: d.updated_by ?? undefined,
+      at: d.updated_at,
+    }))
 
   return {
     id: row.id,
     refId: row.ref_id,
     title: row.title,
+    // DB-check-constrained to a valid CategoryId (see schema.sql), so the cast is safe.
     category: row.category as Issue['category'],
     description: row.description,
     severity: row.severity,
@@ -134,7 +134,9 @@ function mapRow(row: IssueRow): Issue {
     reporterName: row.reporter_name,
     reporterPhone: row.reporter_phone ?? undefined,
     anonymous: row.anonymous,
-    routedDepartments: row.routed_departments as DepartmentId[],
+    // `routed_departments` is a plain text[] with no DB check constraint, so filter
+    // out anything unrecognised (would otherwise 404 on every DEPARTMENTS[id] lookup).
+    routedDepartments: row.routed_departments.filter(isDepartmentId),
     departmentStatus,
     upvotes: row.upvotes,
     createdAt: row.created_at,
@@ -206,8 +208,7 @@ async function signMedia(issues: Issue[]): Promise<Issue[]> {
   const client = sb()
   const toSign = new Set<string>()
   for (const iss of issues)
-    for (const m of iss.media)
-      if (m.url && !isDisplayableUrl(m.url)) toSign.add(m.url)
+    for (const m of iss.media) if (m.url && !isDisplayableUrl(m.url)) toSign.add(m.url)
   if (toSign.size === 0) return issues
 
   const signed = new Map<string, string>()
@@ -225,10 +226,6 @@ async function signMedia(issues: Issue[]): Promise<Issue[]> {
       signed.has(m.url) ? { ...m, url: signed.get(m.url)! } : m
     ),
   }))
-}
-
-function refId(): string {
-  return 'JV-' + Math.floor(1000 + Math.random() * 9000)
 }
 
 export const supabaseApi: IssuesBackend = {
@@ -293,7 +290,7 @@ export const supabaseApi: IssuesBackend = {
       media: [],
       reporterName: '',
       anonymous: true,
-      routedDepartments: row.routed_departments as DepartmentId[],
+      routedDepartments: row.routed_departments.filter(isDepartmentId),
       departmentStatus: [],
       upvotes: row.upvotes,
       createdAt: row.created_at,
@@ -310,39 +307,34 @@ export const supabaseApi: IssuesBackend = {
       input.routedDepartments && input.routedDepartments.length
         ? input.routedDepartments
         : defaultDepartments(input.category)
-    const {
-      data: { user },
-    } = await client.auth.getUser()
 
-    const { data: inserted, error } = await client
-      .from('issues')
-      .insert({
-        ref_id: refId(),
-        title: input.title,
-        category: input.category,
-        description: input.description,
-        severity: input.severity,
-        status: 'reported',
-        lat: input.location.lat,
-        lng: input.location.lng,
-        address: input.location.address,
-        city: input.location.city ?? null,
-        state: input.location.state ?? null,
-        district: input.location.district ?? input.location.city ?? null,
-        reporter_name: input.anonymous ? 'Anonymous' : input.reporterName,
-        reporter_phone: input.anonymous ? null : input.reporterPhone ?? null,
-        anonymous: input.anonymous,
-        routed_departments: routed,
-        ai_meta: input.aiMeta ?? null,
-        reporter_id: user?.id ?? null,
-      })
-      .select('id, ref_id, created_at')
-      .single()
+    // The issue row, its per-department status rows and first timeline entry
+    // are created atomically by one RPC (see create_issue in schema.sql) —
+    // a partial failure here used to leave an orphaned, unrouted issue.
+    const { data, error } = await client.rpc('create_issue', {
+      p_ref_id: generateRefId(),
+      p_title: input.title,
+      p_category: input.category,
+      p_description: input.description,
+      p_severity: input.severity,
+      p_lat: input.location.lat,
+      p_lng: input.location.lng,
+      p_address: input.location.address,
+      p_city: input.location.city ?? null,
+      p_state: input.location.state ?? null,
+      p_district: input.location.district ?? input.location.city ?? null,
+      p_reporter_name: input.anonymous ? 'Anonymous' : input.reporterName,
+      p_reporter_phone: input.anonymous ? null : (input.reporterPhone ?? null),
+      p_anonymous: input.anonymous,
+      p_routed_departments: routed,
+      p_ai_meta: input.aiMeta ?? null,
+    })
     if (error) throw error
+    const issueId = (data as { id: string }[])[0].id
 
-    const issueId = inserted.id as string
-
-    // Media
+    // Media upload is a Storage call, not a DB row, so it isn't part of the
+    // atomic RPC above — best-effort, as before (a failed photo shouldn't
+    // void an otherwise-valid report).
     if (input.media.length) {
       const rows = await uploadMedia(issueId, input.media)
       if (rows.length) {
@@ -351,23 +343,6 @@ export const supabaseApi: IssuesBackend = {
           .insert(rows.map((r) => ({ issue_id: issueId, ...r })))
       }
     }
-
-    // Per-department status rows (each routed dept starts "notified")
-    await client.from('issue_department_status').insert(
-      routed.map((department) => ({
-        issue_id: issueId,
-        department,
-        status: 'notified',
-      }))
-    )
-
-    // First timeline entry
-    await client.from('issue_updates').insert({
-      issue_id: issueId,
-      status: 'reported',
-      note: 'Issue reported and routed to the concerned department(s).',
-      by_name: 'JanVyuha System',
-    })
 
     const full = await this.getIssue(issueId)
     if (!full) throw new Error('Failed to load created issue')
@@ -390,14 +365,9 @@ export const supabaseApi: IssuesBackend = {
       .from('issue_department_status')
       .select('status')
       .eq('issue_id', id)
-    const overall = deriveIssueStatus(
-      (rows as { status: DeptStatus }[] | null) ?? []
-    )
+    const overall = deriveIssueStatus((rows as { status: DeptStatus }[] | null) ?? [])
 
-    await client
-      .from('issues')
-      .update({ status: overall, updated_at: now })
-      .eq('id', id)
+    await client.from('issues').update({ status: overall, updated_at: now }).eq('id', id)
 
     await client.from('issue_updates').insert({
       issue_id: id,
@@ -433,8 +403,10 @@ export const supabaseApi: IssuesBackend = {
   },
 
   async report(id, reason) {
-    // A citizen may only insert a report row (RLS). The admin moderation queue
-    // reads issue_reports; an admin then decides whether to hold/reject.
+    // A citizen may only insert a report row (RLS) — the issue itself is left
+    // untouched until an admin acts; see `services/api.ts`'s `report()` for why
+    // the two backends deliberately diverge here (mock has no issue_reports table).
+    // AdminDashboard's Moderation queue reconciles both via `adminApi.reports()`.
     await sb().from('issue_reports').insert({ issue_id: id, reason })
   },
 
@@ -450,10 +422,12 @@ export const supabaseApi: IssuesBackend = {
       data: { user },
     } = await client.auth.getUser()
     if (!user) throw new Error('Sign in to rate')
-    const { error } = await client.from('issue_ratings').upsert(
-      { issue_id: id, user_id: user.id, stars, comment: comment || null },
-      { onConflict: 'issue_id,user_id' }
-    )
+    const { error } = await client
+      .from('issue_ratings')
+      .upsert(
+        { issue_id: id, user_id: user.id, stars, comment: comment || null },
+        { onConflict: 'issue_id,user_id' }
+      )
     if (error) throw error
   },
 }

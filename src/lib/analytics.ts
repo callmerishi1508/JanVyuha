@@ -44,10 +44,10 @@ export function isOpen(issue: Pick<Issue, 'status'>): boolean {
 /** Resolution time in ms for a resolved issue, else null. */
 export function resolutionMs(issue: Issue): number | null {
   if (issue.status !== 'resolved') return null
-  const resolved = [...issue.updates]
-    .reverse()
-    .find((u) => u.status === 'resolved')
-  const end = resolved ? new Date(resolved.at).getTime() : new Date(issue.updatedAt).getTime()
+  const resolved = [...issue.updates].reverse().find((u) => u.status === 'resolved')
+  const end = resolved
+    ? new Date(resolved.at).getTime()
+    : new Date(issue.updatedAt).getTime()
   return Math.max(0, end - new Date(issue.createdAt).getTime())
 }
 
@@ -91,15 +91,11 @@ export function averageRating(issues: Issue[]): number | null {
   const ratings = issues
     .map((i) => i.rating)
     .filter((v): v is number => typeof v === 'number')
-  return ratings.length
-    ? ratings.reduce((a, b) => a + b, 0) / ratings.length
-    : null
+  return ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null
 }
 
 export function summarize(issues: Issue[], now = Date.now()): Summary {
-  const resolvedTimes = issues
-    .map(resolutionMs)
-    .filter((v): v is number => v != null)
+  const resolvedTimes = issues.map(resolutionMs).filter((v): v is number => v != null)
   const resolved = issues.filter((i) => i.status === 'resolved').length
   const ratedCount = issues.filter((i) => typeof i.rating === 'number').length
   return {
@@ -173,7 +169,10 @@ export function dailyTrend(issues: Issue[], days = 14, now = Date.now()) {
 
 /** Group by administrative district (jurisdiction heatmap). */
 export function byDistrict(issues: Issue[]) {
-  const counts = countBy(issues, (i) => i.location.district || i.location.city || 'Unknown')
+  const counts = countBy(
+    issues,
+    (i) => i.location.district || i.location.city || 'Unknown'
+  )
   return Object.entries(counts)
     .map(([district, count]) => ({ district, count }))
     .sort((a, b) => b.count - a.count)
@@ -209,9 +208,18 @@ export function slaCompliance(issues: Issue[], now = Date.now()): number {
 /** Export issues to a CSV string (officials love a spreadsheet). */
 export function toCsv(issues: Issue[]): string {
   const cols = [
-    'ref_id', 'title', 'category', 'severity', 'status',
-    'district', 'state', 'departments', 'upvotes',
-    'created_at', 'updated_at', 'resolution',
+    'ref_id',
+    'title',
+    'category',
+    'severity',
+    'status',
+    'district',
+    'state',
+    'departments',
+    'upvotes',
+    'created_at',
+    'updated_at',
+    'resolution',
   ]
   const rows = issues.map((i) => {
     const r = resolutionMs(i)

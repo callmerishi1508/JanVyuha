@@ -154,10 +154,7 @@ export function Header() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div
-          id="mobile-menu"
-          className="border-t border-slate-200 bg-white md:hidden"
-        >
+        <div id="mobile-menu" className="border-t border-slate-200 bg-white md:hidden">
           <nav className="container-page flex flex-col gap-1 py-3" aria-label="Mobile">
             {links.map((l) => (
               <button

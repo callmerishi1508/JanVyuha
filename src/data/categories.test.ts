@@ -50,24 +50,22 @@ describe('routing engine', () => {
 
 describe('deriveIssueStatus (multi-department coordination)', () => {
   it('is resolved only when ALL departments are done', () => {
-    expect(
-      deriveIssueStatus([{ status: 'done' }, { status: 'done' }])
-    ).toBe('resolved')
-    expect(
-      deriveIssueStatus([{ status: 'done' }, { status: 'responding' }])
-    ).not.toBe('resolved')
+    expect(deriveIssueStatus([{ status: 'done' }, { status: 'done' }])).toBe('resolved')
+    expect(deriveIssueStatus([{ status: 'done' }, { status: 'responding' }])).not.toBe(
+      'resolved'
+    )
   })
 
   it('surfaces in_progress if any department is responding', () => {
-    expect(
-      deriveIssueStatus([{ status: 'notified' }, { status: 'responding' }])
-    ).toBe('in_progress')
+    expect(deriveIssueStatus([{ status: 'notified' }, { status: 'responding' }])).toBe(
+      'in_progress'
+    )
   })
 
   it('acknowledged when some acknowledged but none responding', () => {
-    expect(
-      deriveIssueStatus([{ status: 'notified' }, { status: 'acknowledged' }])
-    ).toBe('acknowledged')
+    expect(deriveIssueStatus([{ status: 'notified' }, { status: 'acknowledged' }])).toBe(
+      'acknowledged'
+    )
   })
 
   it('empty list is reported', () => {

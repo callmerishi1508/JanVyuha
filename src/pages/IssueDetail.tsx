@@ -33,7 +33,7 @@ import { StatusBadge, SeverityBadge } from '../components/StatusBadge'
 import { CategoryPill } from '../components/CategoryPill'
 import { MediaThumb } from '../components/MediaUpload'
 import { MapView } from '../components/MapView'
-import { formatDateTime, timeAgo, shortId } from '../lib/format'
+import { formatDateTime, timeAgo } from '../lib/format'
 import { tStatus, tDeptShort } from '../lib/i18n'
 import { cn } from '../lib/cn'
 
@@ -41,8 +41,7 @@ export function IssueDetail() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const { issues, loaded, refresh, updateDeptStatus, upvote, report, rate } =
-    useIssues()
+  const { issues, loaded, refresh, updateDeptStatus, upvote, report, rate } = useIssues()
   const { user } = useAuth()
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -92,8 +91,7 @@ export function IssueDetail() {
 
   // This department's own progress on the issue.
   const myDeptStatus =
-    (myDept &&
-      issue.departmentStatus.find((d) => d.department === myDept)?.status) ||
+    (myDept && issue.departmentStatus.find((d) => d.department === myDept)?.status) ||
     'notified'
   const myIdx = DEPT_STATUS_FLOW.indexOf(myDeptStatus as DeptStatus)
   const nextDeptStatus: DeptStatus | null =
@@ -102,17 +100,21 @@ export function IssueDetail() {
   const advanceDept = async (to: DeptStatus) => {
     if (!user || !myDept) return
     setBusy(true)
-    await updateDeptStatus(
-      issue.id,
-      myDept,
-      to,
-      note.trim() ||
-        `${DEPARTMENTS[myDept].short}: ${t(`deptStatuses.${to}`)}.`,
-      `${user.name} · ${DEPARTMENTS[myDept].short}`
-    )
-    setNote('')
-    setBusy(false)
-    toast.success(t('issueDetail.deptMarked', { status: t(`deptStatuses.${to}`) }))
+    try {
+      await updateDeptStatus(
+        issue.id,
+        myDept,
+        to,
+        note.trim() || `${DEPARTMENTS[myDept].short}: ${t(`deptStatuses.${to}`)}.`,
+        `${user.name} · ${DEPARTMENTS[myDept].short}`
+      )
+      setNote('')
+      toast.success(t('issueDetail.deptMarked', { status: t(`deptStatuses.${to}`) }))
+    } catch {
+      toast.error(t('issueDetail.actionFailed'))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -138,7 +140,7 @@ export function IssueDetail() {
             )}
             <div className="p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
-                <span>{shortId(issue.id)}</span>
+                <span>{issue.refId}</span>
                 <span>·</span>
                 <span>{formatDateTime(issue.createdAt)}</span>
               </div>
@@ -163,8 +165,12 @@ export function IssueDetail() {
                 </span>
                 <button
                   onClick={async () => {
-                    await upvote(issue.id)
-                    toast.success(t('issueDetail.markedThanks'))
+                    try {
+                      await upvote(issue.id)
+                      toast.success(t('issueDetail.markedThanks'))
+                    } catch {
+                      toast.error(t('issueDetail.actionFailed'))
+                    }
                   }}
                   className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-ink-700 hover:bg-slate-50"
                 >
@@ -218,7 +224,10 @@ export function IssueDetail() {
                     key={n.id}
                     className="flex items-center gap-3 rounded-lg border border-slate-200 p-2.5"
                   >
-                    <Link to={`/issue/${n.id}`} className="min-w-0 flex-1 hover:opacity-80">
+                    <Link
+                      to={`/issue/${n.id}`}
+                      className="min-w-0 flex-1 hover:opacity-80"
+                    >
                       <div className="truncate text-sm font-semibold text-ink-900">
                         {n.title}
                       </div>
@@ -269,8 +278,8 @@ export function IssueDetail() {
                 const dep = DEPARTMENTS[d]
                 const Icon = dep.icon
                 const st =
-                  issue.departmentStatus.find((x) => x.department === d)
-                    ?.status ?? 'notified'
+                  issue.departmentStatus.find((x) => x.department === d)?.status ??
+                  'notified'
                 const meta = DEPT_STATUS_META[st]
                 const isMe = d === myDept
                 return (
@@ -317,7 +326,9 @@ export function IssueDetail() {
 
           {/* Reporter */}
           <div className="card p-5">
-            <h3 className="text-sm font-bold text-ink-900">{t('issueDetail.reportedBy')}</h3>
+            <h3 className="text-sm font-bold text-ink-900">
+              {t('issueDetail.reportedBy')}
+            </h3>
             <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
               <User className="h-4 w-4 text-slate-500" />
               {issue.reporterName}
@@ -347,6 +358,29 @@ export function IssueDetail() {
                 </div>
               ) : (
                 <>
+                  {nextDeptStatus && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {(
+                        t(`cannedNotes.${nextDeptStatus}`, {
+                          returnObjects: true,
+                        }) as string[]
+                      ).map((text, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setNote(text)}
+                          className={cn(
+                            'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                            note === text
+                              ? 'border-ink-700 bg-ink-800 text-white'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                          )}
+                        >
+                          {text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <textarea
                     className="input mt-3 min-h-[70px] resize-y text-sm"
                     placeholder={t('issueDetail.updateNotePlaceholder')}
@@ -391,12 +425,8 @@ export function IssueDetail() {
           ) : (
             !user && (
               <div className="card bg-ink-50/50 p-5 text-sm text-slate-600">
-                <p className="font-semibold text-ink-900">
-                  {t('issueDetail.respDeptQ')}
-                </p>
-                <p className="mt-1">
-                  {t('issueDetail.respDeptLead')}
-                </p>
+                <p className="font-semibold text-ink-900">{t('issueDetail.respDeptQ')}</p>
+                <p className="mt-1">{t('issueDetail.respDeptLead')}</p>
                 <Link to="/login/stakeholder" className="btn-primary mt-3 w-full">
                   {t('issueDetail.stakeholderLogin')}
                 </Link>
@@ -422,7 +452,11 @@ export function IssueDetail() {
                   </p>
                 ) : (
                   <>
-                    <div className="mt-3 flex gap-1" role="radiogroup" aria-label={t('common.rating')}>
+                    <div
+                      className="mt-3 flex gap-1"
+                      role="radiogroup"
+                      aria-label={t('common.rating')}
+                    >
                       {[1, 2, 3, 4, 5].map((n) => (
                         <button
                           key={n}
@@ -452,9 +486,13 @@ export function IssueDetail() {
                     <button
                       onClick={async () => {
                         if (stars === 0) return toast.error(t('issueDetail.pickRating'))
-                        await rate(issue.id, stars, ratingComment.trim())
-                        setRated(true)
-                        toast.success(t('issueDetail.feedbackSubmitted'))
+                        try {
+                          await rate(issue.id, stars, ratingComment.trim())
+                          setRated(true)
+                          toast.success(t('issueDetail.feedbackSubmitted'))
+                        } catch {
+                          toast.error(t('issueDetail.actionFailed'))
+                        }
                       }}
                       className="btn-primary mt-3 w-full"
                     >
@@ -467,7 +505,9 @@ export function IssueDetail() {
 
           {/* Timeline */}
           <div className="card p-5">
-            <h3 className="text-sm font-bold text-ink-900">{t('issueDetail.activityTimeline')}</h3>
+            <h3 className="text-sm font-bold text-ink-900">
+              {t('issueDetail.activityTimeline')}
+            </h3>
             <ol className="mt-4 space-y-0">
               {issue.updates
                 .slice()
@@ -506,11 +546,12 @@ export function IssueDetail() {
             <button
               onClick={async () => {
                 if (issue.flagged) return
-                await report(
-                  issue.id,
-                  'Reported by a citizen as spam / not genuine'
-                )
-                toast.success(t('issueDetail.reportedThanks'))
+                try {
+                  await report(issue.id, 'Reported by a citizen as spam / not genuine')
+                  toast.success(t('issueDetail.reportedThanks'))
+                } catch {
+                  toast.error(t('issueDetail.actionFailed'))
+                }
               }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600"
             >

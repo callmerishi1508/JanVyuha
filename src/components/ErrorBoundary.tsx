@@ -55,8 +55,8 @@ export class ErrorBoundary extends Component<Props, State> {
             Something went wrong
           </h1>
           <p className="mt-2 text-slate-600">
-            An unexpected error interrupted the page. Your data is safe — please
-            reload to continue.
+            An unexpected error interrupted the page. Your data is safe — please reload to
+            continue.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <button

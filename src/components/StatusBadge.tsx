@@ -7,10 +7,7 @@ export function StatusBadge({ status }: { status: IssueStatus }) {
   useTranslation() // re-render on language change
   const meta = STATUS_META[status]
   return (
-    <span
-      className="chip"
-      style={{ color: meta.color, backgroundColor: meta.bg }}
-    >
+    <span className="chip" style={{ color: meta.color, backgroundColor: meta.bg }}>
       <span
         className="h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: meta.color }}

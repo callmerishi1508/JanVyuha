@@ -18,15 +18,13 @@ export const data: IssuesBackend = {
   getIssuesForDepartment: (dept) => backend().getIssuesForDepartment(dept),
   getPublicFeed: () => backend().getPublicFeed(),
   createIssue: (input) => backend().createIssue(input),
-  updateStatus: (id, status, note, by) =>
-    backend().updateStatus(id, status, note, by),
+  updateStatus: (id, status, note, by) => backend().updateStatus(id, status, note, by),
   updateDeptStatus: (id, department, status, note, by) =>
     backend().updateDeptStatus(id, department, status, note, by),
   upvote: (id) => backend().upvote(id),
   report: (id, reason) => backend().report?.(id, reason) ?? Promise.resolve(),
   deleteIssue: (id) => backend().deleteIssue?.(id) ?? Promise.resolve(),
-  rate: (id, stars, comment) =>
-    backend().rate?.(id, stars, comment) ?? Promise.resolve(),
+  rate: (id, stars, comment) => backend().rate?.(id, stars, comment) ?? Promise.resolve(),
   reset: () => backend().reset?.() ?? Promise.resolve(),
 }
 

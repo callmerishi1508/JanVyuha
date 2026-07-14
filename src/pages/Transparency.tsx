@@ -60,7 +60,12 @@ export function Transparency() {
 
       <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Tile label={t('transparency.reports')} value={s.total} icon={Gauge} />
-        <Tile label={t('transparency.resolved')} value={s.resolved} icon={CheckCircle2} tone="green" />
+        <Tile
+          label={t('transparency.resolved')}
+          value={s.resolved}
+          icon={CheckCircle2}
+          tone="green"
+        />
         <Tile label={t('transparency.open')} value={s.open} icon={Clock} tone="amber" />
         <Tile
           label={t('transparency.avgResolution')}
@@ -71,21 +76,31 @@ export function Transparency() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card p-5 lg:col-span-2">
-          <h3 className="text-sm font-bold text-ink-900">{t('transparency.byCategory')}</h3>
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('transparency.byCategory')}
+          </h3>
           <div className="mt-3">
             {cats.length ? (
               <BarChart data={cats} title={t('transparency.byCategory')} />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-500">{t('transparency.noData')}</p>
+              <p className="py-6 text-center text-sm text-slate-500">
+                {t('transparency.noData')}
+              </p>
             )}
           </div>
         </div>
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-ink-900">{t('transparency.resolutionSplit')}</h3>
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('transparency.resolutionSplit')}
+          </h3>
           <div className="mt-3">
             <Donut
               data={[
-                { label: t('transparency.resolved'), value: s.resolved, color: '#0f8a4f' },
+                {
+                  label: t('transparency.resolved'),
+                  value: s.resolved,
+                  color: '#0f8a4f',
+                },
                 { label: t('transparency.open'), value: s.open, color: '#ea580c' },
               ]}
               title={t('transparency.resolvedVsOpen')}
@@ -93,7 +108,11 @@ export function Transparency() {
             <div className="mt-3">
               <Legend
                 data={[
-                  { label: t('transparency.resolved'), value: s.resolved, color: '#0f8a4f' },
+                  {
+                    label: t('transparency.resolved'),
+                    value: s.resolved,
+                    color: '#0f8a4f',
+                  },
                   { label: t('transparency.open'), value: s.open, color: '#ea580c' },
                 ]}
               />
@@ -104,18 +123,28 @@ export function Transparency() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-ink-900">{t('transparency.byDistrict')}</h3>
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('transparency.byDistrict')}
+          </h3>
           <div className="mt-3">
             {districts.length ? (
-              <BarChart data={districts} accent="#0f8a4f" title={t('transparency.byDistrict')} />
+              <BarChart
+                data={districts}
+                accent="#0f8a4f"
+                title={t('transparency.byDistrict')}
+              />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-500">{t('transparency.noData')}</p>
+              <p className="py-6 text-center text-sm text-slate-500">
+                {t('transparency.noData')}
+              </p>
             )}
           </div>
         </div>
 
         <div className="card p-5 lg:col-span-2">
-          <h3 className="text-sm font-bold text-ink-900">{t('transparency.recentReports')}</h3>
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('transparency.recentReports')}
+          </h3>
           <p className="text-xs text-slate-500">{t('transparency.identityHidden')}</p>
           <div className="mt-3 divide-y divide-slate-100">
             {active.slice(0, 8).map((i) => (
@@ -162,7 +191,11 @@ function Tile({
   icon: typeof Gauge
   tone?: 'slate' | 'green' | 'amber'
 }) {
-  const tones = { slate: 'text-slate-600', green: 'text-emerald-600', amber: 'text-amber-600' }
+  const tones = {
+    slate: 'text-slate-600',
+    green: 'text-emerald-600',
+    amber: 'text-amber-600',
+  }
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between">

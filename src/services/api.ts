@@ -7,6 +7,7 @@ import type {
 } from '../data/categories'
 import { buildSeedIssues } from '../data/seed'
 import type { DepartmentStatus, Issue, MediaItem } from '../data/types'
+import { generateRefId } from '../lib/format'
 
 /**
  * Data-access layer. Everything the UI needs goes through this module so a real
@@ -38,12 +39,7 @@ function save(issues: Issue[]): void {
 }
 
 function uid(prefix: string): string {
-  return (
-    prefix +
-    '_' +
-    Date.now().toString(36) +
-    Math.random().toString(36).slice(2, 6)
-  )
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 }
 
 export interface NewIssueInput {
@@ -65,8 +61,7 @@ export interface NewIssueInput {
 export const api = {
   async getIssues(): Promise<Issue[]> {
     const issues = load().sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     return delay(issues)
   },
@@ -79,10 +74,7 @@ export const api = {
   async getPublicFeed(): Promise<Issue[]> {
     const issues = load()
       .filter((i) => (i.moderationStatus ?? 'active') === 'active')
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     return delay(issues)
   },
 
@@ -90,10 +82,7 @@ export const api = {
   async getIssuesForDepartment(dept: DepartmentId): Promise<Issue[]> {
     const issues = load()
       .filter((i) => i.routedDepartments.includes(dept))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     return delay(issues)
   },
 
@@ -109,9 +98,12 @@ export const api = {
       status: 'notified',
       at: now,
     }))
+    // Auto-route to moderation if the AI itself flagged this as spam/abuse/
+    // not-a-genuine-civic-issue and the citizen submitted anyway.
+    const aiFlagged = input.aiMeta?.flagged === true
     const issue: Issue = {
       id,
-      refId: 'JV-' + Math.floor(1000 + Math.random() * 9000),
+      refId: generateRefId(),
       title: input.title,
       category: input.category,
       description: input.description,
@@ -125,6 +117,8 @@ export const api = {
       routedDepartments: routed,
       departmentStatus,
       upvotes: 0,
+      flagged: aiFlagged,
+      moderationStatus: aiFlagged ? 'flagged' : 'active',
       createdAt: now,
       updatedAt: now,
       updates: [
@@ -200,9 +194,7 @@ export const api = {
     issue.updates.push({
       id: uid('u'),
       status,
-      note:
-        note ||
-        `Status updated to ${status.replace('_', ' ')} by the department.`,
+      note: note || `Status updated to ${status.replace('_', ' ')} by the department.`,
       by,
       at: now,
     })
@@ -219,13 +211,25 @@ export const api = {
     return delay(issue)
   },
 
-  /** Flag an issue for moderation (demo: mark flagged locally). */
+  /**
+   * Flag an issue for moderation. Semantics intentionally differ from
+   * `supabaseApi.report()`: the mock has no separate reports table, so it marks
+   * `flagged`/`moderationStatus` on the issue directly and immediately. The real
+   * backend instead inserts an `issue_reports` row and leaves the issue itself
+   * untouched until an admin acts — citizens can't unilaterally hide a report.
+   * AdminDashboard's Moderation queue reconciles both signals (see `Moderation`
+   * in AdminDashboard.tsx), so this divergence is transparent to the UI.
+   */
   async report(id: string, _reason: string): Promise<void> {
     const issues = load()
     const issue = issues.find((i) => i.id === id)
     if (issue) {
       issue.flagged = true
-      issue.moderationStatus = issue.moderationStatus ?? 'flagged'
+      // Bump the default 'active' status to 'flagged', but don't downgrade a
+      // status an admin already set to something more severe (held/rejected).
+      if (!issue.moderationStatus || issue.moderationStatus === 'active') {
+        issue.moderationStatus = 'flagged'
+      }
       save(issues)
     }
     return delay(undefined)

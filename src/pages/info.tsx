@@ -35,9 +35,7 @@ function Page({
         <div className="mb-3 grid h-12 w-12 place-items-center rounded-xl bg-ink-800/10 text-ink-700">
           <Icon className="h-6 w-6" />
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-ink-900">
-          {title}
-        </h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-ink-900">{title}</h1>
         {subtitle && <p className="mt-2 text-slate-600">{subtitle}</p>}
       </div>
       <div className="space-y-6 text-[15px] leading-relaxed text-slate-700">
@@ -95,20 +93,23 @@ export function Privacy() {
         <p>{t('info.privacyS5Body')}</p>
       </Section>
       <Section title={t('info.privacyS6Title')}>
-        <p>{t('info.privacyS6Intro')}</p>
-        <ul className="list-disc space-y-1 pl-5">
-          <li>{t('info.privacyS6Li1')}</li>
-          <li>{t('info.privacyS6Li2')}</li>
-          <li>{t('info.privacyS6Li3')}</li>
-          <li>{t('info.privacyS6Li4')}</li>
-        </ul>
+        <p>{t('info.privacyS6Body')}</p>
       </Section>
       <Section title={t('info.privacyS7Title')}>
-        <p>{t('info.privacyS7Body')}</p>
+        <p>{t('info.privacyS7Intro')}</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>{t('info.privacyS7Li1')}</li>
+          <li>{t('info.privacyS7Li2')}</li>
+          <li>{t('info.privacyS7Li3')}</li>
+          <li>{t('info.privacyS7Li4')}</li>
+        </ul>
       </Section>
       <Section title={t('info.privacyS8Title')}>
+        <p>{t('info.privacyS8Body')}</p>
+      </Section>
+      <Section title={t('info.privacyS9Title')}>
         <p>
-          <Trans i18nKey="info.privacyS8Body">
+          <Trans i18nKey="info.privacyS9Body">
             Questions or complaints about your data can be raised via our{' '}
             <Link to="/contact" className="font-semibold text-ink-700 underline">
               contact page
@@ -217,11 +218,7 @@ export function About() {
 export function Help() {
   const { t } = useTranslation()
   return (
-    <Page
-      icon={HelpCircle}
-      title={t('info.helpTitle')}
-      subtitle={t('info.helpSubtitle')}
-    >
+    <Page icon={HelpCircle} title={t('info.helpTitle')} subtitle={t('info.helpSubtitle')}>
       <Section title={t('info.helpQ1')}>
         <p>{t('info.helpA1')}</p>
       </Section>
@@ -237,8 +234,8 @@ export function Help() {
       <Section title={t('info.helpQ5')}>
         <p>
           <Trans i18nKey="info.helpA5">
-            Only the routed department(s) and authorised administrators — enforced in
-            the database. See our{' '}
+            Only the routed department(s) and authorised administrators — enforced in the
+            database. See our{' '}
             <Link to="/privacy" className="font-semibold text-ink-700 underline">
               Privacy Policy
             </Link>
@@ -253,16 +250,15 @@ export function Help() {
 export function Contact() {
   const { t } = useTranslation()
   return (
-    <Page
-      icon={Mail}
-      title={t('info.contactTitle')}
-      subtitle={t('info.contactSubtitle')}
-    >
+    <Page icon={Mail} title={t('info.contactTitle')} subtitle={t('info.contactSubtitle')}>
       <Section title={t('info.contactGeneralTitle')}>
         <p>{t('info.contactGeneralBody')}</p>
         <p className="rounded-lg bg-slate-50 px-4 py-3 text-sm">
           {t('info.contactEmail')}{' '}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-ink-700 underline">
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="font-semibold text-ink-700 underline"
+          >
             {CONTACT_EMAIL}
           </a>
         </p>
@@ -281,10 +277,10 @@ export function NotFound() {
       <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 text-slate-500">
         <Home className="h-8 w-8" />
       </div>
-      <h1 className="mt-5 text-3xl font-extrabold text-ink-900">{t('info.notFoundTitle')}</h1>
-      <p className="mt-2 max-w-md text-slate-600">
-        {t('info.notFoundBody')}
-      </p>
+      <h1 className="mt-5 text-3xl font-extrabold text-ink-900">
+        {t('info.notFoundTitle')}
+      </h1>
+      <p className="mt-2 max-w-md text-slate-600">{t('info.notFoundBody')}</p>
       <div className="mt-6 flex gap-3">
         <Link to="/" className="btn-primary">
           {t('info.goHome')}

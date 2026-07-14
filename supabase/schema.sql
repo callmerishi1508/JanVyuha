@@ -340,8 +340,14 @@ drop policy if exists "dept status insert" on public.issue_department_status;
 create policy "dept status insert" on public.issue_department_status
   for insert with check (
     public.my_role() = 'admin'
-    or exists (select 1 from public.issues i
-               where i.id = issue_id and i.reporter_id = auth.uid())
+    -- A reporter may only seed the initial 'notified' row for their own issue —
+    -- without this, a malicious reporter could insert status='done' and fake a
+    -- resolution before any department touched it.
+    or (
+      status = 'notified'
+      and exists (select 1 from public.issues i
+                  where i.id = issue_id and i.reporter_id = auth.uid())
+    )
     or (
       public.my_role() = 'stakeholder'
       and not public.is_suspended()
@@ -427,6 +433,77 @@ create policy "updates insert" on public.issue_updates
         )
     )
   );
+
+-- Atomically create an issue + its per-department status rows + the first
+-- timeline entry. The client used to do these as 3 separate fire-and-forget
+-- inserts with no error checking — a failure partway through (e.g. a dropped
+-- connection after the issue row landed) could leave an orphaned issue with
+-- no routing/timeline rows, a permanently "stuck" report. A single function
+-- call is one Postgres transaction: if any insert raises, everything rolls
+-- back and the client gets a clean error instead of silent partial success.
+--
+-- SECURITY INVOKER (the default — not definer): this runs as the calling
+-- citizen, so the existing RLS policies on issues/issue_department_status/
+-- issue_updates still fully govern every write here; it only adds atomicity,
+-- not new privilege. Media upload is NOT part of this: it's a Storage call,
+-- not a DB row, so it was never transactional with these inserts and stays a
+-- separate best-effort client step (a failed photo shouldn't void the report).
+create or replace function public.create_issue(
+  p_ref_id             text,
+  p_title              text,
+  p_category           text,
+  p_description        text,
+  p_severity           text,
+  p_lat                double precision,
+  p_lng                double precision,
+  p_address            text,
+  p_city               text,
+  p_state              text,
+  p_district           text,
+  p_reporter_name      text,
+  p_reporter_phone     text,
+  p_anonymous          boolean,
+  p_routed_departments text[],
+  p_ai_meta            jsonb
+)
+returns table (id uuid, ref_id text, created_at timestamptz)
+language plpgsql set search_path = public as $$
+declare
+  v_issue_id uuid;
+  v_dept text;
+  -- Auto-route to moderation if the AI itself flagged this as spam/abuse/
+  -- not-a-genuine-civic-issue and the citizen submitted anyway.
+  v_ai_flagged boolean := coalesce((p_ai_meta->>'flagged')::boolean, false);
+begin
+  insert into public.issues (
+    ref_id, title, category, description, severity, status,
+    lat, lng, address, city, state, district,
+    reporter_id, reporter_name, reporter_phone, anonymous,
+    routed_departments, ai_meta, flagged, moderation_status
+  ) values (
+    p_ref_id, p_title, p_category, p_description, p_severity, 'reported',
+    p_lat, p_lng, p_address, p_city, p_state, p_district,
+    auth.uid(), p_reporter_name, p_reporter_phone, p_anonymous,
+    p_routed_departments, p_ai_meta, v_ai_flagged,
+    case when v_ai_flagged then 'flagged' else 'active' end
+  )
+  returning public.issues.id into v_issue_id;
+
+  foreach v_dept in array p_routed_departments loop
+    insert into public.issue_department_status (issue_id, department, status)
+    values (v_issue_id, v_dept, 'notified');
+  end loop;
+
+  insert into public.issue_updates (issue_id, status, note, by_name)
+  values (
+    v_issue_id, 'reported',
+    'Issue reported and routed to the concerned department(s).',
+    'JanVyuha System'
+  );
+
+  return query select i.id, i.ref_id, i.created_at from public.issues i where i.id = v_issue_id;
+end;
+$$;
 
 -- ============================================================================
 -- issue_votes — one "also affected" vote per user per issue (dedup).

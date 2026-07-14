@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { PlusCircle, Inbox, Loader2, Trash2, BellRing } from 'lucide-react'
+import { PlusCircle, Inbox, Loader2, Trash2, BellRing, UserX } from 'lucide-react'
 import { useAuth } from '../store/auth'
 import { useIssues } from '../store/issues'
 import { IssueCard } from '../components/IssueCard'
@@ -28,9 +28,11 @@ function readCreatedIds(): string[] {
 
 export function MyIssues() {
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const navigate = useNavigate()
+  const { user, deleteAccount } = useAuth()
   const { issues, loaded, loading, refresh, remove } = useIssues()
   const [filter, setFilter] = useState<IssueStatus | 'all'>('all')
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   const deleteReport = async (id: string) => {
     if (!window.confirm(t('myIssues.confirmDelete'))) return
@@ -40,6 +42,19 @@ export function MyIssues() {
     } catch (e) {
       toast.error((e as Error).message)
     }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(t('myIssues.confirmDeleteAccount'))) return
+    setDeletingAccount(true)
+    const res = await deleteAccount()
+    setDeletingAccount(false)
+    if (res.error) {
+      toast.error(res.error)
+      return
+    }
+    toast.success(t('myIssues.accountDeleted'))
+    navigate('/')
   }
 
   useEffect(() => {
@@ -56,8 +71,7 @@ export function MyIssues() {
     )
   }, [issues, user])
 
-  const shown =
-    filter === 'all' ? mine : mine.filter((i) => i.status === filter)
+  const shown = filter === 'all' ? mine : mine.filter((i) => i.status === filter)
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: mine.length }
@@ -128,13 +142,9 @@ export function MyIssues() {
             </div>
             <div>
               <p className="font-semibold text-ink-900">
-                {mine.length === 0
-                  ? t('myIssues.emptyNone')
-                  : t('myIssues.emptyStatus')}
+                {mine.length === 0 ? t('myIssues.emptyNone') : t('myIssues.emptyStatus')}
               </p>
-              <p className="mt-1 text-sm text-slate-500">
-                {t('myIssues.emptyLead')}
-              </p>
+              <p className="mt-1 text-sm text-slate-500">{t('myIssues.emptyLead')}</p>
             </div>
             <Link to="/report" className="btn-primary mt-2">
               <PlusCircle className="h-4 w-4" />
@@ -156,6 +166,27 @@ export function MyIssues() {
           ))
         )}
       </div>
+
+      {user && (
+        <div className="mt-10 rounded-xl border border-red-200 bg-red-50/50 p-4">
+          <h2 className="text-sm font-bold text-red-800">{t('myIssues.dangerZone')}</h2>
+          <p className="mt-1 text-xs text-red-700/80">
+            {t('myIssues.deleteAccountLead')}
+          </p>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={deletingAccount}
+            className="btn-outline mt-3 border-red-300 text-red-700 hover:bg-red-100"
+          >
+            {deletingAccount ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <UserX className="h-4 w-4" />
+            )}
+            {t('myIssues.deleteAccount')}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -184,10 +215,7 @@ function FilterChip({
       )}
     >
       {color && !active && (
-        <span
-          className="h-2 w-2 rounded-full"
-          style={{ backgroundColor: color }}
-        />
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       )}
       {label}
       <span

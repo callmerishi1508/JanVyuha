@@ -56,9 +56,7 @@ export function Analytics() {
 
   const scoped = useMemo(
     () =>
-      dept === 'all'
-        ? issues
-        : issues.filter((i) => i.routedDepartments.includes(dept)),
+      dept === 'all' ? issues : issues.filter((i) => i.routedDepartments.includes(dept)),
     [issues, dept]
   )
 
@@ -108,7 +106,9 @@ export function Analytics() {
             </select>
           )}
           <button
-            onClick={() => download(`janvyuha-analytics-${Date.now()}.csv`, toCsv(scoped))}
+            onClick={() =>
+              download(`janvyuha-analytics-${Date.now()}.csv`, toCsv(scoped))
+            }
             className="btn-outline"
           >
             <Download className="h-4 w-4" /> {t('analytics.csv')}
@@ -123,19 +123,42 @@ export function Analytics() {
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
         <Kpi label={t('analytics.kpiTotal')} value={s.total} icon={Gauge} />
         <Kpi label={t('analytics.kpiOpen')} value={s.open} icon={Clock} tone="blue" />
-        <Kpi label={t('analytics.kpiCriticalOpen')} value={s.critical} icon={AlertTriangle} tone="red" />
-        <Kpi label={t('analytics.kpiResolved')} value={s.resolved} icon={CheckCircle2} tone="green" />
+        <Kpi
+          label={t('analytics.kpiCriticalOpen')}
+          value={s.critical}
+          icon={AlertTriangle}
+          tone="red"
+        />
+        <Kpi
+          label={t('analytics.kpiResolved')}
+          value={s.resolved}
+          icon={CheckCircle2}
+          tone="green"
+        />
         <Kpi
           label={t('analytics.kpiAvgResolution')}
           value={s.avgResolutionMs == null ? '—' : humanizeMs(s.avgResolutionMs)}
           icon={Gauge}
         />
-        <Kpi label={t('analytics.kpiSla')} value={`${compliance}%`} icon={ShieldCheck} tone={compliance >= 80 ? 'green' : 'amber'} />
+        <Kpi
+          label={t('analytics.kpiSla')}
+          value={`${compliance}%`}
+          icon={ShieldCheck}
+          tone={compliance >= 80 ? 'green' : 'amber'}
+        />
         <Kpi
           label={t('analytics.kpiCsat')}
           value={s.avgRating == null ? '—' : `${s.avgRating.toFixed(1)}★`}
           icon={Star}
-          tone={s.avgRating == null ? 'slate' : s.avgRating >= 4 ? 'green' : s.avgRating >= 3 ? 'amber' : 'red'}
+          tone={
+            s.avgRating == null
+              ? 'slate'
+              : s.avgRating >= 4
+                ? 'green'
+                : s.avgRating >= 3
+                  ? 'amber'
+                  : 'red'
+          }
         />
       </div>
 
@@ -163,19 +186,36 @@ export function Analytics() {
         <div className="card p-5 lg:col-span-2">
           <h3 className="text-sm font-bold text-ink-900">{t('analytics.byCategory')}</h3>
           <div className="mt-3">
-            <BarChart data={cats.map((c) => ({ label: tCategory(c.id as Parameters<typeof tCategory>[0]), value: c.count, color: c.color }))} title={t('analytics.categoryChartTitle')} />
+            <BarChart
+              data={cats.map((c) => ({
+                label: tCategory(c.id as Parameters<typeof tCategory>[0]),
+                value: c.count,
+                color: c.color,
+              }))}
+              title={t('analytics.categoryChartTitle')}
+            />
           </div>
         </div>
 
         {/* District heatmap */}
         <div className="card p-5">
-          <h3 className="text-sm font-bold text-ink-900">{t('analytics.topDistricts')}</h3>
-          <p className="text-xs text-slate-500">{t('analytics.reportingConcentration')}</p>
+          <h3 className="text-sm font-bold text-ink-900">
+            {t('analytics.topDistricts')}
+          </h3>
+          <p className="text-xs text-slate-500">
+            {t('analytics.reportingConcentration')}
+          </p>
           <div className="mt-3">
             {districts.length ? (
-              <BarChart data={districts} accent="#0f8a4f" title={t('analytics.districtChartTitle')} />
+              <BarChart
+                data={districts}
+                accent="#0f8a4f"
+                title={t('analytics.districtChartTitle')}
+              />
             ) : (
-              <p className="py-6 text-center text-sm text-slate-500">{t('analytics.noData')}</p>
+              <p className="py-6 text-center text-sm text-slate-500">
+                {t('analytics.noData')}
+              </p>
             )}
           </div>
         </div>
@@ -183,7 +223,9 @@ export function Analytics() {
 
       {/* Department performance */}
       <div className="mt-6 card p-5">
-        <h3 className="text-sm font-bold text-ink-900">{t('analytics.deptPerformance')}</h3>
+        <h3 className="text-sm font-bold text-ink-900">
+          {t('analytics.deptPerformance')}
+        </h3>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
@@ -203,7 +245,10 @@ export function Analytics() {
                 <tr key={p.id}>
                   <td className="py-2 pr-4">
                     <span className="inline-flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: p.color }} />
+                      <span
+                        className="h-2.5 w-2.5 rounded-sm"
+                        style={{ backgroundColor: p.color }}
+                      />
                       {tDeptShort(p.id)}
                     </span>
                   </td>
@@ -225,7 +270,9 @@ export function Analytics() {
                     {p.avgRating == null ? (
                       <span className="text-slate-500">—</span>
                     ) : (
-                      <span className="font-semibold text-ink-800">{p.avgRating.toFixed(1)}★</span>
+                      <span className="font-semibold text-ink-800">
+                        {p.avgRating.toFixed(1)}★
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -244,7 +291,10 @@ export function Analytics() {
 
       {user?.role === 'admin' && (
         <div className="mt-6 print:hidden">
-          <Link to="/admin" className="text-sm font-semibold text-ink-700 hover:text-saffron-600">
+          <Link
+            to="/admin"
+            className="text-sm font-semibold text-ink-700 hover:text-saffron-600"
+          >
             {t('analytics.backToConsole')}
           </Link>
         </div>

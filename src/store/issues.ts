@@ -78,9 +78,7 @@ export const useIssues = create<IssuesState>((set, get) => ({
     await api.report?.(id, reason)
     // Reflect the flag locally so the UI updates immediately (mock backend).
     set({
-      issues: get().issues.map((i) =>
-        i.id === id ? { ...i, flagged: true } : i
-      ),
+      issues: get().issues.map((i) => (i.id === id ? { ...i, flagged: true } : i)),
     })
   },
   remove: async (id) => {
@@ -90,11 +88,9 @@ export const useIssues = create<IssuesState>((set, get) => ({
   rate: async (id, stars, comment) => {
     await api.rate?.(id, stars, comment)
     const updated = await api.getIssue(id)
-    if (updated)
-      set({ issues: get().issues.map((i) => (i.id === id ? updated : i)) })
+    if (updated) set({ issues: get().issues.map((i) => (i.id === id ? updated : i)) })
   },
-  forDepartment: (dept) =>
-    get().issues.filter((i) => i.routedDepartments.includes(dept)),
+  forDepartment: (dept) => get().issues.filter((i) => i.routedDepartments.includes(dept)),
   byId: (id) => get().issues.find((i) => i.id === id),
 
   /**
@@ -108,15 +104,11 @@ export const useIssues = create<IssuesState>((set, get) => ({
 
     const channel = client
       .channel('issues-stream')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'issues' },
-        () => {
-          set({ lastRealtimeAt: Date.now() })
-          // Cheapest correct approach: re-pull the (RLS-scoped) list.
-          get().refresh()
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'issues' }, () => {
+        set({ lastRealtimeAt: Date.now() })
+        // Cheapest correct approach: re-pull the (RLS-scoped) list.
+        get().refresh()
+      })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'issue_updates' },

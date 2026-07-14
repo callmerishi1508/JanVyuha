@@ -125,9 +125,7 @@ export function Landing() {
               <div className="grid h-11 w-11 place-items-center rounded-lg bg-ink-800/10 text-ink-700">
                 <f.icon className="h-5 w-5" />
               </div>
-              <h3 className="mt-4 text-base font-bold text-ink-900">
-                {f.title}
-              </h3>
+              <h3 className="mt-4 text-base font-bold text-ink-900">{f.title}</h3>
               <p className="mt-1.5 text-sm text-slate-600">{f.body}</p>
             </div>
           ))}
@@ -163,9 +161,7 @@ export function Landing() {
                   <div className="grid h-12 w-12 place-items-center rounded-xl bg-saffron-500/15 text-saffron-600">
                     <s.icon className="h-6 w-6" />
                   </div>
-                  <h3 className="mt-4 text-lg font-bold text-ink-900">
-                    {s.title}
-                  </h3>
+                  <h3 className="mt-4 text-lg font-bold text-ink-900">{s.title}</h3>
                   <p className="mt-1.5 text-sm text-slate-600">{s.body}</p>
                 </div>
               </div>

@@ -28,7 +28,13 @@ export function MediaThumb({
   if (item.type === 'video') {
     return <video src={item.url} className={`object-cover ${className}`} controls />
   }
-  return <img src={item.url} alt={item.label ?? 'evidence'} className={`object-cover ${className}`} />
+  return (
+    <img
+      src={item.url}
+      alt={item.label ?? 'evidence'}
+      className={`object-cover ${className}`}
+    />
+  )
 }
 
 export function MediaUpload({
@@ -59,9 +65,7 @@ export function MediaUpload({
     const newItems = await Promise.all(
       Array.from(files).map(async (file) => ({
         id: 'm_' + Math.random().toString(36).slice(2, 8),
-        type: (file.type.startsWith('video') ? 'video' : 'image') as
-          | 'video'
-          | 'image',
+        type: (file.type.startsWith('video') ? 'video' : 'image') as 'video' | 'image',
         url: await toCompressedDataURL(file),
         label: file.name,
       }))
@@ -147,7 +151,9 @@ export function MediaUpload({
           >
             <div className="text-center">
               <ImagePlus className="mx-auto h-6 w-6" />
-              <span className="mt-1 block text-xs font-semibold">{t('media.addMedia')}</span>
+              <span className="mt-1 block text-xs font-semibold">
+                {t('media.addMedia')}
+              </span>
             </div>
           </button>
 

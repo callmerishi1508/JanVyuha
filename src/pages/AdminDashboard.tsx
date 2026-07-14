@@ -143,9 +143,24 @@ function Overview({ issues }: { issues: Issue[] }) {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Tile label={t('admin.tileTotal')} value={s.total} icon={Gauge} tone="slate" />
         <Tile label={t('admin.tileOpen')} value={s.open} icon={Clock} tone="blue" />
-        <Tile label={t('admin.tileCriticalOpen')} value={s.critical} icon={AlertTriangle} tone="red" />
-        <Tile label={t('admin.tileResolved')} value={s.resolved} icon={CheckCircle2} tone="green" />
-        <Tile label={t('admin.tileSlaBreached')} value={s.breached} icon={AlertTriangle} tone="amber" />
+        <Tile
+          label={t('admin.tileCriticalOpen')}
+          value={s.critical}
+          icon={AlertTriangle}
+          tone="red"
+        />
+        <Tile
+          label={t('admin.tileResolved')}
+          value={s.resolved}
+          icon={CheckCircle2}
+          tone="green"
+        />
+        <Tile
+          label={t('admin.tileSlaBreached')}
+          value={s.breached}
+          icon={AlertTriangle}
+          tone="amber"
+        />
         <Tile
           label={t('admin.tileAvgResolve')}
           value={s.avgResolutionMs == null ? '—' : humanizeMs(s.avgResolutionMs)}
@@ -224,9 +239,13 @@ function Overview({ issues }: { issues: Issue[] }) {
                     </td>
                     <td className="px-3 py-2">
                       {isResolutionBreached(i) ? (
-                        <span className="chip bg-red-100 text-red-700">{t('admin.breached')}</span>
+                        <span className="chip bg-red-100 text-red-700">
+                          {t('admin.breached')}
+                        </span>
                       ) : (
-                        <span className="chip bg-emerald-100 text-emerald-700">{t('admin.onTrack')}</span>
+                        <span className="chip bg-emerald-100 text-emerald-700">
+                          {t('admin.onTrack')}
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -246,9 +265,7 @@ function Overview({ issues }: { issues: Issue[] }) {
         <div>
           <div className="card p-5">
             <h3 className="text-sm font-bold text-ink-900">{t('admin.topDistricts')}</h3>
-            <p className="mb-3 text-xs text-slate-500">
-              {t('admin.whereConcentrated')}
-            </p>
+            <p className="mb-3 text-xs text-slate-500">{t('admin.whereConcentrated')}</p>
             <div className="space-y-2">
               {districts.map((d) => (
                 <div key={d.district}>
@@ -276,13 +293,7 @@ function Overview({ issues }: { issues: Issue[] }) {
 }
 
 // ── Moderation ──────────────────────────────────────────────────────────────
-function Moderation({
-  issues,
-  onChange,
-}: {
-  issues: Issue[]
-  onChange: () => void
-}) {
+function Moderation({ issues, onChange }: { issues: Issue[]; onChange: () => void }) {
   const { t } = useTranslation()
   const ready = adminBackendReady()
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set())
@@ -352,10 +363,16 @@ function Moderation({
                 <button onClick={() => act(i.id, 'held')} className="btn-outline text-xs">
                   <Ban className="h-3.5 w-3.5" /> {t('admin.hold')}
                 </button>
-                <button onClick={() => act(i.id, 'rejected')} className="btn-outline text-xs">
+                <button
+                  onClick={() => act(i.id, 'rejected')}
+                  className="btn-outline text-xs"
+                >
                   {t('admin.reject')}
                 </button>
-                <button onClick={() => act(i.id, 'active')} className="btn-outline text-xs">
+                <button
+                  onClick={() => act(i.id, 'active')}
+                  className="btn-outline text-xs"
+                >
                   <RotateCcw className="h-3.5 w-3.5" /> {t('admin.restore')}
                 </button>
               </div>
@@ -415,9 +432,7 @@ function Accounts() {
         <h3 className="flex items-center gap-2 text-sm font-bold text-ink-900">
           <UserPlus className="h-4 w-4" /> {t('admin.provisionTitle')}
         </h3>
-        <p className="mt-1 text-xs text-slate-500">
-          {t('admin.provisionLead')}
-        </p>
+        <p className="mt-1 text-xs text-slate-500">{t('admin.provisionLead')}</p>
         {!ready && (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             {t('admin.provisionNeedsSupabase')}
@@ -425,7 +440,9 @@ function Accounts() {
         )}
         <div className="mt-4 space-y-3">
           <div>
-            <label htmlFor="inv-email" className="label">{t('admin.govEmail')}</label>
+            <label htmlFor="inv-email" className="label">
+              {t('admin.govEmail')}
+            </label>
             <input
               id="inv-email"
               value={email}
@@ -437,7 +454,9 @@ function Accounts() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="inv-role" className="label">{t('admin.role')}</label>
+              <label htmlFor="inv-role" className="label">
+                {t('admin.role')}
+              </label>
               <select
                 id="inv-role"
                 value={role}
@@ -450,7 +469,9 @@ function Accounts() {
               </select>
             </div>
             <div>
-              <label htmlFor="inv-dept" className="label">{t('admin.department')}</label>
+              <label htmlFor="inv-dept" className="label">
+                {t('admin.department')}
+              </label>
               <select
                 id="inv-dept"
                 value={dept}
@@ -479,7 +500,11 @@ function Accounts() {
               disabled={!ready}
             />
           </div>
-          <button onClick={invite} disabled={!ready || busy} className="btn-primary w-full">
+          <button
+            onClick={invite}
+            disabled={!ready || busy}
+            className="btn-primary w-full"
+          >
             {busy ? t('admin.saving') : t('admin.addAllowlist')}
           </button>
         </div>
@@ -491,9 +516,7 @@ function Accounts() {
           {profiles.map((p) => (
             <div key={p.id} className="flex items-center justify-between py-2">
               <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-ink-900">
-                  {p.name}
-                </div>
+                <div className="truncate text-sm font-medium text-ink-900">{p.name}</div>
                 <div className="text-xs text-slate-500">
                   {p.role}
                   {p.department ? ` · ${tDeptShort(p.department)}` : ''}
@@ -505,7 +528,9 @@ function Accounts() {
                   onClick={async () => {
                     try {
                       await adminApi.setSuspended(p.id, !p.suspended)
-                      toast.success(p.suspended ? t('admin.reinstated') : t('admin.suspended'))
+                      toast.success(
+                        p.suspended ? t('admin.reinstated') : t('admin.suspended')
+                      )
                       load()
                     } catch (e) {
                       toast.error((e as Error).message)
@@ -540,7 +565,11 @@ function Audit() {
   const ready = adminBackendReady()
   const [rows, setRows] = useState<Awaited<ReturnType<typeof adminApi.auditLog>>>([])
   useEffect(() => {
-    if (ready) adminApi.auditLog().then(setRows).catch(() => {})
+    if (ready)
+      adminApi
+        .auditLog()
+        .then(setRows)
+        .catch(() => {})
   }, [ready])
 
   if (!ready)

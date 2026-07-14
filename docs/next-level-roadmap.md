@@ -108,8 +108,19 @@ P1-5 image downscale → P1-6 touch delete → P1-7/P1-8 i18n gaps → P1-9/P1-1
 **Phase C — The demo "wow" (≈2–3 days):**
 P2-1/P2-2 notifications actually fire → P2-4 CSAT → P2-5 SLA escalation + bulk → P2-6 hotspots. *Result: the officials'-productivity + accountability story lands.*
 
-**Phase D — Reach & foundation (≈2–3 days, parallelizable):**
-P2-7 Telegram → P2-9 transparency/open-data → P2-11 voice → P3-1/P3-2/P3-3 CI+lint+tests. *Result: growth channels + an engineering-credible repo.*
+**Phase D1 — CI + lint + tests foundation (≈1–1.5 days, do first, parallelizable): DONE (2026-07-13).**
+P3-1 CI/ESLint/Prettier/Dependabot → P3-2 jsdom + Testing Library + coverage → P3-3 highest-value unit tests → P3-4 type the serverless handlers → P3-5 npm audit triage → P3-6 split `ReportIssue.tsx` → P3-7 minor cleanups → P3-8 PWA icons. *Result: an engineering-credible repo with a real quality gate.*
+- **P3-1** ESLint+Prettier+GH Actions CI (`.github/workflows/ci.yml`: format/lint/typecheck/test/build) + Dependabot (`.github/dependabot.yml`).
+- **P3-2** jsdom + Testing Library + v8 coverage wired (`vitest.config.ts`).
+- **P3-3** added `toE164`/`mapProfileRole` (`auth.test.ts`), `mapRow` (`supabaseApi.test.ts`, now exported for testability), `toCsv`/`byDistrict`/`dailyTrend`/`departmentPerformance` (`analytics.test.ts`), mock `api.ts` round-trip (`api.test.ts`) — 31→52 tests.
+- **P3-4** `api/analyze.ts` + `api/notify.ts` now typed with `VercelRequest`/`VercelResponse` (no more `any`); added `isCategoryId`/`isDepartmentId` runtime guards in `data/categories.ts`, used in `supabaseApi.mapRow` to filter the unconstrained `routed_departments` text[] and department-status rows.
+- **P3-5** confirmed: 9 dev-only vulns all require a breaking `@vercel/node` v3→v5 bump (`npm audit fix` found no further non-breaking fix); prod audit (`--omit=dev`) = 0. Deferred per plan; Dependabot will track it.
+- **P3-6** split the 1,242-line `ReportIssue.tsx` into `src/pages/report-issue/`: `useReportForm.tsx` (all state/effects/submit logic) + `Stepper`/`StepCategory`/`StepDetails`/`StepLocation`/`StepDepartments`/`StepReview`; `ReportIssue.tsx` is now a ~65-line orchestrator. Verified via typecheck/lint/test/build only — **not manually smoke-tested in a browser** (no browser tool available this session); click through the wizard once before trusting it fully.
+- **P3-7** fixed a real bug: 6 display sites (`IssueCard`, `MapView`, `NotificationBell`, `Dashboard`, `IssueDetail`, the post-submit toast) showed `shortId(issue.id)` — a string derived from the internal UUID — while `AdminDashboard`'s search/CSV export used the actual `issue.refId`. Two unrelated "JV-XXXX"-looking strings meant a citizen-quoted id couldn't be found by admins. Removed `shortId`, consolidated the two duplicated random ref-id generators (`services/api.ts`, `services/supabaseApi.ts`) into `generateRefId()` in `lib/format.ts`, and now every surface shows the real `refId`. Also: `analyze.ts` no longer echoes upstream Gemini error text to the client (logs server-side instead); fixed the "max ~1.5MB" message to match the real 3.5MB/~2.6MB-image cap; documented the intentional mock-vs-Supabase `report()` divergence.
+- **P3-8** manifest only declared an SVG icon — many Android launchers and all of iOS's `apple-touch-icon` don't render SVG. Rasterized `icon.svg` to real `icon-192.png`/`icon-512.png` (one-off `sharp` via `npm install --no-save`, removed after), wired into `manifest.webmanifest` (any + maskable) and `index.html`; service worker (`sw.js`, cache bumped to v6) now precaches and uses the PNGs for push notification icon/badge too (SVG isn't reliably supported there either). Added a `beforeinstallprompt`-driven "Install app" footer button (`lib/pwa.ts` `useInstallPrompt` hook), i18n'd across all 4 locales. Skipped: `screenshots` manifest field (explicitly optional, needs real screenshot images).
+
+**Phase D2 — Reach channels (≈2–3 days, do after D1):**
+P2-9 transparency/open-data (leaderboard, CSV/JSON export, weekly digest) → P2-11 voice + icon-first low-literacy flow → **P2-7 Telegram bot last** (biggest lift; positioned as an optional add-on channel, not required for the reach story to land). *Result: growth channels beyond the pilot.*
 
 ---
 

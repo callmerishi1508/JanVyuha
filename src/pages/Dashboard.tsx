@@ -27,7 +27,7 @@ import { StatTile } from '../components/StatTile'
 import { StatusBadge, SeverityBadge } from '../components/StatusBadge'
 import { CategoryPill } from '../components/CategoryPill'
 import { MapView } from '../components/MapView'
-import { timeAgo, shortId } from '../lib/format'
+import { timeAgo } from '../lib/format'
 import { tCategory, tDept } from '../lib/i18n'
 import { isResolutionBreached, isAckBreached } from '../lib/analytics'
 import { AlarmClock } from 'lucide-react'
@@ -76,8 +76,7 @@ export function Dashboard() {
     if (statusFilter === 'open') list = list.filter((i) => i.status !== 'resolved')
     else if (statusFilter === 'breaching')
       list = list.filter((i) => isResolutionBreached(i))
-    else if (statusFilter !== 'all')
-      list = list.filter((i) => i.status === statusFilter)
+    else if (statusFilter !== 'all') list = list.filter((i) => i.status === statusFilter)
     if (query.trim()) {
       const q = query.toLowerCase()
       list = list.filter(
@@ -171,8 +170,17 @@ export function Dashboard() {
 
           {/* Stats */}
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            <StatTile label={t('dashboard.totalRouted')} value={stats.total} icon={Inbox} />
-            <StatTile label={t('dashboard.open')} value={stats.open} icon={CircleDot} tone="amber" />
+            <StatTile
+              label={t('dashboard.totalRouted')}
+              value={stats.total}
+              icon={Inbox}
+            />
+            <StatTile
+              label={t('dashboard.open')}
+              value={stats.open}
+              icon={CircleDot}
+              tone="amber"
+            />
             <StatTile
               label={t('dashboard.critical')}
               value={stats.critical}
@@ -286,7 +294,11 @@ export function Dashboard() {
                       disabled={bulkBusy}
                       className="btn-outline py-1.5 text-xs"
                     >
-                      {bulkBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                      {bulkBusy ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      )}
                       {t('dashboard.bulkAcknowledge')}
                     </button>
                     <button
@@ -329,10 +341,7 @@ export function Dashboard() {
 
         {/* Map */}
         <div
-          className={cn(
-            'relative min-h-0',
-            mobileView === 'list' && 'hidden lg:block'
-          )}
+          className={cn('relative min-h-0', mobileView === 'list' && 'hidden lg:block')}
         >
           <button
             onClick={() => setHotspots((h) => !h)}
@@ -382,7 +391,7 @@ function DashboardRow({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-          <span>{shortId(issue.id)}</span>
+          <span>{issue.refId}</span>
           {cat.emergency && (
             <span className="chip bg-red-100 py-0 text-[9px] text-red-600">
               {t('dashboard.emergency')}
@@ -403,16 +412,12 @@ function DashboardRow({
       <h3 className="mt-1 font-bold text-ink-900 group-hover:text-ink-700">
         {issue.title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">
-        {issue.description}
-      </p>
+      <p className="mt-0.5 line-clamp-1 text-sm text-slate-500">{issue.description}</p>
       <div className="mt-2.5 flex flex-wrap items-center gap-2">
         <CategoryPill category={issue.category} />
         <SeverityBadge severity={issue.severity} />
         <span className="text-xs text-slate-500">{issue.location.address}</span>
-        <span className="ml-auto text-xs text-slate-500">
-          {timeAgo(issue.createdAt)}
-        </span>
+        <span className="ml-auto text-xs text-slate-500">{timeAgo(issue.createdAt)}</span>
       </div>
     </button>
   )

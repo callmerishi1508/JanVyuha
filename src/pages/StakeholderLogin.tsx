@@ -38,15 +38,18 @@ export function StakeholderLogin() {
       const d = DEPARTMENT_LIST.find((x) => x.id === dept)!
       if (!officerId.trim() || !password.trim())
         return toast.error(t('stakeholder.errOfficerCreds'))
-      loginStakeholder(dept, officerId.trim(), t('stakeholder.dutyOfficer', { dept: d.short }))
+      loginStakeholder(
+        dept,
+        officerId.trim(),
+        t('stakeholder.dutyOfficer', { dept: d.short })
+      )
       toast.success(t('stakeholder.signedInControl', { dept: d.short }))
       return navigate('/dashboard')
     }
 
     // Real Supabase auth. Department accounts are provisioned by an administrator
     // (no self-registration) — the role and department come from the profile.
-    if (!email || !password)
-      return toast.error(t('stakeholder.errOfficialCreds'))
+    if (!email || !password) return toast.error(t('stakeholder.errOfficialCreds'))
     setBusy(true)
     try {
       const r = await signInPassword(email, password)
@@ -88,9 +91,7 @@ export function StakeholderLogin() {
           <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-ink-900">
             {t('stakeholder.portalTitle')}
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {t('stakeholder.portalSubtitle')}
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{t('stakeholder.portalSubtitle')}</p>
         </div>
 
         <form onSubmit={submit} className="card p-6 sm:p-8">
@@ -187,7 +188,11 @@ export function StakeholderLogin() {
                   id="dept-pass"
                   type="password"
                   className="input pl-9"
-                  placeholder={supabase ? t('stakeholder.passwordReal') : t('stakeholder.passwordDemo')}
+                  placeholder={
+                    supabase
+                      ? t('stakeholder.passwordReal')
+                      : t('stakeholder.passwordDemo')
+                  }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -196,11 +201,7 @@ export function StakeholderLogin() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="btn-primary mt-6 w-full py-3"
-            disabled={busy}
-          >
+          <button type="submit" className="btn-primary mt-6 w-full py-3" disabled={busy}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
             {supabase ? t('stakeholder.signInSecure') : t('stakeholder.signInDashboard')}
           </button>
@@ -213,10 +214,10 @@ export function StakeholderLogin() {
               </p>
               <p className="mt-1">
                 <Trans i18nKey="stakeholder.provisionNote">
-                  Department and administrator accounts are provisioned by the
-                  nodal officer — there is no public self-registration. If you are a
-                  department that needs access, contact your administrator or the
-                  JanVyuha team via the{' '}
+                  Department and administrator accounts are provisioned by the nodal
+                  officer — there is no public self-registration. If you are a department
+                  that needs access, contact your administrator or the JanVyuha team via
+                  the{' '}
                   <Link to="/contact" className="font-semibold text-ink-700 underline">
                     contact page
                   </Link>

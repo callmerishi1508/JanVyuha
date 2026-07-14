@@ -83,12 +83,20 @@ export function tDeptShort(id: DepartmentId): string {
  * suggestion. Keyed by category+department; falls back to the English data
  * string, so a missing translation degrades gracefully instead of breaking.
  */
-export function tReason(category: CategoryId, dept: DepartmentId, fallback: string): string {
+export function tReason(
+  category: CategoryId,
+  dept: DepartmentId,
+  fallback: string
+): string {
   return i18n.t(`routing.${category}_${dept}.reason`, { defaultValue: fallback })
 }
 
 /** Localised plain-language confirmation question for a conditional department. */
-export function tQuestion(category: CategoryId, dept: DepartmentId, fallback: string): string {
+export function tQuestion(
+  category: CategoryId,
+  dept: DepartmentId,
+  fallback: string
+): string {
   return i18n.t(`routing.${category}_${dept}.question`, { defaultValue: fallback })
 }
 

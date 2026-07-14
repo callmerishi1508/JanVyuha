@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Download } from 'lucide-react'
 import { tDeptShort } from '../lib/i18n'
 import { Wordmark } from './Brand'
 import { DEPARTMENT_LIST } from '../data/categories'
 import { BRAND } from '../config/brand'
+import { useInstallPrompt } from '../lib/pwa'
 
 export function Footer() {
   const { t } = useTranslation()
+  const { installable, promptInstall } = useInstallPrompt()
   return (
     <footer className="mt-16 border-t border-slate-200 bg-white">
       <div className="tricolour h-1 w-full" />
@@ -98,6 +101,16 @@ export function Footer() {
             <Link to="/about" className="hover:text-ink-800">
               {t('footer.about')}
             </Link>
+            {installable && (
+              <button
+                type="button"
+                onClick={promptInstall}
+                className="flex items-center gap-1 font-semibold text-ink-700 hover:text-ink-900"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {t('footer.installApp')}
+              </button>
+            )}
           </p>
         </div>
       </div>

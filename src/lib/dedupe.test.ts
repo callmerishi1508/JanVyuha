@@ -31,20 +31,20 @@ describe('haversineMeters', () => {
   })
   it('roughly measures a short distance', () => {
     // ~111 m per 0.001° latitude near the equator/India.
-    const d = haversineMeters(12.9700, 77.5900, 12.9710, 77.5900)
+    const d = haversineMeters(12.97, 77.59, 12.971, 77.59)
     expect(d).toBeGreaterThan(90)
     expect(d).toBeLessThan(130)
   })
 })
 
 describe('findNearby', () => {
-  const base = { lat: 12.9700, lng: 77.5900, category: 'fire' as const }
+  const base = { lat: 12.97, lng: 77.59, category: 'fire' as const }
 
   it('finds same-category issues within the radius, nearest first', () => {
     const issues = [
-      issueAt('self', 12.9700, 77.5900),
-      issueAt('close', 12.9701, 77.5900), // ~11 m
-      issueAt('mid', 12.9710, 77.5900), // ~111 m
+      issueAt('self', 12.97, 77.59),
+      issueAt('close', 12.9701, 77.59), // ~11 m
+      issueAt('mid', 12.971, 77.59), // ~111 m
       issueAt('far', 12.99, 77.61), // > 2 km
     ]
     const near = findNearby(base, issues, { excludeId: 'self', meters: 200 })
@@ -52,12 +52,12 @@ describe('findNearby', () => {
   })
 
   it('excludes different categories', () => {
-    const issues = [issueAt('other', 12.9701, 77.5900, { category: 'water' })]
+    const issues = [issueAt('other', 12.9701, 77.59, { category: 'water' })]
     expect(findNearby(base, issues, { meters: 200 })).toHaveLength(0)
   })
 
   it('excludes resolved issues', () => {
-    const issues = [issueAt('done', 12.9701, 77.5900, { status: 'resolved' })]
+    const issues = [issueAt('done', 12.9701, 77.59, { status: 'resolved' })]
     expect(findNearby(base, issues, { meters: 200 })).toHaveLength(0)
   })
 })

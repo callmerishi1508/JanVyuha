@@ -4,7 +4,7 @@ import { Bell } from 'lucide-react'
 import { useAuth } from '../store/auth'
 import { useIssues } from '../store/issues'
 import { CATEGORIES } from '../data/categories'
-import { timeAgo, shortId } from '../lib/format'
+import { timeAgo } from '../lib/format'
 import { cn } from '../lib/cn'
 
 /**
@@ -131,8 +131,7 @@ export function NotificationBell() {
                         {i.title}
                       </div>
                       <div className="text-xs text-slate-500">
-                        {shortId(i.id)} · {i.status.replace('_', ' ')} ·{' '}
-                        {timeAgo(i.updatedAt)}
+                        {i.refId} · {i.status.replace('_', ' ')} · {timeAgo(i.updatedAt)}
                       </div>
                     </div>
                     <span

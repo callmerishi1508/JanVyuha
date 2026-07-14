@@ -43,7 +43,14 @@ export function BarChart({
             <text x="0" y={barH / 2 + 4} className="fill-slate-600" fontSize="11">
               {d.label.length > 14 ? d.label.slice(0, 13) + '…' : d.label}
             </text>
-            <rect x="100" y="2" width="210" height={barH - 4} rx="4" className="fill-slate-100" />
+            <rect
+              x="100"
+              y="2"
+              width="210"
+              height={barH - 4}
+              rx="4"
+              className="fill-slate-100"
+            />
             <rect
               x="100"
               y="2"
@@ -154,7 +161,14 @@ export function Donut({
           return seg
         })}
       </g>
-      <text x={r} y={r - 2} textAnchor="middle" className="fill-ink-900" fontSize="22" fontWeight="800">
+      <text
+        x={r}
+        y={r - 2}
+        textAnchor="middle"
+        className="fill-ink-900"
+        fontSize="22"
+        fontWeight="800"
+      >
         {total}
       </text>
       <text x={r} y={r + 16} textAnchor="middle" className="fill-slate-500" fontSize="10">

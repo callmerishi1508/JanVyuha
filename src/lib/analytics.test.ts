@@ -5,6 +5,10 @@ import {
   isOpen,
   summarize,
   resolutionMs,
+  toCsv,
+  byDistrict,
+  dailyTrend,
+  departmentPerformance,
 } from './analytics'
 import type { Issue } from '../data/types'
 
@@ -96,5 +100,94 @@ describe('resolutionMs', () => {
     const ms = resolutionMs(iss)!
     expect(ms).toBeGreaterThan(1.9 * HOUR)
     expect(ms).toBeLessThan(2.1 * HOUR)
+  })
+})
+
+describe('byDistrict', () => {
+  it('groups by district, falling back to city, sorted by count desc', () => {
+    const issues = [
+      makeIssue({
+        id: '1',
+        location: { lat: 0, lng: 0, address: '', district: 'Hyderabad' },
+      }),
+      makeIssue({
+        id: '2',
+        location: { lat: 0, lng: 0, address: '', district: 'Hyderabad' },
+      }),
+      makeIssue({ id: '3', location: { lat: 0, lng: 0, address: '', city: 'Chennai' } }),
+      makeIssue({ id: '4', location: { lat: 0, lng: 0, address: '' } }),
+    ]
+    expect(byDistrict(issues)).toEqual([
+      { district: 'Hyderabad', count: 2 },
+      { district: 'Chennai', count: 1 },
+      { district: 'Unknown', count: 1 },
+    ])
+  })
+})
+
+describe('dailyTrend', () => {
+  it('buckets issues by calendar day for the requested window', () => {
+    const now = Date.now()
+    const today = new Date(now)
+    today.setHours(12, 0, 0, 0)
+    const yesterday = new Date(today.getTime() - 24 * HOUR)
+    const issues = [
+      makeIssue({ id: '1', createdAt: today.toISOString() }),
+      makeIssue({ id: '2', createdAt: today.toISOString() }),
+      makeIssue({ id: '3', createdAt: yesterday.toISOString() }),
+    ]
+    const trend = dailyTrend(issues, 3, now)
+    expect(trend).toHaveLength(3)
+    expect(trend[trend.length - 1].count).toBe(2)
+    expect(trend[trend.length - 2].count).toBe(1)
+  })
+})
+
+describe('departmentPerformance', () => {
+  it('only includes departments with routed issues, with correct aggregates', () => {
+    const issues = [
+      makeIssue({ id: '1', routedDepartments: ['fire'], status: 'resolved' }),
+      makeIssue({ id: '2', routedDepartments: ['fire'], status: 'reported' }),
+      makeIssue({ id: '3', routedDepartments: ['water'], status: 'reported' }),
+    ]
+    const perf = departmentPerformance(issues)
+    const fire = perf.find((p) => p.id === 'fire')!
+    const water = perf.find((p) => p.id === 'water')!
+    expect(fire.total).toBe(2)
+    expect(fire.resolved).toBe(1)
+    expect(water.total).toBe(1)
+    expect(perf.find((p) => p.id === 'police')).toBeUndefined()
+  })
+})
+
+describe('toCsv', () => {
+  it('produces a header row plus one quoted row per issue', () => {
+    const issue = makeIssue({
+      refId: 'JV-0042',
+      title: 'Water leak, "urgent"',
+      location: {
+        lat: 0,
+        lng: 0,
+        address: '',
+        district: 'Hyderabad',
+        state: 'Telangana',
+      },
+    })
+    const csv = toCsv([issue])
+    const lines = csv.split('\n')
+    expect(lines).toHaveLength(2)
+    expect(lines[0]).toBe(
+      'ref_id,title,category,severity,status,district,state,departments,upvotes,created_at,updated_at,resolution'
+    )
+    // Embedded double quotes are escaped by doubling, per CSV convention.
+    expect(lines[1]).toContain('"Water leak, ""urgent"""')
+    expect(lines[1]).toContain('"JV-0042"')
+    expect(lines[1]).toContain('"Hyderabad"')
+  })
+
+  it('leaves resolution blank for unresolved issues', () => {
+    const csv = toCsv([makeIssue({ status: 'reported' })])
+    const cols = csv.split('\n')[1].split(',')
+    expect(cols[cols.length - 1]).toBe('""')
   })
 })

@@ -25,9 +25,7 @@ export function StatTile({
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <div className="text-2xl font-extrabold leading-none text-ink-900">
-          {value}
-        </div>
+        <div className="text-2xl font-extrabold leading-none text-ink-900">{value}</div>
         <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
           {label}
         </div>
