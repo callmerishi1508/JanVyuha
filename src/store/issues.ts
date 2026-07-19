@@ -30,6 +30,7 @@ interface IssuesState {
   report: (id: string, reason: string) => Promise<void>
   remove: (id: string) => Promise<void>
   rate: (id: string, stars: number, comment: string) => Promise<void>
+  reopen: (id: string, by: string) => Promise<void>
   forDepartment: (dept: DepartmentId) => Issue[]
   byId: (id: string) => Issue | undefined
   startRealtime: () => () => void
@@ -88,6 +89,10 @@ export const useIssues = create<IssuesState>((set, get) => ({
   rate: async (id, stars, comment) => {
     await api.rate?.(id, stars, comment)
     const updated = await api.getIssue(id)
+    if (updated) set({ issues: get().issues.map((i) => (i.id === id ? updated : i)) })
+  },
+  reopen: async (id, by) => {
+    const updated = await api.reopen?.(id, by)
     if (updated) set({ issues: get().issues.map((i) => (i.id === id ? updated : i)) })
   },
   forDepartment: (dept) => get().issues.filter((i) => i.routedDepartments.includes(dept)),

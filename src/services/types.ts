@@ -39,6 +39,13 @@ export interface IssuesBackend {
   deleteIssue?(id: string): Promise<void>
   /** Post-resolution citizen satisfaction rating (1–5 + optional comment). */
   rate?(id: string, stars: number, comment: string): Promise<void>
+  /**
+   * Citizen reopens a resolved report they're not satisfied with — the counter
+   * to "administrative closure". Reporter (or admin) only; resolved issues only.
+   * `by` is used by the mock for the timeline entry; the Supabase RPC derives
+   * the actor server-side and ignores it.
+   */
+  reopen?(id: string, by: string): Promise<Issue | undefined>
   reset?(): Promise<void>
 }
 

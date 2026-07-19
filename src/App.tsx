@@ -7,6 +7,7 @@ import { Header } from './components/Header'
 import { RoleGuard } from './components/RoleGuard'
 import { RouteErrorBoundary } from './components/RouteErrorBoundary'
 import { flushOutbox } from './lib/outbox'
+import { IS_DEV, testerAllowed } from './lib/config'
 // Landing is the first paint for most visitors — keep it eager. Everything else
 // is code-split so the initial bundle (and low-end-phone load time) stays small.
 import { Landing } from './pages/Landing'
@@ -119,6 +120,14 @@ export default function App() {
         {t('common.skipToContent')}
       </a>
       {!isEmbed && <Header />}
+      {/* A production build that deliberately ships the Tester panel is a
+          public evaluation sandbox (see docs/deploy-guide). Label it, always
+          and unmissably, so it can never be mistaken for the real service. */}
+      {!isEmbed && !IS_DEV && testerAllowed() && (
+        <div className="bg-amber-500 px-4 py-1.5 text-center text-xs font-bold text-amber-950">
+          {t('common.sandboxBanner')}
+        </div>
+      )}
       <main id="main-content" className="flex-1">
         {/* key=pathname resets the boundary on navigation, so an error on one
             route doesn't strand the user — going elsewhere recovers the app

@@ -11,6 +11,8 @@ const hi: Dict = {
     search: 'खोजें',
     loading: 'लोड हो रहा है…',
     skipToContent: 'मुख्य सामग्री पर जाएँ',
+    sandboxBanner:
+      'प्रदर्शन सैंडबॉक्स — केवल उदाहरणात्मक डेटा। यह कोई सक्रिय सरकारी सेवा नहीं है।',
     routedTo: 'भेजा गया:',
     selectedLocation: 'चयनित स्थान',
     rating: 'रेटिंग',
@@ -579,6 +581,10 @@ const hi: Dict = {
     submitFeedback: 'प्रतिक्रिया सबमिट करें',
     pickRating: 'एक रेटिंग चुनें',
     feedbackSubmitted: 'प्रतिक्रिया सबमिट की गई',
+    reopen: 'समाधान नहीं हुआ? फिर से खोलें',
+    reopenConfirm:
+      'इस रिपोर्ट को फिर से खोलें? यह हर संबंधित विभाग की कतार में वापस चली जाएगी।',
+    reopened: 'रिपोर्ट फिर से खोली गई — विभागों को पुनः सूचित कर दिया गया है।',
     starAria_one: '{{count}} स्टार',
     starAria_other: '{{count}} स्टार',
     activityTimeline: 'गतिविधि समयरेखा',

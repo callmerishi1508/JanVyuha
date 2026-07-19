@@ -253,6 +253,36 @@ export const api = {
     return delay(undefined)
   },
 
+  /**
+   * Citizen reopens a resolved report they're not satisfied with. Every routed
+   * department drops back to 'acknowledged' (they already know about it — it's
+   * back in their queue), the overall status is re-derived, and the timeline
+   * records who reopened it. Guarded to resolved issues so it can't be used to
+   * reset in-flight work.
+   */
+  async reopen(id: string, by: string): Promise<Issue | undefined> {
+    const issues = load()
+    const issue = issues.find((i) => i.id === id)
+    if (!issue || issue.status !== 'resolved') return delay(undefined)
+    const now = new Date().toISOString()
+    issue.departmentStatus = issue.departmentStatus.map((d) => ({
+      ...d,
+      status: 'acknowledged',
+      at: now,
+    }))
+    issue.status = deriveIssueStatus(issue.departmentStatus)
+    issue.updatedAt = now
+    issue.updates.push({
+      id: uid('u'),
+      status: issue.status,
+      note: 'Reopened by the citizen — the issue was not resolved.',
+      by,
+      at: now,
+    })
+    save(issues)
+    return delay(issue)
+  },
+
   /** Right to erasure — remove a report from local storage. */
   async deleteIssue(id: string): Promise<void> {
     const issues = load().filter((i) => i.id !== id)

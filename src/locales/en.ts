@@ -8,6 +8,8 @@ const en = {
     search: 'Search',
     loading: 'Loading…',
     skipToContent: 'Skip to main content',
+    sandboxBanner:
+      'Demonstration sandbox — illustrative data only. This is not a live government service.',
     routedTo: 'Routed to:',
     selectedLocation: 'Selected location',
     rating: 'Rating',
@@ -571,6 +573,10 @@ const en = {
     submitFeedback: 'Submit feedback',
     pickRating: 'Pick a rating',
     feedbackSubmitted: 'Feedback submitted',
+    reopen: 'Not resolved? Reopen',
+    reopenConfirm:
+      'Reopen this report? It will go back into the queue of every routed department.',
+    reopened: 'Report reopened — the departments have been re-notified.',
     starAria_one: '{{count}} star',
     starAria_other: '{{count}} stars',
     activityTimeline: 'Activity timeline',

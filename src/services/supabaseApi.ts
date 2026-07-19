@@ -430,4 +430,12 @@ export const supabaseApi: IssuesBackend = {
       )
     if (error) throw error
   },
+
+  async reopen(id) {
+    // The RPC enforces reporter-or-admin + resolved-only and drops every routed
+    // department back to 'acknowledged' atomically (see reopen_issue in schema.sql).
+    const { error } = await sb().rpc('reopen_issue', { p_issue: id })
+    if (error) throw error
+    return this.getIssue(id)
+  },
 }

@@ -538,6 +538,56 @@ begin
 end;
 $$;
 
+-- Citizen reopens a resolved report they're not satisfied with (the counter to
+-- "administrative closure"). SECURITY DEFINER because the reporter has no UPDATE
+-- policy on issues — the function itself enforces: caller is the reporter (or an
+-- admin) AND the issue is currently resolved. Every routed department drops back
+-- to 'acknowledged' (it's back in their queue), the overall status is re-derived
+-- by the normal model, and the timeline + audit record who reopened it.
+create or replace function public.reopen_issue(p_issue uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_reporter uuid;
+  v_status text;
+  v_name text;
+begin
+  select reporter_id, status into v_reporter, v_status
+  from public.issues where id = p_issue;
+  if v_reporter is null and public.my_role() is distinct from 'admin' then
+    raise exception 'Issue not found';
+  end if;
+  if v_reporter is distinct from auth.uid() and public.my_role() is distinct from 'admin' then
+    raise exception 'Only the reporter may reopen this issue';
+  end if;
+  if v_status is distinct from 'resolved' then
+    raise exception 'Only a resolved issue can be reopened';
+  end if;
+
+  update public.issue_department_status
+  set status = 'acknowledged', updated_at = now()
+  where issue_id = p_issue;
+
+  perform set_config('app.bypass_issue_guard', 'on', true);
+  update public.issues
+  set status = 'acknowledged', updated_at = now()
+  where id = p_issue;
+
+  select coalesce(raw_user_meta_data->>'name', email, 'Citizen')
+  into v_name from auth.users where id = auth.uid();
+  insert into public.issue_updates (issue_id, status, note, by_name)
+  values (
+    p_issue, 'acknowledged',
+    'Reopened by the citizen — the issue was not resolved.',
+    coalesce(v_name, 'Citizen')
+  );
+
+  -- Audit directly (write_audit is officials-only by design; a citizen reopen
+  -- is still a legitimate audit event — actor pinned to auth.uid() as always).
+  insert into public.audit_log (actor_id, actor_name, action, issue_id)
+  values (auth.uid(), coalesce(v_name, 'Citizen'), 'reopen', p_issue);
+end;
+$$;
+
 -- ============================================================================
 -- issue_ratings — post-resolution citizen satisfaction (1..5 + comment).
 -- ============================================================================

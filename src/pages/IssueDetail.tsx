@@ -17,6 +17,7 @@ import {
   MapPinned,
   Star,
   Languages,
+  RotateCcw,
 } from 'lucide-react'
 import { useIssues } from '../store/issues'
 import { useAuth } from '../store/auth'
@@ -43,7 +44,8 @@ export function IssueDetail() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const { issues, loaded, refresh, updateDeptStatus, upvote, report, rate } = useIssues()
+  const { issues, loaded, refresh, updateDeptStatus, upvote, report, rate, reopen } =
+    useIssues()
   const { user } = useAuth()
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -561,6 +563,32 @@ export function IssueDetail() {
                       className="btn-primary mt-3 w-full"
                     >
                       {t('issueDetail.submitFeedback')}
+                    </button>
+                    {/* The counter to "administrative closure": a dissatisfied
+                        citizen can put the issue straight back in every routed
+                        department's queue instead of just leaving a low star. */}
+                    <button
+                      onClick={async () => {
+                        if (!window.confirm(t('issueDetail.reopenConfirm'))) return
+                        setBusy(true)
+                        try {
+                          await reopen(issue.id, user?.name || issue.reporterName)
+                          toast.success(t('issueDetail.reopened'))
+                        } catch {
+                          toast.error(t('issueDetail.actionFailed'))
+                        } finally {
+                          setBusy(false)
+                        }
+                      }}
+                      disabled={busy}
+                      className="btn-outline mt-2 w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                    >
+                      {busy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="h-4 w-4" />
+                      )}
+                      {t('issueDetail.reopen')}
                     </button>
                   </>
                 )}

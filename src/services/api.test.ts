@@ -85,4 +85,29 @@ describe('mock api round-trip', () => {
     expect(created.flagged).toBe(false)
     expect(created.moderationStatus).toBe('active')
   })
+
+  it('reopen() puts a resolved issue back in every department queue', async () => {
+    const created = await api.createIssue(INPUT)
+    // Resolve it: every routed department marks done.
+    for (const dept of created.routedDepartments) {
+      await api.updateDeptStatus(created.id, dept, 'done', 'fixed', 'Officer')
+    }
+    expect((await api.getIssue(created.id))!.status).toBe('resolved')
+
+    const reopened = await api.reopen(created.id, 'A Citizen')
+    expect(reopened!.status).toBe('acknowledged')
+    expect(reopened!.departmentStatus.every((d) => d.status === 'acknowledged')).toBe(
+      true
+    )
+    expect(reopened!.updates[reopened!.updates.length - 1]!.note).toMatch(
+      /Reopened by the citizen/
+    )
+  })
+
+  it('reopen() refuses an issue that is not resolved', async () => {
+    const created = await api.createIssue(INPUT)
+    expect(created.status).toBe('reported')
+    expect(await api.reopen(created.id, 'A Citizen')).toBeUndefined()
+    expect((await api.getIssue(created.id))!.status).toBe('reported')
+  })
 })
