@@ -1,14 +1,15 @@
 # JanVyuha — Pitch Deck
 
 > Slide-per-section. Present as-is, or paste into slides. Neutral / white-label —
-> swap in the sponsoring authority's name and emblem per deployment.
+> swap in the sponsoring authority's name and emblem per deployment (once
+> authorised).
 
 ---
 
 ## 1 · Title
 **JanVyuha** — Citizen reporting, routed to the right responders.
-A zero-cost, multilingual civic-response platform.
-*Pilot proposal for [Telangana / Andhra Pradesh / Tamil Nadu / NITI Aayog].*
+A multilingual civic-response platform, ready for a supervised district pilot.
+*Pilot proposal for [Telangana / Andhra Pradesh / Tamil Nadu / DARPG–NITI Aayog].*
 
 ---
 
@@ -16,7 +17,7 @@ A zero-cost, multilingual civic-response platform.
 - Citizens don't know which department to call; complaints scatter across helplines.
 - Emergencies lose minutes to wrong routing.
 - Officials lack a unified, accountable, data-driven view.
-- Existing portals are costly, English-only, and desktop-first.
+- Existing portals are often single-department, English-first, and desktop-first.
 
 ---
 
@@ -25,15 +26,17 @@ A citizen files **one** report (photo/video + location). JanVyuha:
 1. **Classifies** it (AI + rules) — category, severity, clean title.
 2. **Routes** it to the responsible department(s) by **category + jurisdiction**.
 3. Shows it **only** to those departments — enforced in the database.
-4. Lets each department act independently and the citizen track to resolution.
+4. Lets each department act independently and the citizen track to resolution
+   and rate the outcome.
 
 ---
 
 ## 4 · Live demo (60 seconds)
 Report a **Fire** → it appears for **Fire + Ambulance only**, never Police or
 Electricity. Switch languages live. Open the **department dashboard** (SLA
-overdue flags), the **admin console** (moderation, provisioning, audit), and the
-**public transparency dashboard** (anonymised).
+overdue flags, bulk actions), the **admin console** (moderation, provisioning,
+audit), and the **public transparency dashboard** (anonymised, with open-data
+download).
 
 ---
 
@@ -42,61 +45,71 @@ overdue flags), the **admin console** (moderation, provisioning, audit), and the
   reports; departments are scoped by routing *and* jurisdiction.
 - **Private evidence** (signed URLs), **audit trail**, **guarded columns**,
   **admin-only provisioning** (no self-registration as "Police").
-- **Abuse/cost controls** on the AI endpoint.
+- **Abuse and cost controls** on the AI endpoint; rate-limited serverless APIs.
+- **Engineering hygiene**: typed codebase, automated tests, CI on every change.
 
 ---
 
 ## 6 · What officials get
 - **Oversight console**: cross-department view, account provisioning, moderation
-  queue (spam/duplicate), tamper-evident audit log.
+  queue (spam/duplicates, one-click merge), tamper-evident audit log.
 - **Analytics**: SLA compliance, response/resolution times, department
-  performance, category & district heatmaps, CSV/PDF export.
-- **SLA escalation**: overdue reports flagged automatically.
+  performance, citizen-satisfaction (CSAT), category & district views, hotspot
+  clusters on the map, CSV/PDF export.
+- **Productivity**: SLA-breach filter, bulk status updates, canned responses,
+  one-click translation of citizen reports into the official's language.
 
 ---
 
 ## 7 · Citizen experience
-- Multilingual (EN/HI/TE/TA), mobile-first, installable PWA, offline shell.
-- Track status, get free **Web Push** + email updates, **rate** the resolution.
-- Report anonymously; exercise **right to erasure** (DPDP).
+- Multilingual (EN/HI/TE/TA) end-to-end, mobile-first, installable PWA.
+- **Offline report drafting** — the report queues on the phone and submits when
+  coverage returns; **voice input** for low-literacy users.
+- Track status, receive **Web Push + email** updates, **rate** the resolution.
+- Report anonymously; exercise **right to erasure** (DPDP) self-serve.
 
 ---
 
 ## 8 · Compliance (DPDP Act 2023 + GIGW)
-Consent · purpose limitation · data minimisation · retention · erasure ·
-grievance route · anonymised public data · India-region data residency ·
-accessibility (WCAG 2.1 AA / GIGW).
+Consent · purpose limitation · data minimisation · automatic retention-based
+anonymisation · self-serve erasure · grievance route · anonymised public data ·
+India-region data residency · accessibility (WCAG 2.1 AA / GIGW).
 
 ---
 
-## 9 · Zero-budget architecture
-React + Vite PWA · Supabase (Postgres/Auth/Storage/Realtime/RLS) · Google Gemini
-(free tier) · OpenStreetMap · Vercel. **Every piece has a free tier.** Degrades
-gracefully — runs with no keys at all (demo mode).
+## 9 · Architecture
+React + Vite PWA · Supabase (Postgres/Auth/Storage/Realtime/RLS) · Google
+Gemini (server-proxied) · OpenStreetMap · Vercel serverless. Managed services
+only — no servers for the authority to run. Degrades gracefully — every flow is
+demonstrable even with no keys configured (demo mode).
 
 ---
 
-## 10 · Cost & scale (honest)
-- **Pilot (one district)**: ₹0 on free tiers.
-- **State rollout**: costed upgrade path (Supabase Pro, Vercel Pro, Gemini paid,
-  SMS/WhatsApp) — see `scaling-and-cost.md`. Free tiers are framed as pilot-scale,
-  not misrepresented as infinite.
+## 10 · Cost & scale (transparent)
+- **Pilot (one district)**: hosted and operated by the provider at no cost to
+  the authority; no procurement or hardware required to evaluate.
+- **Scale-up**: a published, costed path (database tier, hosting tier, AI
+  volume, SMS/WhatsApp messaging) — see `scaling-and-cost.md`. Capacity limits
+  of the pilot configuration are stated openly, not discovered later.
 
 ---
 
 ## 11 · Roadmap
-Pilot (8–12 wks, 1 district) → evaluate routing accuracy, response time, adoption
-→ multi-district → state → national (NITI Aayog reference architecture).
+Pilot (8–12 wks, 1 district) → evaluate routing accuracy, response time,
+adoption, satisfaction → multi-district → state → national reference
+architecture (DARPG / NITI Aayog).
 
 ---
 
 ## 12 · The ask
 A supervised **single-district pilot** with a nodal officer and a handful of
-department accounts. No procurement, no cost. We provide the platform, training,
-and weekly metrics.
+department accounts. No cost to the authority, no procurement, no obligation
+beyond the pilot term. We provide the platform, training, and weekly metrics.
 
 ---
 
 ## 13 · Why now
-Digital India + DPDP set the direction. JanVyuha is a working, compliant,
-zero-cost way to demonstrate outcomes in weeks — then scale with confidence.
+Digital India and the DPDP Act set the direction; citizens already expect
+app-grade services. JanVyuha is a working, compliant way to demonstrate
+measurable outcomes in weeks — with the full cost of scale on the table before
+any commitment.

@@ -1,147 +1,100 @@
-# Pre-Outreach Checklist — before emailing for a tie-up
+# Pre-Outreach Checklist — final gate before sending
 
-Everything to verify, fix, polish, and prepare before sending JanVyuha to
-Telangana / Andhra Pradesh / Tamil Nadu / NITI Aayog. Ordered by priority.
-**Legend:** 🔴 blocker · 🟠 strongly recommended · 🟢 nice-to-have.
-
----
-
-## 0 · Prove it actually works (do this FIRST)
-
-- 🔴 **Run the build & tests**: `npm run build && npm test`. (The latest login/auth
-  changes were written while the sandbox verifier was down — they've been code-
-  reviewed but not compiler-verified. Confirm green before anything else.)
-- 🔴 **Exercise the demo end-to-end in a browser** (`npm run dev`): the 60-second
-  fire-routing story, all 4 languages, mobile view (hamburger nav), admin console,
-  analytics, transparency page, report → dashboard → resolve → rate.
-- 🔴 **Stand up a REAL Supabase project** (India region, `ap-south-1`), run
-  `supabase/schema.sql` then `supabase/seed.sql`, and **verify the security claims
-  on real infra, not the mock**:
-  - a citizen account cannot see another citizen's report or a department's queue;
-  - a department sees only its routed + in-jurisdiction issues;
-  - evidence photos are NOT reachable by public URL;
-  - admin provisioning + moderation + audit log work;
-  - Google + phone sign-in work (after enabling providers — see §4).
-  > The entire pitch rests on "security enforced in Postgres." It must be tested
-  > against a live database before you claim it.
+Updated 2026-07-19 to reflect the shipped state (all roadmap phases A–D2 done;
+55 tests + CI green; deployed at `jan-vyuha.vercel.app`). Most of the original
+list is complete — what remains is verification, one-time console wiring, and
+the outreach package itself.
+**Legend:** 🔴 blocker · 🟠 strongly recommended · 🟢 nice-to-have · ✅ done.
 
 ---
 
-## 1 · Credibility — must-do before the email
+## 0 · Verify the live deploy (do this FIRST — ~15 minutes)
 
-- 🔴 **Deploy a live hosted demo** (Vercel prod, HTTPS, a real URL). Officials will
-  click a link, not run `npm`.
-- 🔴 **Lock down the production build**: `VITE_ENABLE_TESTER` unset (Tester panel
-  OFF), demo copy hidden, `VITE_BRAND` set to the recipient (telangana/andhra/…).
-- 🟠 **Seed demo data for the TARGET city** (Hyderabad / Vijayawada / Chennai) — not
-  Bengaluru — so a Telangana official sees Telangana places on the map.
-- 🟠 **Fill the placeholders**: contact email (currently `contact@janvyuha.example`),
-  grievance officer, footer authority, any "example.org" strings.
-- 🟠 **Real 192/512 PNG app icons** (the one deferred PWA item; currently SVG only).
-- 🟠 **Native-speaker review of Hindi/Telugu/Tamil** (translations are machine-
-  assisted and flagged for review — a wrong word in an official's language hurts).
-- 🟠 **A 2–3 min demo video + 5–6 screenshots** for the email (officials skim).
-- 🟠 **Proofread all `docs/`**, confirm numbers match the app, export the deck to PDF.
-- 🟢 **Intentional logo/emblem** (current mark is a neutral placeholder).
+- 🔴 **Smoke-test the production URL on a phone** (the React 19 / router 7 /
+  react-leaflet 5 upgrades were machine-verified, not clicked through):
+  1. Footer shows the current `build <sha>` stamp (not a stale cache).
+  2. Landing loads; switch EN→TE→TA→HI — UI, department names, wizard all translate.
+  3. Login (Google or phone) round-trips back into the app.
+  4. Full report wizard: photo upload → Analyse → map pin → submit.
+  5. Report appears in My Reports and on the correct department dashboard;
+     hotspot map clusters render.
+- 🔴 **Verify security on the live backend** (deploy-guide §7): citizen
+  isolation, department isolation, evidence URL fails logged-out, moderation +
+  audit populate. The pitch rests on "enforced in Postgres" — prove it on real
+  infra once per schema change.
 
----
+## 1 · One-time console wiring (only you can do these)
 
-## 2 · Product gaps & improvements (deferred in the build — "better to have")
+- 🔴 **Notifications webhook** — the one gap between "infra ready" and
+  "notifications fire": Supabase → Database → Webhooks → INSERT on
+  `issue_updates` → POST `https://<domain>/api/notify` with the
+  `x-notify-secret` header. Full steps: `notifications-setup.md`. Test by
+  advancing an issue's status and receiving the push.
+- 🔴 **Vercel env complete**: `NOTIFY_SECRET`, `CRON_SECRET`,
+  `DIGEST_RECIPIENTS`, VAPID keys, `EMAIL_API_KEY`/`EMAIL_FROM` (if email),
+  `ALLOWED_ORIGINS`, `GEOCODE_CONTACT` (optional). `VITE_ENABLE_TESTER` must be
+  **unset**. Redeploy after any `VITE_` change.
+- 🔴 **Schema currency**: if the Supabase project predates the Phase A security
+  fixes, re-apply `supabase/schema.sql`.
+- 🟠 **Rotate any secrets that ever sat in a local `.env`** (anon key is safe;
+  service-role, Gemini, VAPID private, email keys are not).
+- 🟠 **Crons live**: Vercel → Crons shows retention (daily) + digest (Mon);
+  check the first run's logs.
+- 🟠 **Keep-alive**: free Supabase pauses after ~7 days idle — schedule a ping
+  (e.g. cron-job.org) so the demo is never asleep when an official clicks.
 
-- 🟠 **Report-time "similar reports nearby" hint** (dedup currently shows only on the
-  issue detail page, not while filing).
-- 🟠 **Inline field validation + 10-digit phone validation** in the report wizard
-  (currently toast-only gating; no red field states).
-- 🟠 **Wizard leave-guard** (navigating away mid-report loses the draft).
-- 🟠 **Notification matching by `reporter_id`, not name** (the bell + rating gate on
-  name match — collides on common names, breaks for anonymous reports).
-- 🟠 **Wire email notifications + a Supabase DB webhook** to trigger `/api/notify` on
-  status change (push/email infra is ready but nothing fires it yet).
-- 🟢 **Colour-contrast sweep** (some `slate-400` body text fails WCAG AA).
-- 🟢 **Admin "merge duplicate" button** (the API/schema exist; no UI yet).
-- 🟢 **i18n for the report wizard + dashboards** (only landing/nav/legal + category/
-  status labels are translated; officials' console is English by design).
-- 🟢 **Code-split the bundle** (~700 KB; lazy-load admin/analytics/maps for low-end
-  phones).
-- 🟢 **Offline report queue** (offline is shell-only today).
-- 🟢 **Edge rate-limiter** for `/api/analyze` (in-memory only; add Vercel WAF or
-  Upstash free tier).
+## 2 · The outreach package
 
----
+- 🔴 **Recipients researched and verified** — names/addresses from official
+  portals only, immediately before sending (see `outreach-email.md` for the
+  target table; TN leadership especially — new government since May 2026).
+- 🔴 **Decide "who is we"** — the first official question. Individual or
+  registered entity; who signs the MoU; who is the DPDP Grievance Officer
+  (`mou-template.md` §"If you don't have a registered entity yet").
+- 🔴 **2–3 minute demo video** recorded on the live site (`demo-script.md`),
+  uploaded unlisted (YouTube/Drive), link tested logged-out.
+- 🔴 **Export attachments to PDF**: `one-pager.md` + `pilot-proposal.md`
+  (≤ 5 MB total). Deck stays a link or is presented live.
+- 🟠 **Per-state pass before each batch**: `VITE_BRAND` set to the recipient's
+  state, demo data showing their city, contact email real, then smoke-test.
+- 🟠 **Native-speaker glance at HI/TE/TA** — at minimum the landing page and
+  wizard, in the target state's language. Machine-assisted strings are flagged
+  for review; a wrong word in an official's language costs credibility.
+- 🟢 **Custom domain** so the URL doesn't read as a hobby deploy.
+- 🟢 **Uptime monitor + error tracking (Sentry free)** so a broken demo never
+  greets an official.
 
-## 3 · Security & compliance (before real citizen data)
+## 3 · Positioning rules (bake into every artifact)
 
-*Not required for a demo, but be ready to answer these — a govt CTO will ask.*
+- Independent **pilot proposal**, never an official service; the app carries
+  the disclosure and the "does not replace 112" line.
+- **No "free/₹0" claims.** Say: no budget allocation, procurement, or hardware
+  needed to evaluate; provider hosts the pilot; costed scale-up plan attached
+  (`scaling-and-cost.md`). Capacity ceilings stated, not hidden.
+- Data ownership is the citizens' and the authority's; provider is a processor
+  (`mou-template.md` §4).
+- One recipient per mail, by name and office; log every send; one follow-up
+  after 7–10 working days.
 
-- 🟠 **Independent RLS/security review** + a basic pen-test of the isolation rules.
-- 🔴 **Set `ALLOWED_ORIGINS`** in the production environment (locks the AI endpoint).
-- 🟠 **Automated data-retention/deletion job** (currently documented, not implemented).
-- 🟠 **Persist a consent record + version** per report (documented, not stored).
-- 🟠 **Supabase backups + auto-pause mitigation** (free projects sleep after ~7 days
-  idle — schedule a keep-alive ping, or upgrade before a scheduled official viewing
-  so the demo isn't asleep).
-- 🟠 **DPDP**: designate a Grievance Officer; have the privacy policy reviewed by
-  counsel before real data.
-- 🟢 **Error tracking (Sentry free) + uptime monitor + privacy-friendly analytics**
-  (Plausible/GA) so you can later show adoption numbers.
+## 4 · Known-and-accepted gaps (be ready to answer, don't fix now)
 
----
-
-## 4 · Deployment / ops
-
-- 🔴 **Supabase**: project in `ap-south-1`; run schema + seed; create the first admin
-  via a `department_invites` row; enable **Google** provider (free) and, when funded,
-  a **phone/SMS** provider.
-- 🔴 **Vercel**: deploy; set ALL env vars (Supabase URL/anon, `GEMINI_API_KEY`,
-  `ALLOWED_ORIGINS`, `VITE_BRAND`, VAPID keys, `SUPABASE_SERVICE_ROLE_KEY`).
-- 🟠 **Generate VAPID keys**: `npx web-push generate-vapid-keys` (for Web Push).
-- 🟢 **Custom domain** so it doesn't read as a hobby project.
-
----
-
-## 5 · The outreach package (email + attachments)
-
-- 🔴 **Identify the RIGHT recipients** (research): state IT / e-Governance secretary,
-  district collector, municipal commissioner, police/fire nodal officers; for NITI
-  Aayog, the relevant vertical/adviser.
-- 🔴 **A tight cover email** (can be drafted for you): problem → one-line solution →
-  live demo link → the ask (a supervised, zero-cost single-district pilot).
-- 🟠 **Attach**: one-pager (PDF), pitch deck (PDF), pilot proposal. **Link**: live
-  demo + demo video.
-- 🟠 **Honest positioning**: independent pilot proposal, not an official service,
-  ₹0 to run. (Already baked into the app copy.)
-- 🟢 **A follow-up plan** (polite nudge after 7–10 days).
+- Telegram bot channel — deferred by decision; Web Push + email cover the pilot.
+- Per-instance rate limiting on serverless APIs — edge limiter is a scale-stage
+  item (documented in `security-and-dpdp.md`).
+- Dashboard virtualization / realtime deltas — pilot-scale fine; documented
+  trade-off.
+- Independent pen-test — not yet commissioned; offer the live isolation
+  walkthrough (deploy-guide §7) during evaluation.
+- iOS push requires installed PWA (platform constraint; Android/desktop fine).
 
 ---
 
-## 6 · Legal / organisational (the "who are you?" question)
+## Send-day runbook (per state)
 
-- 🔴 **Who is "we"?** A person or registered entity able to sign an MoU / data-
-  sharing agreement. Officials will ask on first contact.
-- 🟠 **Liability disclaimer** — especially because it touches emergencies ("does not
-  replace 112"; already stated in Terms, keep it prominent).
-- 🟠 **Data ownership clarity** — citizen/government data belongs to them, not you.
-- 🟢 **Terms reviewed**; IP ownership stated.
-
----
-
-## Already prepared for you (in this repo)
-
-- ✅ **Cover email drafts** (state + NITI Aayog + follow-up) — `outreach-email.md`.
-- ✅ **Demo scripts** (60-second video + full walkthrough + Q&A) — `demo-script.md`.
-- ✅ **Demo data reseeded** for Hyderabad / Vijayawada / Visakhapatnam / Chennai
-  (Telangana, AP, Tamil Nadu) in both `src/data/seed.ts` and `supabase/seed.sql`.
-- ✅ **Full pitch docs** — one-pager, deck, pilot proposal, architecture,
-  security/DPDP, SLA/KPI, scaling/cost.
-
-## Quick "tonight" shortlist (highest impact, least effort)
-
-1. `npm run build && npm test` — confirm green.
-2. Deploy to Vercel + a real Supabase project (India region); test the security on
-   real infra.
-3. Enable Google login; set `VITE_BRAND`, turn the Tester panel off.
-4. Reseed demo data for one target city; fill contact/grievance placeholders.
-5. Record a 2-minute demo video; export the deck to PDF.
-6. Decide who "we" are and draft the cover email.
-
-Everything below the shortlist can follow after first contact.
+1. `VITE_BRAND` + seed check → redeploy → phone smoke-test (§0.1).
+2. Verify recipient names/emails on the official portal (same day).
+3. Send the state batch (secretary/agency desk, minister's office, municipal
+   commissioner) — individually addressed, PDFs attached, links tested.
+4. Log sends (date, office, address). Calendar the day-8 follow-up.
+5. Be reachable: the phone number in the signature is answered, and the
+   MoU/"who are we" answers from §2 are at hand.

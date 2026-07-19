@@ -71,7 +71,7 @@ So the list below reads as "finishing touches," not "it's broken":
 ---
 
 ## 5. What to explicitly say in the mail (turns gaps into strengths)
-- "Runs on free-tier infra; **₹0** to pilot" — already true, lead with it.
+- "**No budget allocation, procurement, or hardware needed to evaluate** — the provider hosts the pilot; a costed scale-up plan is attached." (Superseded guidance: do **not** lead with "free/₹0" — see `outreach-email.md` positioning rules.)
 - "**DPDP-aligned** from day one: private evidence, RLS, audit trail, right-to-erasure" — `docs/security-and-dpdp.md`.
 - "Available in **English, Hindi, Telugu, Tamil**" — headline; make sure §2.1/§3.6 are clean if you say it.
 - "**Neutral/white-label** — presented as a *proposed pilot*, not an unauthorized GoI claim" — `official=false` is deliberate and honest; call it out.

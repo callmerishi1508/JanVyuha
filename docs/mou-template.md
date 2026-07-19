@@ -1,8 +1,9 @@
 # Pilot MoU / Data-Sharing — one-pager template
 
-A plain-language **Memorandum of Understanding** template for a zero-cost JanVyuha
-pilot with a government authority. It answers the "who are you and on what terms?"
-question that officials raise on first contact.
+A plain-language **Memorandum of Understanding** template for a JanVyuha pilot
+with a government authority, provided at no cost to the authority. It answers
+the "who are you and on what terms?" question that officials raise on first
+contact.
 
 > ⚠️ **Not legal advice.** This is a starting point. Have it reviewed by a lawyer
 > (and the authority's legal cell) before signing. Bracketed fields are yours to fill.

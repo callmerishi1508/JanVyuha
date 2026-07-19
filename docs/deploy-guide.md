@@ -79,13 +79,18 @@ Copy the **Public Key** → `VITE_VAPID_PUBLIC_KEY`, **Private Key** →
 
    | Key | Value |
    |---|---|
-   | `VITE_SUPABASE_URL` | from step 1.5 |
+   | `VITE_SUPABASE_URL` | from step 1.5 (bare project root, no `/rest/v1`) |
    | `VITE_SUPABASE_ANON_KEY` | from step 1.5 |
    | `SUPABASE_SERVICE_ROLE_KEY` | from step 1.5 (secret) |
    | `GEMINI_API_KEY` | your Gemini key (server-only) |
    | `VITE_BRAND` | `telangana` / `andhra` / `tamilnadu` / `national` |
    | `VITE_CONTACT_EMAIL` | a real inbox you monitor |
    | `VITE_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | from step 3 |
+   | `NOTIFY_SECRET` | long random string — gates `/api/notify` (see `notifications-setup.md`) |
+   | `CRON_SECRET` | long random string — gates the retention + digest crons |
+   | `DIGEST_RECIPIENTS` | comma-separated emails for the weekly digest (optional) |
+   | `EMAIL_API_KEY` / `EMAIL_FROM` | Resend key + sender (optional — enables email notifications) |
+   | `GEOCODE_CONTACT` | contact email for the Nominatim User-Agent (optional; falls back to `VAPID_SUBJECT`) |
    | `ALLOWED_ORIGINS` | leave blank for now; set in step 5 |
 
    **Do NOT set `VITE_ENABLE_TESTER`** — leaving it unset keeps the Tester panel
@@ -139,9 +144,10 @@ real infrastructure** — that's the green light for outreach.
 
 ## 8 · Optional, later (free)
 
-- **Web Push delivery:** create a **Supabase Database Webhook** on `issue_updates`
-  INSERT that POSTs to `https://YOUR-SITE/api/notify` with the reporter's `userId`.
-- **Email updates:** add `EMAIL_API_KEY` / `EMAIL_FROM` (Resend/Brevo free tier).
+- **Web Push/email delivery:** wire the **Supabase Database Webhook** on
+  `issue_updates` INSERT → POST `https://YOUR-SITE/api/notify` with the
+  `x-notify-secret` header — full steps in `notifications-setup.md`. Without
+  it, the in-app bell works but nothing pushes.
 - **Phone OTP:** enable Supabase Phone provider + an SMS provider (paid).
 - **Keep-alive:** free Supabase projects pause after ~7 days idle — schedule a
   simple cron ping (e.g. cron-job.org) so the demo is never asleep for a viewing.
