@@ -12,6 +12,7 @@ platform. Start with the one-pager, then the deck.
 | [security-and-dpdp.md](security-and-dpdp.md) | Security / legal | Enforced controls + DPDP Act 2023 mapping + GIGW + honest limitations. |
 | [sla-kpi.md](sla-kpi.md) | Operations | SLA targets and the KPIs officials get. |
 | [scaling-and-cost.md](scaling-and-cost.md) | Finance / IT | Pilot-configuration ceilings + costed upgrade path. |
+| [competitive-landscape.md](competitive-landscape.md) | You + meetings | Every comparable system (CPGRAMS, Swachhata, 112, DIGIT/UPYOG, state & city apps, intl.), our differentiation, honest gaps, per-conversation positioning. |
 | [deploy-guide.md](deploy-guide.md) | You | Step-by-step: Supabase (India) + Vercel + Google login + full env table + live security verification. |
 | [notifications-setup.md](notifications-setup.md) | You | One-time webhook wiring that makes push/email notifications fire. |
 | [pre-outreach-checklist.md](pre-outreach-checklist.md) | You | Final gate: live-deploy verification, console wiring, outreach package, send-day runbook. |
