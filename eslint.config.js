@@ -19,6 +19,15 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // eslint-plugin-react-hooks 7 promoted React-Compiler-era rules (refs,
+      // set-state-in-effect, immutability) to errors. They flag ~30
+      // pre-existing, intentional patterns here (Leaflet/SpeechRecognition
+      // instance refs, one-shot draft-hydration effects). Keep them visible as
+      // warnings to burn down over time rather than turning a lint-plugin
+      // upgrade into a CI blocker.
+      'react-hooks/refs': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/immutability': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Pragmatic for a shipping app: unused vars are warnings, and an
       // underscore prefix opts out. `any` is discouraged but not fatal (the

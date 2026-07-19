@@ -176,7 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (rateLimited(clientIp(req)))
     return json(res, 429, { error: 'Too many requests, slow down' })
 
-  let body: AnalyzeBody = {}
+  let body: AnalyzeBody
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body ?? {})
   } catch {
