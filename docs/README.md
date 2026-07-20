@@ -17,6 +17,8 @@ platform. Start with the one-pager, then the deck.
 | [notifications-setup.md](notifications-setup.md) | You | One-time webhook wiring that makes push/email notifications fire. |
 | [pre-outreach-checklist.md](pre-outreach-checklist.md) | You | Final gate: live-deploy verification, console wiring, outreach package, send-day runbook. |
 | [outreach-email.md](outreach-email.md) | You | Final cover emails + researched recipient plan (who, in what order, where to find addresses). |
+| [applications-tsic-thub.md](applications-tsic-thub.md) | You | Ready-to-paste TSIC + T-Hub application answers, cover emails, and sequencing (the warm-introduction channels). |
+| [send-prep-worksheet.md](send-prep-worksheet.md) | You | Every letter/application placeholder resolved or assigned + send-day order. |
 | [demo-script.md](demo-script.md) | You | 60-second video script + full live-walkthrough + Q&A. |
 | [mou-template.md](mou-template.md) | You + legal | Plain-language pilot MoU / data-sharing template (the "who are you / on what terms" answer). |
 | [pre-launch-gaps-and-improvements.md](pre-launch-gaps-and-improvements.md) | You | Historical launch checklist + the cloud-console actions only you can do. |
